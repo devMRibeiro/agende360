@@ -1,3 +1,6 @@
+# keep directory
+!.gitignore
+
 ### Java ###
 *.class
 *.jar

@@ -30,6 +30,7 @@
 	<properties>
 		<java.version>17</java.version>
 		<jsonwebtoken.version>0.12.5</jsonwebtoken.version>
+		<resend.version>4.11.0</resend.version>
 	</properties>
 	<dependencies>
 		<dependency>
@@ -112,6 +113,11 @@
 		    <groupId>io.jsonwebtoken</groupId>
 		    <artifactId>jjwt-jackson</artifactId>
 		    <version>${jsonwebtoken.version}</version>
+		</dependency>
+		<dependency>
+		    <groupId>com.resend</groupId>
+		    <artifactId>resend-java</artifactId>
+		    <version>${resend.version}</version>
 		</dependency>
 	</dependencies>
 

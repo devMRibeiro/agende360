@@ -2,7 +2,7 @@ package com.github.devmribeiro.clipply.application.dto.request;
 
 import jakarta.validation.constraints.NotNull;
 
-public record RegisterCompany(
+public record RegisterCompanyRequest(
 
 		@NotNull
 		String name,
@@ -10,9 +10,6 @@ public record RegisterCompany(
 		@NotNull
 		String email,
 
-		@NotNull
-		String password,
-		
 		@NotNull
 		String document,
 		

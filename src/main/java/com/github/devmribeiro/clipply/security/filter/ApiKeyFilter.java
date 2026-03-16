@@ -21,10 +21,10 @@ public class ApiKeyFilter extends OncePerRequestFilter {
 	@Override
 	protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response, FilterChain filterChain) throws ServletException, IOException {
 
-		String path = request.getRequestURI();
-
-		if (!path.startsWith("/api/clipply"))
-			return;
+		if (!request.getServletPath().startsWith("/api/clipply")) {
+		    filterChain.doFilter(request, response);
+		    return;
+		}
 
 		String requestKey = request.getHeader("X-API-KEY");
 

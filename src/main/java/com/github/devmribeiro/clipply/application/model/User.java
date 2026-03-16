@@ -13,19 +13,12 @@ import jakarta.persistence.Index;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
 import jakarta.persistence.Table;
-import jakarta.persistence.UniqueConstraint;
 
 @Entity
-@Table(name = "users",
+@Table(name = "user",
 	indexes = {
 		@Index(name = "idx_user_email", columnList = "email", unique = true),
 		@Index(name = "idx_user_phone", columnList = "phone"),
-	},
-	uniqueConstraints = {
-        @UniqueConstraint(
-            name = "uk_company_email",
-            columnNames = {"company_id", "email"}
-    )
 })
 public class User extends BaseEntity {
 
@@ -46,7 +39,7 @@ public class User extends BaseEntity {
 	private UserRole role;
 	
 	@ManyToOne(fetch = FetchType.LAZY)
-	@JoinColumn(name = "company_id", nullable = false)
+	@JoinColumn(name = "company_id")
 	private Company company;
 
 	@Column(name = "password_chaged_at")

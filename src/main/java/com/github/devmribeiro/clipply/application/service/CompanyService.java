@@ -1,7 +1,6 @@
 package com.github.devmribeiro.clipply.application.service;
 
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.http.ResponseEntity;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
@@ -26,9 +25,6 @@ public class CompanyService {
 
 	@Value("${clipply.default-password}")
 	private String defaultPassword;
-
-	@Value("${clipply.suport-password}")
-	private String suportPassword;
 
 	public CompanyService(CompanyRepository companyRepository,
 						  UserRepository userRepository,

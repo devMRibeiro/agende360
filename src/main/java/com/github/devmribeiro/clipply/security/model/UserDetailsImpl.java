@@ -19,13 +19,16 @@ public class UserDetailsImpl implements UserDetails {
 	private static final long serialVersionUID = 1L;
 
 	private String email;
+	private String password;
 	private Collection<? extends GrantedAuthority> authorities;
 	
 	public UserDetailsImpl(User user) {
         this.email = user.getEmail();
+        this.password = user.getPassword();
 
         List<SimpleGrantedAuthority> auths = new ArrayList<SimpleGrantedAuthority>();
-        auths.add(new SimpleGrantedAuthority(user.getRole().name()));
+        auths.add(new SimpleGrantedAuthority("ROLE_" + user.getRole().name()));
+        this.authorities = auths;
     }
 
 	@Override
@@ -35,7 +38,7 @@ public class UserDetailsImpl implements UserDetails {
 
 	@Override
 	public @Nullable String getPassword() {
-		return null;
+		return password;
 	}
 
 	@Override

@@ -44,11 +44,12 @@ public class SecurityConfig {
 	    	// Setting SameSite=Strict in CookieService provides protection in most cases,
 	    	// but keeping Spring's CSRF protection enabled is safer
 	        .csrf(csrf -> csrf
-	            .ignoringRequestMatchers("/api/auth/**")
-	        )
-	        .sessionManagement(session ->
-	            session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
-	        .authorizeHttpRequests(auth -> auth
+	            .ignoringRequestMatchers(
+	            		"/api/auth/**",
+	            		"/api/clipply/**")
+	        ).sessionManagement(session ->
+	            session.sessionCreationPolicy(SessionCreationPolicy.STATELESS)
+            ).authorizeHttpRequests(auth -> auth
 	            .requestMatchers("/api/auth/**").permitAll()
 	            .requestMatchers("/api/admin/**").hasRole("ADMIN")
 	            .requestMatchers("/api/clipply/**").permitAll()

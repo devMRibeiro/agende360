@@ -8,6 +8,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.github.devmribeiro.clipply.application.dto.request.RegisterCompanyRequest;
+import com.github.devmribeiro.clipply.application.dto.response.RegisterCompanyResponse;
 import com.github.devmribeiro.clipply.application.service.CompanyService;
 
 import jakarta.validation.Valid;
@@ -23,7 +24,7 @@ public class ClipplyController {
 	}
 
 	@PostMapping("/company")
-	public ResponseEntity<?> registerCompany(@RequestBody @Valid RegisterCompanyRequest request) {
+	public ResponseEntity<RegisterCompanyResponse> registerCompany(@RequestBody @Valid RegisterCompanyRequest request) {
 		return ResponseEntity
 				.status(HttpStatus.CREATED.value())
 				.body(companyService.registerCompany(request));

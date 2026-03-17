@@ -29,7 +29,8 @@ public class AuthController {
 	private final UserRepository userRepository;
 	private final RefreshTokenService refreshTokenService;
 	private final CookieService cookieService;
-	
+	private final String REFRESH_COOKIE_TOKEN_NAME = "refresh_token";
+
 	public AuthController(
 			AuthenticationManager authenticationManager,
 			JwtService jwtService,
@@ -66,7 +67,7 @@ public class AuthController {
 	@PostMapping("/refresh")
 	public ResponseEntity<Void> refresh(HttpServletRequest request, HttpServletResponse response) {
 		
-		String refreshTokenValue = jwtService.getTokenFromCookie(request);
+		String refreshTokenValue = jwtService.getTokenFromCookie(request, REFRESH_COOKIE_TOKEN_NAME);
 		
 		if (refreshTokenValue == null)
 			return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
@@ -84,7 +85,7 @@ public class AuthController {
 	@PostMapping("/logout")
 	public ResponseEntity<Void> logout(HttpServletRequest request, HttpServletResponse response) {
 		
-		String refreshTokenValue = jwtService.getTokenFromCookie(request);
+		String refreshTokenValue = jwtService.getTokenFromCookie(request, REFRESH_COOKIE_TOKEN_NAME);
 		
 		if (refreshTokenValue != null) {
 			RefreshToken rf = refreshTokenService.findByToken(refreshTokenValue);

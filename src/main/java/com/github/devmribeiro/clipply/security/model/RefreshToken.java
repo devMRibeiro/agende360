@@ -32,7 +32,7 @@ public class RefreshToken {
 	@Column(nullable = false)
 	private Instant expiresAt;
 
-	private boolean revoke = false; // if it was invalidated upon logout
+	private boolean revoked = false; // if it was invalidated upon logout
 
 	public UUID getId() {
 		return id;
@@ -66,11 +66,11 @@ public class RefreshToken {
 		this.expiresAt = expiresAt;
 	}
 
-	public boolean isRevoke() {
-		return revoke;
+	public boolean isRevoked() {
+		return revoked;
 	}
 
-	public void setRevoke(boolean revoke) {
-		this.revoke = revoke;
+	public void setRevoked(boolean revoked) {
+		this.revoked = revoked;
 	}
 }

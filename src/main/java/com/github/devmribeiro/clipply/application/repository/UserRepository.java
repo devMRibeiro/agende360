@@ -11,7 +11,7 @@ import com.github.devmribeiro.clipply.application.model.User;
 @Repository
 public interface UserRepository extends JpaRepository<User, UUID> {
 
-	@Query("select u from users u where u.id = :id")
+	@Query("select u from User u where u.id = :id")
 	User findByUserId(UUID id);
 
 	User findByEmail(String email);

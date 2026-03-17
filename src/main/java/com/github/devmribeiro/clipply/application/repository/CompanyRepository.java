@@ -11,7 +11,7 @@ import com.github.devmribeiro.clipply.application.model.Company;
 @Repository
 public interface CompanyRepository extends JpaRepository<Company, UUID> {
 
-	@Query("select c from company c where c.id = :id")
+	@Query("select c from Company c where c.id = :id")
 	Company findByCompanyId(UUID id);
 
 	boolean existsByDocument(String document);

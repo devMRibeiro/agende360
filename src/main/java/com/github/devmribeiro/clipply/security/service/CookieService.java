@@ -8,14 +8,8 @@ import jakarta.servlet.http.Cookie;
 @Service
 public class CookieService {
 
-	- adicionar esses valores no file
-	- continuar de refreshTokenService
 	@Value("${cookie.secure:true}") // false when dev (HTTP), true when prod (HTTPS)
 	private boolean secure;
-
-	@Value("${cookie.domain:}")
-	private String domain;
-
 	private final String COOKIE_NAME = "access_token"; 
 	private final String REFRESH_COOKIE_NAME = "refresh_token"; 
 	

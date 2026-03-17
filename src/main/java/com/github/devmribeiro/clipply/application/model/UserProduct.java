@@ -1,5 +1,6 @@
 package com.github.devmribeiro.clipply.application.model;
 
+import jakarta.persistence.EmbeddedId;
 import jakarta.persistence.Entity;
 import jakarta.persistence.Table;
 
@@ -7,7 +8,8 @@ import jakarta.persistence.Table;
 @Table(name = "user_products")
 public class UserProduct {
 
-	UserProductId id;
+	@EmbeddedId
+	private UserProductId id;
 
 	public UserProductId getId() {
 		return id;

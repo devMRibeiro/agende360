@@ -38,23 +38,28 @@ public class SecurityConfig {
 	}
 
 	@Bean
-    public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
-        http
-            .csrf(csrf -> csrf.disable()) // JWT não precisa de CSRF
-            .sessionManagement(session ->
-                session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
-            .authorizeHttpRequests(auth -> auth
-                .requestMatchers("/api/auth/**").permitAll()  // login e registro livres
-                .requestMatchers("/api/admin/**").hasRole("ADMIN")
-                .requestMatchers("/api/clipply/**").permitAll()
-                .anyRequest().authenticated()
-            )
-            .authenticationProvider(authenticationProvider())
-            .addFilterBefore(apiKeyFilter, UsernamePasswordAuthenticationFilter.class)
-            .addFilterBefore(authenticationFilter, UsernamePasswordAuthenticationFilter.class);
+	public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
+	    http
+	        // With an HttpOnly cookie, CSRF must be enabled;
+	    	// Setting SameSite=Strict in CookieService provides protection in most cases,
+	    	// but keeping Spring's CSRF protection enabled is safer
+	        .csrf(csrf -> csrf
+	            .ignoringRequestMatchers("/api/auth/**")
+	        )
+	        .sessionManagement(session ->
+	            session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
+	        .authorizeHttpRequests(auth -> auth
+	            .requestMatchers("/api/auth/**").permitAll()
+	            .requestMatchers("/api/admin/**").hasRole("ADMIN")
+	            .requestMatchers("/api/clipply/**").permitAll()
+	            .anyRequest().authenticated()
+	        )
+	        .authenticationProvider(authenticationProvider())
+	        .addFilterBefore(authenticationFilter, UsernamePasswordAuthenticationFilter.class)
+	        .addFilterBefore(apiKeyFilter, authenticationFilter.getClass());
 
-        return http.build();
-    }
+	    return http.build();
+	}
 
 	@Bean
     public AuthenticationProvider authenticationProvider() {

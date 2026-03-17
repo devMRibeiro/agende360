@@ -57,4 +57,8 @@ public class RefreshTokenService {
 	public void revokeByUser(User user) {
 		refreshTokenRepository.deleteByUser(user);
 	}
+	
+	public RefreshToken findByToken(String token) {
+		return refreshTokenRepository.findByToken(token);
+	}
 }

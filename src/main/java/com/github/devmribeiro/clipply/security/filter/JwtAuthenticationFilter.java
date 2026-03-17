@@ -14,7 +14,6 @@ import com.github.devmribeiro.clipply.security.service.UserDetailsServiceImpl;
 
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
-import jakarta.servlet.http.Cookie;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 
@@ -23,7 +22,6 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
 
 	private final JwtService jwtService;
 	private final UserDetailsServiceImpl userDetailsService;
-	private final String COOKIE_TOKEN_NAME = "access_token";
 
 	public JwtAuthenticationFilter(JwtService jwtService, UserDetailsServiceImpl userDetailsServiceImpl) {
 		this.jwtService = jwtService;
@@ -34,7 +32,7 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
 	protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response, FilterChain filterChain)
 			throws ServletException, IOException {
 
-		String token = getTokenFromCookie(request);
+		String token = jwtService.getTokenFromCookie(request);
 
 //      If the accessToken is null. It will pass the request to next filter in the chain.
 //      Any login and signup requests will not have jwt token in their header, therefore they will be passed to next filter chain.
@@ -65,17 +63,5 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
 		}
 
 		filterChain.doFilter(request, response);
-	}
-
-	private String getTokenFromCookie(HttpServletRequest request) {
-
-	    if (request.getCookies() == null)
-	        return null;
-
-	    for (Cookie cookie : request.getCookies()) {
-	        if (COOKIE_TOKEN_NAME.equals(cookie.getName()))
-	            return cookie.getValue();
-	    }
-	    return null;
 	}
 }

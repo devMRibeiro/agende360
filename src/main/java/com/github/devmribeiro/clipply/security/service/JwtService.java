@@ -19,6 +19,8 @@ import io.jsonwebtoken.UnsupportedJwtException;
 import io.jsonwebtoken.io.Decoders;
 import io.jsonwebtoken.security.Keys;
 import io.jsonwebtoken.security.SignatureException;
+import jakarta.servlet.http.Cookie;
+import jakarta.servlet.http.HttpServletRequest;
 
 public class JwtService {
 
@@ -27,6 +29,8 @@ public class JwtService {
 
 	@Value("${security.jwt.expiration-ms}")
     private Long expirationToken;
+
+	private final String COOKIE_TOKEN_NAME = "access_token";
 
 	public String generateToken(User user) {
         SecretKey key = Keys.hmacShaKeyFor(Decoders.BASE64.decode(secretKey));
@@ -80,4 +84,16 @@ public class JwtService {
     private boolean isTokenExpired(String token) {
         return parseClaims(token).getExpiration().before(new Date());
     }
+    
+    public String getTokenFromCookie(HttpServletRequest request) {
+
+	    if (request.getCookies() == null)
+	        return null;
+
+	    for (Cookie cookie : request.getCookies()) {
+	        if (COOKIE_TOKEN_NAME.equals(cookie.getName()))
+	            return cookie.getValue();
+	    }
+	    return null;
+	}
 }

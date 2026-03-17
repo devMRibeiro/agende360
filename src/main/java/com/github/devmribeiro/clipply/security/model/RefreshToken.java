@@ -26,13 +26,11 @@ public class RefreshToken {
 	private String token;
 
 	@OneToOne
-	@JoinColumn(name = "user_id", referencedColumnName = "id")
+	@JoinColumn(name = "users_id", referencedColumnName = "id")
 	private User user;
 
 	@Column(nullable = false)
 	private Instant expiresAt;
-
-	private boolean revoked = false; // if it was invalidated upon logout
 
 	public UUID getId() {
 		return id;
@@ -64,13 +62,5 @@ public class RefreshToken {
 
 	public void setExpiresAt(Instant expiresAt) {
 		this.expiresAt = expiresAt;
-	}
-
-	public boolean isRevoked() {
-		return revoked;
-	}
-
-	public void setRevoked(boolean revoked) {
-		this.revoked = revoked;
 	}
 }

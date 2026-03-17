@@ -6,6 +6,7 @@ import java.util.UUID;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
+import com.github.devmribeiro.clipply.application.exception.IllegalArgumentException;
 import com.github.devmribeiro.clipply.application.model.User;
 import com.github.devmribeiro.clipply.security.model.RefreshToken;
 import com.github.devmribeiro.clipply.security.repository.RefreshTokenRepository;
@@ -41,13 +42,13 @@ public class RefreshTokenService {
 		RefreshToken rf = refreshTokenRepository.findByToken(token);
 
 		if (rf == null)
-			throw new RuntimeException("Refresh token not found");
+			throw new IllegalArgumentException("Refresh token not found");
 
 		if (rf.isRevoked())
-			throw new RuntimeException("The refresh token has been revoked");
+			throw new IllegalArgumentException("The refresh token has been revoked");
 
 		if (rf.getExpiresAt().isBefore(Instant.now()))
-			throw new RuntimeException("Refresh token expired. Log in again.");
+			throw new IllegalArgumentException("Refresh token expired. Log in again.");
 
 		return rf;
 	}

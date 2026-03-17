@@ -27,7 +27,7 @@ public class CookieService {
 		Cookie cookie = new Cookie(REFRESH_COOKIE_NAME, token);
 		cookie.setHttpOnly(true);
 		cookie.setSecure(secure);
-		cookie.setPath("/auth"); // send to /auth/refresh and /auth/logout only.
+		cookie.setPath("/api/auth"); // send to /auth/refresh and /auth/logout only.
 		cookie.setMaxAge(60 * 60 * 24 * 7);
 		return cookie;
 	}
@@ -43,7 +43,7 @@ public class CookieService {
 	public Cookie clearRefreshTokenCookie() {
 		Cookie cookie = new Cookie(REFRESH_COOKIE_NAME, "");
 		cookie.setHttpOnly(true);
-		cookie.setPath("/auth");
+		cookie.setPath("/api/auth");
 		cookie.setMaxAge(0);
 		return cookie;
 	}

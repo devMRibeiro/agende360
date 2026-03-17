@@ -1,6 +1,7 @@
 package com.github.devmribeiro.clipply.application.service;
 
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
@@ -71,5 +72,10 @@ public class CompanyService {
 			newSlug = baseSlug + "-" + counter++;
 
 		return newSlug;
+	}
+	
+	public static void main(String[] args) {
+		PasswordEncoder encoder = new BCryptPasswordEncoder();
+		System.out.println(encoder.matches("admin", "$2a$10$ShXt4Qfd2BPWqvGyCrzH7e4KF9FPxVGRTj1t6E3ivHTJUFNWdQ9X2"));
 	}
 }

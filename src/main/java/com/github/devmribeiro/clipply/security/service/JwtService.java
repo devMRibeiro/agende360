@@ -8,13 +8,17 @@ import javax.crypto.SecretKey;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.security.core.userdetails.UserDetails;
 
+import com.github.devmribeiro.clipply.application.exception.IllegalArgumentException;
 import com.github.devmribeiro.clipply.application.model.User;
-import com.github.devmribeiro.clipply.application.type.UserRole;
 
 import io.jsonwebtoken.Claims;
+import io.jsonwebtoken.ExpiredJwtException;
 import io.jsonwebtoken.Jwts;
+import io.jsonwebtoken.MalformedJwtException;
+import io.jsonwebtoken.UnsupportedJwtException;
 import io.jsonwebtoken.io.Decoders;
 import io.jsonwebtoken.security.Keys;
+import io.jsonwebtoken.security.SignatureException;
 
 public class JwtService {
 
@@ -38,11 +42,23 @@ public class JwtService {
 
 	public Claims parseClaims(String token) {
 		SecretKey key = Keys.hmacShaKeyFor(secretKey.getBytes(StandardCharsets.UTF_8));
-        return Jwts.parser()
-        		.verifyWith(key)
-	            .build()
-	            .parseSignedClaims(token)
-	            .getPayload();
+		try {
+	        return Jwts.parser()
+	        		.verifyWith(key)
+		            .build()
+		            .parseSignedClaims(token)
+		            .getPayload();
+		} catch (ExpiredJwtException e) {
+			throw new IllegalArgumentException("JWT token expired");
+		} catch (UnsupportedJwtException e) {
+			throw new IllegalArgumentException("Unsupported JWT");
+		} catch (MalformedJwtException e) {
+			throw new IllegalArgumentException("Malformed JWT");
+		} catch (SignatureException e) {
+			throw new IllegalArgumentException("Invalid signature");
+		} catch (Exception e) {
+			throw new IllegalArgumentException("Unexpected error");
+		}
 	}
 
 	public String extractUserId(String token) {
@@ -53,8 +69,8 @@ public class JwtService {
 		return parseClaims(token).get("email", String.class);
 	}
 
-	public UserRole extractUserRole(String token) {
-		return parseClaims(token).get("role", UserRole.class);
+	public String extractUserRole(String token) {
+		return parseClaims(token).get("role", String.class);
 	}
 	
 	public boolean isTokenValid(String token, UserDetails userDetails) {

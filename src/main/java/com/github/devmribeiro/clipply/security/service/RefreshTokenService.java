@@ -6,10 +6,13 @@ import java.util.UUID;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
+import com.github.devmribeiro.clipply.application.exception.ExpiredException;
 import com.github.devmribeiro.clipply.application.exception.IllegalArgumentException;
 import com.github.devmribeiro.clipply.application.model.User;
 import com.github.devmribeiro.clipply.security.model.RefreshToken;
 import com.github.devmribeiro.clipply.security.repository.RefreshTokenRepository;
+
+import jakarta.transaction.Transactional;
 
 @Service
 public class RefreshTokenService {
@@ -24,6 +27,7 @@ public class RefreshTokenService {
 	}
 
 	// Creates and persists a new refresh token for the user
+	@Transactional
 	public RefreshToken createRefreshToken(User user) {
 		// Removes any previous refresh tokens for the user
 		refreshTokenRepository.deleteByUser(user);
@@ -32,7 +36,6 @@ public class RefreshTokenService {
 		rf.setToken(UUID.randomUUID().toString());
 		rf.setUser(user);
 		rf.setExpiresAt(Instant.now().plusMillis(refreshExpiration));
-		rf.setRevoked(false);
 
 		return refreshTokenRepository.save(rf);
 	}
@@ -44,16 +47,14 @@ public class RefreshTokenService {
 		if (rf == null)
 			throw new IllegalArgumentException("Refresh token not found");
 
-		if (rf.isRevoked())
-			throw new IllegalArgumentException("The refresh token has been revoked");
-
 		if (rf.getExpiresAt().isBefore(Instant.now()))
-			throw new IllegalArgumentException("Refresh token expired. Log in again.");
+			throw new ExpiredException("Refresh token expired. Log in again.");
 
 		return rf;
 	}
 
 	// Revokes (invalidates) all of the user's refresh tokens - used during logout
+	@Transactional
 	public void revokeByUser(User user) {
 		refreshTokenRepository.deleteByUser(user);
 	}

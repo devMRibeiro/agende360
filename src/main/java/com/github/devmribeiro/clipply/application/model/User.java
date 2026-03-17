@@ -15,10 +15,10 @@ import jakarta.persistence.ManyToOne;
 import jakarta.persistence.Table;
 
 @Entity
-@Table(name = "user",
+@Table(name = "users",
 	indexes = {
-		@Index(name = "idx_user_email", columnList = "email", unique = true),
-		@Index(name = "idx_user_phone", columnList = "phone"),
+		@Index(name = "idx_users_email", columnList = "email", unique = true),
+		@Index(name = "idx_users_phone", columnList = "phone"),
 })
 public class User extends BaseEntity {
 

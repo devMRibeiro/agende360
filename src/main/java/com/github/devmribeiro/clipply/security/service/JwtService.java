@@ -1,12 +1,12 @@
 package com.github.devmribeiro.clipply.security.service;
 
-import java.nio.charset.StandardCharsets;
 import java.util.Date;
 
 import javax.crypto.SecretKey;
 
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.security.core.userdetails.UserDetails;
+import org.springframework.stereotype.Service;
 
 import com.github.devmribeiro.clipply.application.exception.IllegalArgumentException;
 import com.github.devmribeiro.clipply.application.model.User;
@@ -22,6 +22,7 @@ import io.jsonwebtoken.security.SignatureException;
 import jakarta.servlet.http.Cookie;
 import jakarta.servlet.http.HttpServletRequest;
 
+@Service
 public class JwtService {
 
 	@Value("${security.jwt.secret}")
@@ -30,25 +31,21 @@ public class JwtService {
 	@Value("${security.jwt.expiration-ms}")
     private Long expirationToken;
 
-	private final String COOKIE_TOKEN_NAME = "access_token";
-
 	public String generateToken(User user) {
-        SecretKey key = Keys.hmacShaKeyFor(Decoders.BASE64.decode(secretKey));
         return Jwts.builder()
                 .subject(user.getId().toString())
                 .claim("role", user.getRole().name())
                 .claim("email", user.getEmail())
                 .issuedAt(new Date())
                 .expiration(new Date(System.currentTimeMillis() + expirationToken))
-                .signWith(key)
+                .signWith(getKey())
                 .compact();
 	}
 
 	public Claims parseClaims(String token) {
-		SecretKey key = Keys.hmacShaKeyFor(secretKey.getBytes(StandardCharsets.UTF_8));
 		try {
 	        return Jwts.parser()
-	        		.verifyWith(key)
+	        		.verifyWith(getKey())
 		            .build()
 		            .parseSignedClaims(token)
 		            .getPayload();
@@ -63,6 +60,10 @@ public class JwtService {
 		} catch (Exception e) {
 			throw new IllegalArgumentException("Unexpected error");
 		}
+	}
+
+	private SecretKey getKey() {
+	    return Keys.hmacShaKeyFor(Decoders.BASE64.decode(secretKey));
 	}
 
 	public String extractUserId(String token) {
@@ -85,13 +86,13 @@ public class JwtService {
         return parseClaims(token).getExpiration().before(new Date());
     }
     
-    public String getTokenFromCookie(HttpServletRequest request) {
+    public String getTokenFromCookie(HttpServletRequest request, String cookieName) {
 
 	    if (request.getCookies() == null)
 	        return null;
 
 	    for (Cookie cookie : request.getCookies()) {
-	        if (COOKIE_TOKEN_NAME.equals(cookie.getName()))
+	        if (cookieName.equals(cookie.getName()))
 	            return cookie.getValue();
 	    }
 	    return null;

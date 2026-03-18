@@ -42,9 +42,6 @@ public class CompanyService {
 	@Transactional
 	public RegisterCompanyResponse registerCompany(RegisterCompanyRequest request) {
 
-		if (!SecurityUtils.isSupport())
-			throw new UnauthorizedException("Access Denied");
-
 		if (companyRepository.existsByDocument(request.document()))
 			throw new ConflictException("company already exists");
 
@@ -82,9 +79,6 @@ public class CompanyService {
 	}
 
 	public void disable(UUID companyId) {
-
-		if (!SecurityUtils.isSupport())
-			throw new UnauthorizedException("Access Denied");
 
 		Company company = companyRepository.findByCompanyId(companyId);
 

@@ -31,9 +31,4 @@ public class SecurityUtils {
     public static UUID getCompanyId() {
         return getPrincipal().getCompanyId();
     }
-
-    public static boolean isSupport() {
-        UserDetailsImpl user = getPrincipal();
-        return user.getRole() == UserRole.SUPPORT && user.getCompanyId() == null;
-    }
 }

@@ -1,6 +1,7 @@
 package com.github.devmribeiro.clipply.security.service;
 
 import java.util.Date;
+import java.util.UUID;
 
 import javax.crypto.SecretKey;
 
@@ -10,6 +11,7 @@ import org.springframework.stereotype.Service;
 
 import com.github.devmribeiro.clipply.application.exception.IllegalArgumentException;
 import com.github.devmribeiro.clipply.application.model.User;
+import com.github.devmribeiro.clipply.application.type.UserRole;
 
 import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.ExpiredJwtException;
@@ -33,9 +35,10 @@ public class JwtService {
 
 	public String generateToken(User user) {
         return Jwts.builder()
-                .subject(user.getId().toString())
+        		.subject(user.getEmail())
                 .claim("role", user.getRole().name())
-                .claim("email", user.getEmail())
+                .claim("companyId", user.getCompanyId())
+                .claim("active", user.getActive())
                 .issuedAt(new Date())
                 .expiration(new Date(System.currentTimeMillis() + expirationToken))
                 .signWith(getKey())
@@ -74,8 +77,18 @@ public class JwtService {
 		return parseClaims(token).get("email", String.class);
 	}
 
-	public String extractUserRole(String token) {
-		return parseClaims(token).get("role", String.class);
+	public UserRole extractUserRole(String token) {
+		String role = parseClaims(token).get("role", String.class);
+		return role != null ? UserRole.valueOf(role) : null;
+	}
+	
+	public UUID extractCompanyId(String token) {
+	    String companyId = parseClaims(token).get("companyId", String.class);
+
+	    if (companyId == null)
+	        return null;
+
+	    return UUID.fromString(companyId);
 	}
 	
 	public boolean isTokenValid(String token, UserDetails userDetails) {

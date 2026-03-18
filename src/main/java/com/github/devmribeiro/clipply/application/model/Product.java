@@ -1,16 +1,23 @@
 package com.github.devmribeiro.clipply.application.model;
 
 import java.math.BigDecimal;
+import java.util.UUID;
 
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.Index;
 import jakarta.persistence.Table;
+import jakarta.persistence.UniqueConstraint;
 
 @Entity
-@Table(name = "product", indexes = {
-		@Index(name = "idx_product_name", columnList = "name")
-})
+@Table(name = "product",
+	indexes = {
+			@Index(name = "idx_product_name", columnList = "name")
+	},
+	uniqueConstraints = {
+			@UniqueConstraint(name = "uk_product_name_company", columnNames = {"name", "company_id"})
+    }
+)
 public class Product extends BaseEntity {
 
 	@Column(nullable = false, length = 100)
@@ -26,6 +33,9 @@ public class Product extends BaseEntity {
 
 	@Column(nullable = false)
 	private Boolean active = true;
+	
+	@Column(name = "company_id", nullable = false)
+	private UUID companyId;
 
 	public String getName() {
 		return name;
@@ -65,5 +75,13 @@ public class Product extends BaseEntity {
 
 	public void setDurationMinutes(Integer durationMinutes) {
 		this.durationMinutes = durationMinutes;
+	}
+
+	public UUID getCompany() {
+		return companyId;
+	}
+
+	public void setCompany(UUID companyId) {
+		this.companyId = companyId;
 	}
 }

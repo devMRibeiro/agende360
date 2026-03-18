@@ -22,8 +22,8 @@ public class GlobalExceptionHandler {
 				.body(new ErrorResponse(HttpStatus.CONFLICT.value(), ex.getMessage()));
 	}
 
-	@ExceptionHandler(ExpiredException.class)
-	public ResponseEntity<ErrorResponse> handleExpiredTokenException(ExpiredException ex) {
+	@ExceptionHandler(UnauthorizedException.class)
+	public ResponseEntity<ErrorResponse> handleUnauthorizedExceptionException(UnauthorizedException ex) {
 		return ResponseEntity
 				.status(HttpStatus.UNAUTHORIZED.value())
 				.body(new ErrorResponse(HttpStatus.UNAUTHORIZED.value(), ex.getMessage()));

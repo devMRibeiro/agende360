@@ -1,6 +1,7 @@
 package com.github.devmribeiro.clipply.security.filter;
 
 import java.io.IOException;
+import java.util.UUID;
 
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.context.SecurityContextHolder;
@@ -9,8 +10,9 @@ import org.springframework.security.web.authentication.WebAuthenticationDetailsS
 import org.springframework.stereotype.Component;
 import org.springframework.web.filter.OncePerRequestFilter;
 
+import com.github.devmribeiro.clipply.application.type.UserRole;
+import com.github.devmribeiro.clipply.security.model.UserDetailsImpl;
 import com.github.devmribeiro.clipply.security.service.JwtService;
-import com.github.devmribeiro.clipply.security.service.UserDetailsServiceImpl;
 
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
@@ -21,12 +23,10 @@ import jakarta.servlet.http.HttpServletResponse;
 public class JwtAuthenticationFilter extends OncePerRequestFilter {
 
 	private final JwtService jwtService;
-	private final UserDetailsServiceImpl userDetailsService;
 	private final String COOKIE_TOKEN_NAME = "access_token";
 
-	public JwtAuthenticationFilter(JwtService jwtService, UserDetailsServiceImpl userDetailsServiceImpl) {
+	public JwtAuthenticationFilter(JwtService jwtService) {
 		this.jwtService = jwtService;
-		this.userDetailsService = userDetailsServiceImpl;
 	}
 
 	@Override
@@ -34,7 +34,7 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
 			throws ServletException, IOException {
 
 		String token = jwtService.getTokenFromCookie(request, COOKIE_TOKEN_NAME);
-
+		
 //      If the accessToken is null. It will pass the request to next filter in the chain.
 //      Any login and signup requests will not have jwt token in their header, therefore they will be passed to next filter chain.
 		if (token == null) {
@@ -53,9 +53,12 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
 			return;
 		}
 
+		UserRole role = jwtService.extractUserRole(token);
+		UUID companyId = jwtService.extractCompanyId(token);
+
 //		If any accessToken is present, then it will validate the token and then authenticate the request in security context
 		if (email != null && SecurityContextHolder.getContext().getAuthentication() == null) {
-			UserDetails userDetails = userDetailsService.loadUserByUsername(email);
+			UserDetails userDetails = new UserDetailsImpl(email, null, companyId, role);
 			if (jwtService.isTokenValid(token, userDetails)) {
 				UsernamePasswordAuthenticationToken authenticationToken = new UsernamePasswordAuthenticationToken(userDetails, null, userDetails.getAuthorities());
 				authenticationToken.setDetails(new WebAuthenticationDetailsSource().buildDetails(request));

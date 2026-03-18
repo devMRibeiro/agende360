@@ -1,6 +1,7 @@
 package com.github.devmribeiro.clipply.application.model;
 
 import java.time.LocalDateTime;
+import java.util.UUID;
 
 import com.github.devmribeiro.clipply.application.type.UserRole;
 
@@ -8,10 +9,7 @@ import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.EnumType;
 import jakarta.persistence.Enumerated;
-import jakarta.persistence.FetchType;
 import jakarta.persistence.Index;
-import jakarta.persistence.JoinColumn;
-import jakarta.persistence.ManyToOne;
 import jakarta.persistence.Table;
 
 @Entity
@@ -37,10 +35,9 @@ public class User extends BaseEntity {
 	@Enumerated(EnumType.STRING)
 	@Column(nullable = false)
 	private UserRole role;
-	
-	@ManyToOne(fetch = FetchType.LAZY)
-	@JoinColumn(name = "company_id")
-	private Company company;
+
+	@Column(name = "company_id")
+	private UUID companyId;
 
 	@Column(name = "password_chaged_at")
 	private LocalDateTime passwordChangedAt;
@@ -85,12 +82,12 @@ public class User extends BaseEntity {
 		this.role = role;
 	}
 
-	public Company getCompany() {
-		return company;
+	public UUID getCompanyId() {
+		return companyId;
 	}
 
-	public void setCompany(Company company) {
-		this.company = company;
+	public void setCompanyId(UUID companyId) {
+		this.companyId = companyId;
 	}
 
 	public LocalDateTime getPasswordChagendAt() {

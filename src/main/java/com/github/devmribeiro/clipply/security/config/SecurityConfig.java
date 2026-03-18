@@ -16,6 +16,7 @@ import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
 
 import com.github.devmribeiro.clipply.security.filter.ApiKeyFilter;
+import com.github.devmribeiro.clipply.security.filter.AuthEntryPointJwt;
 import com.github.devmribeiro.clipply.security.filter.JwtAuthenticationFilter;
 import com.github.devmribeiro.clipply.security.service.UserDetailsServiceImpl;
 
@@ -24,35 +25,31 @@ import com.github.devmribeiro.clipply.security.service.UserDetailsServiceImpl;
 @EnableMethodSecurity // enable @PreAuthorize in the controllers
 public class SecurityConfig {
 
-	private JwtAuthenticationFilter authenticationFilter;
-	private UserDetailsServiceImpl userDetailsService;
-	private ApiKeyFilter apiKeyFilter;
+	private final JwtAuthenticationFilter authenticationFilter;
+	private final UserDetailsServiceImpl userDetailsService;
+	private final ApiKeyFilter apiKeyFilter;
+	private final AuthEntryPointJwt unauthorizedHandler;
 	
 	public SecurityConfig(
 			JwtAuthenticationFilter authenticationFilter,
 			UserDetailsServiceImpl userDetailsService,
-			ApiKeyFilter apiKeyFilter) {
+			ApiKeyFilter apiKeyFilter,
+			AuthEntryPointJwt unauthorizedHandler) {
 		this.authenticationFilter = authenticationFilter;
 		this.userDetailsService = userDetailsService;
 		this.apiKeyFilter = apiKeyFilter;
+		this.unauthorizedHandler = unauthorizedHandler;
 	}
 
 	@Bean
 	public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
 	    http
-	        // With an HttpOnly cookie, CSRF must be enabled;
-	    	// Setting SameSite=Strict in CookieService provides protection in most cases,
-	    	// but keeping Spring's CSRF protection enabled is safer
-	        .csrf(csrf -> csrf
-	            .ignoringRequestMatchers(
-	            		"/api/auth/**",
-	            		"/api/clipply/**")
-	        ).sessionManagement(session ->
-	            session.sessionCreationPolicy(SessionCreationPolicy.STATELESS)
-            ).authorizeHttpRequests(auth -> auth
+	        .csrf(csrf -> csrf.disable())
+	        .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
+	        .exceptionHandling(exception -> exception.authenticationEntryPoint(unauthorizedHandler))
+	        .authorizeHttpRequests(auth -> auth
 	            .requestMatchers("/api/auth/**").permitAll()
-	            .requestMatchers("/api/admin/**").hasRole("ADMIN")
-	            .requestMatchers("/api/clipply/**").permitAll()
+ 	            .requestMatchers("/api/clipply/**").hasRole("SUPPORT")
 	            .anyRequest().authenticated()
 	        )
 	        .authenticationProvider(authenticationProvider())
@@ -70,8 +67,7 @@ public class SecurityConfig {
     }
 
 	@Bean
-    public AuthenticationManager authenticationManager(AuthenticationConfiguration config)
-            throws Exception {
+    public AuthenticationManager authenticationManager(AuthenticationConfiguration config) throws Exception {
         return config.getAuthenticationManager();
     }
 

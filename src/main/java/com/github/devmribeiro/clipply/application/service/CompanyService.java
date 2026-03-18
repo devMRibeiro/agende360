@@ -1,18 +1,22 @@
 package com.github.devmribeiro.clipply.application.service;
 
+import java.util.UUID;
+
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
 import com.github.devmribeiro.clipply.application.dto.request.RegisterCompanyRequest;
 import com.github.devmribeiro.clipply.application.dto.response.RegisterCompanyResponse;
 import com.github.devmribeiro.clipply.application.exception.ConflictException;
+import com.github.devmribeiro.clipply.application.exception.IllegalArgumentException;
+import com.github.devmribeiro.clipply.application.exception.UnauthorizedException;
 import com.github.devmribeiro.clipply.application.model.Company;
 import com.github.devmribeiro.clipply.application.model.User;
 import com.github.devmribeiro.clipply.application.repository.CompanyRepository;
 import com.github.devmribeiro.clipply.application.repository.UserRepository;
 import com.github.devmribeiro.clipply.application.type.UserRole;
+import com.github.devmribeiro.clipply.security.util.SecurityUtils;
 
 import jakarta.transaction.Transactional;
 
@@ -38,6 +42,9 @@ public class CompanyService {
 	@Transactional
 	public RegisterCompanyResponse registerCompany(RegisterCompanyRequest request) {
 
+		if (!SecurityUtils.isSupport())
+			throw new UnauthorizedException("Access Denied");
+
 		if (companyRepository.existsByDocument(request.document()))
 			throw new ConflictException("company already exists");
 
@@ -57,7 +64,7 @@ public class CompanyService {
 		user.setPhone(request.phone());
 		user.setPassword(encoder.encode(defaultPassword));
 		user.setRole(UserRole.ADMIN);
-		user.setCompany(company);
+		user.setCompanyId(company.getId());
 		userRepository.save(user);
 
 		return new RegisterCompanyResponse(company.getName(), user.getEmail(), company.getSlug());
@@ -73,9 +80,18 @@ public class CompanyService {
 
 		return newSlug;
 	}
-	
-	public static void main(String[] args) {
-		PasswordEncoder encoder = new BCryptPasswordEncoder();
-		System.out.println(encoder.matches("admin", "$2a$10$ShXt4Qfd2BPWqvGyCrzH7e4KF9FPxVGRTj1t6E3ivHTJUFNWdQ9X2"));
+
+	public void disable(UUID companyId) {
+
+		if (!SecurityUtils.isSupport())
+			throw new UnauthorizedException("Access Denied");
+
+		Company company = companyRepository.findByCompanyId(companyId);
+
+		if (company == null)
+			throw new IllegalArgumentException("company not found");
+
+		company.setActive(false);
+		companyRepository.save(company);
 	}
 }

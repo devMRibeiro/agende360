@@ -1,6 +1,6 @@
 package com.github.devmribeiro.clipply.application.model;
 
-import java.time.LocalDateTime;
+import java.time.LocalTime;
 import java.util.UUID;
 
 import com.github.devmribeiro.clipply.application.type.DayOfWeek;
@@ -15,48 +15,48 @@ import jakarta.persistence.Table;
 @Table(name = "schedule")
 public class Schedule extends BaseEntity {
 
-	@Enumerated(EnumType.STRING)
-	@Column(name = "day_of_week", nullable = false)
-	private DayOfWeek dayOfWeek;
-	
-	@Column(name = "start_time", nullable = false)
-	private LocalDateTime startTime;
-	
-	@Column(name = "end_time", nullable = false)
-	private LocalDateTime endTime;
-	
-	@Column(name = "company_id", nullable = false)
-	private UUID companyId;
+    @Enumerated(EnumType.STRING)
+    @Column(name = "day_of_week", nullable = false)
+    private DayOfWeek dayOfWeek;
 
-	public DayOfWeek getDayOfWeek() {
-		return dayOfWeek;
-	}
+    @Column(name = "start_time", nullable = false)
+    private LocalTime startTime;
 
-	public void setDayOfWeek(DayOfWeek dayOfWeek) {
-		this.dayOfWeek = dayOfWeek;
-	}
+    @Column(name = "end_time", nullable = false)
+    private LocalTime endTime;
 
-	public LocalDateTime getStartTime() {
-		return startTime;
-	}
+    @Column(name = "company_id", nullable = false)
+    private UUID companyId;
 
-	public void setStartTime(LocalDateTime startTime) {
-		this.startTime = startTime;
-	}
+    public DayOfWeek getDayOfWeek() {
+        return dayOfWeek;
+    }
 
-	public LocalDateTime getEndTime() {
-		return endTime;
-	}
+    public void setDayOfWeek(DayOfWeek dayOfWeek) {
+        this.dayOfWeek = dayOfWeek;
+    }
 
-	public void setEndTime(LocalDateTime endTime) {
-		this.endTime = endTime;
-	}
+    public LocalTime getStartTime() {
+        return startTime;
+    }
 
-	public UUID getCompany() {
-		return companyId;
-	}
+    public void setStartTime(LocalTime startTime) {
+        this.startTime = startTime;
+    }
 
-	public void setCompany(UUID companyId) {
-		this.companyId = companyId;
-	}
+    public LocalTime getEndTime() {
+        return endTime;
+    }
+
+    public void setEndTime(LocalTime endTime) {
+        this.endTime = endTime;
+    }
+
+    public UUID getCompanyId() {
+        return companyId;
+    }
+
+    public void setCompanyId(UUID companyId) {
+        this.companyId = companyId;
+    }
 }

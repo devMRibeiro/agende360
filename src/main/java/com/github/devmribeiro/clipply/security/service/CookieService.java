@@ -13,12 +13,15 @@ public class CookieService {
 	private final String COOKIE_NAME = "access_token"; 
 	private final String REFRESH_COOKIE_NAME = "refresh_token"; 
 	
+	@Value("${security.jwt.expiration-ms}")
+	private Long expirationToken;
+	
 	public Cookie createAccessTokenCookie(String token) {
 		Cookie cookie = new Cookie(COOKIE_NAME, token);
 		cookie.setHttpOnly(true);
 		cookie.setSecure(secure);
 		cookie.setPath("/");
-		cookie.setMaxAge(60 * 15);
+		cookie.setMaxAge((int) (expirationToken / 1000));
 		cookie.setAttribute("SameSite", "Strict"); // CSRF protection
 		return cookie;
 	}

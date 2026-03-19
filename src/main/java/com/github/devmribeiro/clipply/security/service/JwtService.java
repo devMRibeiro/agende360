@@ -69,12 +69,8 @@ public class JwtService {
 	    return Keys.hmacShaKeyFor(Decoders.BASE64.decode(secretKey));
 	}
 
-	public String extractUserId(String token) {
-		return parseClaims(token).getSubject();
-	}
-
 	public String extractEmail(String token) {
-		return parseClaims(token).get("email", String.class);
+		return parseClaims(token).getSubject();
 	}
 
 	public UserRole extractUserRole(String token) {

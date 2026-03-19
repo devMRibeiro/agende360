@@ -70,7 +70,7 @@ public class CompanyService {
 		String newSlug = baseSlug;
 
 		int counter = 2;
-		while (companyRepository.existsBySlug(baseSlug))
+		while (companyRepository.existsBySlug(newSlug))
 			newSlug = baseSlug + "-" + counter++;
 
 		return newSlug;

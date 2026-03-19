@@ -5,7 +5,7 @@ import jakarta.persistence.Entity;
 import jakarta.persistence.Table;
 
 @Entity
-@Table(name = "user_products")
+@Table(name = "users_products")
 public class UserProduct {
 
 	@EmbeddedId

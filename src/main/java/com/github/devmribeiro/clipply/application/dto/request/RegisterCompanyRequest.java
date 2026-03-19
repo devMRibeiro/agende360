@@ -1,19 +1,24 @@
 package com.github.devmribeiro.clipply.application.dto.request;
 
-import jakarta.validation.constraints.NotNull;
+import jakarta.validation.constraints.Email;
+import jakarta.validation.constraints.NotBlank;
 
 public record RegisterCompanyRequest(
 
-		@NotNull
-		String name,
+		@NotBlank(message = "companyName is required")
+		String companyName,
 
-		@NotNull
+		@NotBlank(message = "userName is required")
+		String userName,
+
+		@NotBlank
+		@Email
 		String email,
 
-		@NotNull
+		@NotBlank
 		String document,
 		
-		@NotNull
+		@NotBlank
 		String phone
 	) {
 }

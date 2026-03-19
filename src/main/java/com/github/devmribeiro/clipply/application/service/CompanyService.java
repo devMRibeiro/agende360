@@ -23,7 +23,6 @@ public class CompanyService {
 
 	private final CompanyRepository companyRepository;
 	private final UserRepository userRepository;
-
 	private final PasswordEncoder encoder;
 
 	@Value("${clipply.default-password}")
@@ -43,18 +42,17 @@ public class CompanyService {
 		if (companyRepository.existsByDocument(request.document()))
 			throw new ConflictException("company already exists");
 
-		User userExisting = userRepository.findByEmail(request.email());
-
-		if (userExisting != null && request.email().equals(userExisting.getEmail()))
+		if (userRepository.existsByEmail(request.email()))
 			throw new ConflictException("email already exists");
 
 		Company company = new Company();
-		company.setName(request.name());
+		company.setName(request.companyName());
 		company.setDocument(request.document());
-		company.setSlug(genSlug(request.name()));
+		company.setSlug(genSlug(request.companyName()));
 		companyRepository.save(company);
 		
 		User user = new User();
+		user.setName(request.userName());
 		user.setEmail(request.email());
 		user.setPhone(request.phone());
 		user.setPassword(encoder.encode(defaultPassword));

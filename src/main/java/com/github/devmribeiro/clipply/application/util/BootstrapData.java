@@ -41,10 +41,11 @@ public class BootstrapData implements CommandLineRunner {
 
 		User user = new User();
 		user.setEmail(emailSupport);
+		user.setName("CoreStacks");
 		user.setPassword(encoder.encode(passwordSupport));
 		user.setPhone(phoneSupport);
 		user.setRole(UserRole.SUPPORT);
-		user.setPasswordChagedAt(LocalDateTime.now());
+		user.setPasswordChangedAt(LocalDateTime.now());
 		userRepository.save(user);
 	}
 }

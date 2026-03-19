@@ -10,13 +10,11 @@ import com.github.devmribeiro.clipply.application.dto.request.RegisterCompanyReq
 import com.github.devmribeiro.clipply.application.dto.response.RegisterCompanyResponse;
 import com.github.devmribeiro.clipply.application.exception.ConflictException;
 import com.github.devmribeiro.clipply.application.exception.IllegalArgumentException;
-import com.github.devmribeiro.clipply.application.exception.UnauthorizedException;
 import com.github.devmribeiro.clipply.application.model.Company;
 import com.github.devmribeiro.clipply.application.model.User;
 import com.github.devmribeiro.clipply.application.repository.CompanyRepository;
 import com.github.devmribeiro.clipply.application.repository.UserRepository;
 import com.github.devmribeiro.clipply.application.type.UserRole;
-import com.github.devmribeiro.clipply.security.util.SecurityUtils;
 
 import jakarta.transaction.Transactional;
 

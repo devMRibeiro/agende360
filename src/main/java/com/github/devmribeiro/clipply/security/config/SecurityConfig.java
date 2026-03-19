@@ -15,6 +15,7 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
 
+import com.github.devmribeiro.clipply.application.type.UserRole;
 import com.github.devmribeiro.clipply.security.filter.ApiKeyFilter;
 import com.github.devmribeiro.clipply.security.filter.AuthEntryPointJwt;
 import com.github.devmribeiro.clipply.security.filter.JwtAuthenticationFilter;
@@ -49,7 +50,7 @@ public class SecurityConfig {
 	        .exceptionHandling(exception -> exception.authenticationEntryPoint(unauthorizedHandler))
 	        .authorizeHttpRequests(auth -> auth
 	            .requestMatchers("/api/auth/**").permitAll()
- 	            .requestMatchers("/api/clipply/**").hasRole("SUPPORT")
+ 	            .requestMatchers("/api/clipply/**").hasRole(UserRole.SUPPORT.name())
 	            .anyRequest().authenticated()
 	        )
 	        .authenticationProvider(authenticationProvider())

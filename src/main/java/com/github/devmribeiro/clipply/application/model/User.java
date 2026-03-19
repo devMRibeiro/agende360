@@ -16,9 +16,13 @@ import jakarta.persistence.Table;
 @Table(name = "users",
 	indexes = {
 		@Index(name = "idx_users_email", columnList = "email", unique = true),
-		@Index(name = "idx_users_phone", columnList = "phone"),
+		@Index(name = "idx_users_name", columnList = "name"),
+		@Index(name = "idx_users_phone", columnList = "phone")
 })
 public class User extends BaseEntity {
+
+	@Column(nullable = false, length = 100)
+	private String name;
 
 	@Column(nullable = false, length = 100)
 	private String email;
@@ -41,7 +45,7 @@ public class User extends BaseEntity {
 
 	@Column(name = "password_chaged_at")
 	private LocalDateTime passwordChangedAt;
-	
+
 	public String getEmail() {
 		return email;
 	}
@@ -90,11 +94,19 @@ public class User extends BaseEntity {
 		this.companyId = companyId;
 	}
 
-	public LocalDateTime getPasswordChagendAt() {
+	public LocalDateTime getPasswordChangedAt() {
 		return passwordChangedAt;
 	}
 
-	public void setPasswordChagedAt(LocalDateTime passwordChangedAt) {
+	public void setPasswordChangedAt(LocalDateTime passwordChangedAt) {
 		this.passwordChangedAt = passwordChangedAt;
+	}
+
+	public String getName() {
+		return name;
+	}
+
+	public void setName(String name) {
+		this.name = name;
 	}
 }

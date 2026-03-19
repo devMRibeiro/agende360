@@ -1,5 +1,6 @@
 package com.github.devmribeiro.clipply.application.repository;
 
+import java.util.List;
 import java.util.UUID;
 
 import org.springframework.data.jpa.repository.JpaRepository;
@@ -15,6 +16,10 @@ public interface UserRepository extends JpaRepository<User, UUID> {
 	User findByUserId(UUID id);
 
 	User findByEmail(String email);
-
+	
 	boolean existsByEmail(String email);
+	
+	User findByEmailAndCompanyId(String email, UUID companyId);
+	
+	List<User> findByCompanyId(UUID companyId);
 }

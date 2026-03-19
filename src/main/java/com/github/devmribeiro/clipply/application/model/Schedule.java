@@ -16,13 +16,13 @@ import jakarta.persistence.Table;
 public class Schedule extends BaseEntity {
 
 	@Enumerated(EnumType.STRING)
-	@Column(nullable = false)
+	@Column(name = "day_of_week", nullable = false)
 	private DayOfWeek dayOfWeek;
 	
-	@Column(nullable = false)
+	@Column(name = "start_time", nullable = false)
 	private LocalDateTime startTime;
 	
-	@Column(nullable = false)
+	@Column(name = "end_time", nullable = false)
 	private LocalDateTime endTime;
 	
 	@Column(name = "company_id", nullable = false)

@@ -1,6 +1,7 @@
 package com.github.devmribeiro.clipply.application.model;
 
 import java.time.LocalDateTime;
+import java.util.UUID;
 
 import com.github.devmribeiro.clipply.application.type.DayOfWeek;
 
@@ -8,9 +9,6 @@ import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.EnumType;
 import jakarta.persistence.Enumerated;
-import jakarta.persistence.FetchType;
-import jakarta.persistence.JoinColumn;
-import jakarta.persistence.ManyToOne;
 import jakarta.persistence.Table;
 
 @Entity
@@ -27,9 +25,8 @@ public class Schedule extends BaseEntity {
 	@Column(nullable = false)
 	private LocalDateTime endTime;
 	
-	@ManyToOne(fetch = FetchType.LAZY)
-	@JoinColumn(name = "company_id", nullable = false)
-	private Company company;
+	@Column(name = "company_id", nullable = false)
+	private UUID companyId;
 
 	public DayOfWeek getDayOfWeek() {
 		return dayOfWeek;
@@ -55,11 +52,11 @@ public class Schedule extends BaseEntity {
 		this.endTime = endTime;
 	}
 
-	public Company getCompany() {
-		return company;
+	public UUID getCompany() {
+		return companyId;
 	}
 
-	public void setCompany(Company company) {
-		this.company = company;
+	public void setCompany(UUID companyId) {
+		this.companyId = companyId;
 	}
 }

@@ -1,6 +1,7 @@
 package com.github.devmribeiro.clipply.application.model;
 
 import java.time.LocalDateTime;
+import java.util.UUID;
 
 import com.github.devmribeiro.clipply.application.type.AppointmentStatus;
 
@@ -8,30 +9,23 @@ import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.EnumType;
 import jakarta.persistence.Enumerated;
-import jakarta.persistence.FetchType;
-import jakarta.persistence.JoinColumn;
-import jakarta.persistence.ManyToOne;
 import jakarta.persistence.Table;
 
 @Entity
 @Table(name = "appointment")
 public class Appointment extends BaseEntity {
 
-	@ManyToOne(fetch = FetchType.LAZY)
-	@JoinColumn(name = "company_id")
-	private Company company;
+	@Column(name = "company_id", nullable = false)
+	private UUID companyId;
 
-	@ManyToOne(fetch = FetchType.LAZY)
-	@JoinColumn(name = "customer_id")
-	private Customer customer;
+	@Column(name = "customer_id", nullable = false)
+	private UUID customerId;
 
-	@ManyToOne(fetch = FetchType.LAZY)
-	@JoinColumn(name = "product_id")
-	private Product product;
+	@Column(name = "product_id", nullable = false)
+	private UUID productId;
 
-	@ManyToOne(fetch = FetchType.LAZY)
-	@JoinColumn(name = "user_id")
-	private User user;
+	@Column(name = "users_id", nullable = false)
+	private UUID userId;
 
 	@Column(nullable = false)
 	private LocalDateTime startTime;
@@ -45,36 +39,36 @@ public class Appointment extends BaseEntity {
 	@Column(nullable = false)
 	private AppointmentStatus status;
 
-	public Company getCompany() {
-		return company;
+	public UUID getCompanyId() {
+		return companyId;
 	}
 
-	public void setCompany(Company company) {
-		this.company = company;
+	public void setCompanyId(UUID companyId) {
+		this.companyId = companyId;
 	}
 
-	public Customer getCustomer() {
-		return customer;
+	public UUID getCustomerId() {
+		return customerId;
 	}
 
-	public void setCustomer(Customer customer) {
-		this.customer = customer;
+	public void setCustomerId(UUID customerId) {
+		this.customerId = customerId;
 	}
 
-	public Product getProduct() {
-		return product;
+	public UUID getProductId() {
+		return productId;
 	}
 
-	public void setProduct(Product product) {
-		this.product = product;
+	public void setProductId(UUID productId) {
+		this.productId = productId;
 	}
 
-	public User getUser() {
-		return user;
+	public UUID getUserId() {
+		return userId;
 	}
 
-	public void setUser(User user) {
-		this.user = user;
+	public void setUserId(UUID userId) {
+		this.userId = userId;
 	}
 
 	public LocalDateTime getStartTime() {

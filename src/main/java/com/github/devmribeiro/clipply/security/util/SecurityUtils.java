@@ -5,7 +5,6 @@ import java.util.UUID;
 import org.springframework.security.core.context.SecurityContextHolder;
 
 import com.github.devmribeiro.clipply.application.exception.UnauthorizedException;
-import com.github.devmribeiro.clipply.application.type.UserRole;
 import com.github.devmribeiro.clipply.security.model.UserDetailsImpl;
 
 public class SecurityUtils {

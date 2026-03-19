@@ -23,12 +23,12 @@ public class GlobalExceptionHandler {
 	}
 
 	@ExceptionHandler(UnauthorizedException.class)
-	public ResponseEntity<ErrorResponse> handleUnauthorizedExceptionException(UnauthorizedException ex) {
+	public ResponseEntity<ErrorResponse> handleConflictException(UnauthorizedException ex) {
 		return ResponseEntity
 				.status(HttpStatus.UNAUTHORIZED.value())
 				.body(new ErrorResponse(HttpStatus.UNAUTHORIZED.value(), ex.getMessage()));
 	}
-	
+
 	@ExceptionHandler(Exception.class)
 	public ResponseEntity<ErrorResponse> handleGeneric(Exception ex) {
 		return ResponseEntity

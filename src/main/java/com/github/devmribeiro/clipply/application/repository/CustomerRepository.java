@@ -13,6 +13,9 @@ import java.util.List;
 @Repository
 public interface CustomerRepository extends JpaRepository<Customer, UUID> {
 
+	@Query("SELECT c FROM Customer c WHERE c.id = :id")
+	Customer findByCustomerId(UUID id);
+	
     Customer findByPhone(String phone);
 
     boolean existsByPhone(String phone);

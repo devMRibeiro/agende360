@@ -17,4 +17,6 @@ public interface CompanyRepository extends JpaRepository<Company, UUID> {
 	boolean existsByDocument(String document);
 	
 	boolean existsBySlug(String slug);
+	
+	Company findBySlug(String slug);
 }

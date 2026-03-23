@@ -15,4 +15,6 @@ public interface ScheduleRepository extends JpaRepository<Schedule, UUID> {
     List<Schedule> findByCompanyId(UUID companyId);
 
     boolean existsByCompanyIdAndDayOfWeek(UUID companyId, DayOfWeek dayOfWeek);
+
+    Schedule findByCompanyIdAndDayOfWeek(UUID companyId, DayOfWeek dayOfWeek);
 }

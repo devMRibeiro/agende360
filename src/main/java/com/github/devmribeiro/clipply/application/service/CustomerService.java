@@ -48,4 +48,8 @@ public class CustomerService {
         newCustomer.setPhone(phone);
         return customerRepository.save(newCustomer);
     }
+
+    public Customer findById(UUID customerId) {
+        return customerRepository.findByCustomerId(customerId);
+    }
 }

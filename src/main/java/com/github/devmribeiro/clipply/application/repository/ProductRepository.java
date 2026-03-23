@@ -12,7 +12,7 @@ import com.github.devmribeiro.clipply.application.model.Product;
 @Repository
 public interface ProductRepository extends JpaRepository<Product, UUID> {
 
-	@Query("SELECT p FROM product p WHERE p.id = :id")
+	@Query("SELECT p FROM Product p WHERE p.id = :id")
 	Product findByProductId(UUID id);
 	
     boolean existsByNameAndCompanyId(String name, UUID companyId);

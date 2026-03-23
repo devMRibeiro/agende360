@@ -49,10 +49,11 @@ public class SecurityConfig {
 	        .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
 	        .exceptionHandling(exception -> exception.authenticationEntryPoint(unauthorizedHandler))
 	        .authorizeHttpRequests(auth -> auth
-	            .requestMatchers("/api/auth/**").permitAll()
- 	            .requestMatchers("/api/clipply/**").hasRole(UserRole.SUPPORT.name())
-	            .anyRequest().authenticated()
-	        )
+	        	    .requestMatchers("/api/auth/**").permitAll()
+	        	    .requestMatchers("/api/public/**").permitAll()
+	        	    .requestMatchers("/api/clipply/**").hasRole(UserRole.SUPPORT.name())
+	        	    .anyRequest().authenticated()
+        	)
 	        .authenticationProvider(authenticationProvider())
 	        .addFilterBefore(authenticationFilter, UsernamePasswordAuthenticationFilter.class)
 	        .addFilterBefore(apiKeyFilter, authenticationFilter.getClass());

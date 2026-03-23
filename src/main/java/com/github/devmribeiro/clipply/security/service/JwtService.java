@@ -36,6 +36,7 @@ public class JwtService {
 	public String generateToken(User user) {
         return Jwts.builder()
         		.subject(user.getEmail())
+        		.claim("userId", user.getId())
                 .claim("role", user.getRole().name())
                 .claim("companyId", user.getCompanyId())
                 .claim("active", user.getActive())
@@ -67,6 +68,10 @@ public class JwtService {
 
 	private SecretKey getKey() {
 	    return Keys.hmacShaKeyFor(Decoders.BASE64.decode(secretKey));
+	}
+	
+	public UUID extractUserId(String token) {
+		return UUID.fromString(parseClaims(token).get("userId", String.class));
 	}
 
 	public String extractEmail(String token) {

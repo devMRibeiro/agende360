@@ -19,13 +19,15 @@ public class UserDetailsImpl implements UserDetails {
 	 */
 	private static final long serialVersionUID = 1L;
 
+	private UUID id;
 	private UUID companyId;
 	private String email;
 	private String password;
 	private UserRole role;
 	private Collection<? extends GrantedAuthority> authorities;
 	
-	public UserDetailsImpl(String email, String password, UUID companyId, UserRole role) {
+	public UserDetailsImpl(UUID id, String email, String password, UUID companyId, UserRole role) {
+		this.id = id;
         this.email = email;
         this.password = password;
         this.companyId = companyId;
@@ -62,5 +64,9 @@ public class UserDetailsImpl implements UserDetails {
 
 	public UserRole getRole() {
 		return role;
+	}
+
+	public UUID getId() {
+		return id;
 	}
 }

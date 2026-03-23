@@ -1,0 +1,8 @@
+ALTER TABLE customer
+ADD COLUMN name VARCHAR(100) NOT NULL DEFAULT 'unknown',
+ALTER COLUMN email DROP NOT NULL,
+DROP CONSTRAINT uq_customer_email,
+DROP INDEX idx_customer_email;
+
+ALTER TABLE customer
+ALTER COLUMN name DROP DEFAULT;

@@ -1,7 +1,5 @@
 package com.github.devmribeiro.clipply.application.model;
 
-import java.util.UUID;
-
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.Index;
@@ -9,41 +7,40 @@ import jakarta.persistence.Table;
 
 @Entity
 @Table(name = "customer", indexes = {
-		@Index(name = "idx_customer_phone", columnList = "phone"),
-		@Index(name = "idx_customer_email", columnList = "email", unique = true)
+    @Index(name = "idx_customer_phone", columnList = "phone", unique = true)
 })
 public class Customer extends BaseEntity {
 
-	@Column(nullable = false)
-	private String phone;
+    @Column(nullable = false, length = 100)
+    private String name;
 
-	@Column(nullable = false, unique = true)
-	private String email;
-	
-	@Column(name = "company_id", nullable = false)
-	private UUID companyId;
+    @Column(nullable = false, unique = true)
+    private String phone;
 
-	public String getPhone() {
-		return phone;
-	}
+    @Column
+    private String email;
 
-	public void setPhone(String phone) {
-		this.phone = phone;
-	}
+    public String getName() {
+        return name;
+    }
 
-	public String getEmail() {
-		return email;
-	}
+    public void setName(String name) {
+        this.name = name;
+    }
 
-	public void setEmail(String email) {
-		this.email = email;
-	}
+    public String getPhone() {
+        return phone;
+    }
 
-	public UUID getCompanyId() {
-		return companyId;
-	}
+    public void setPhone(String phone) {
+        this.phone = phone;
+    }
 
-	public void setCompanyId(UUID companyId) {
-		this.companyId = companyId;
-	}
+    public String getEmail() {
+        return email;
+    }
+
+    public void setEmail(String email) {
+        this.email = email;
+    }
 }

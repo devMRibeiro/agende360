@@ -2,6 +2,7 @@ package com.github.devmribeiro.clipply.security.util;
 
 import java.util.UUID;
 
+import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 
 import com.github.devmribeiro.clipply.application.exception.UnauthorizedException;
@@ -10,7 +11,7 @@ import com.github.devmribeiro.clipply.security.model.UserDetailsImpl;
 public class SecurityUtils {
 
     private static UserDetailsImpl getPrincipal() {
-        var authentication = SecurityContextHolder.getContext().getAuthentication();
+    	Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
 
         if (authentication == null)
             throw new UnauthorizedException("User not authenticated");

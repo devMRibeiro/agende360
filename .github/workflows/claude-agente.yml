@@ -14,11 +14,13 @@ jobs:
     steps:
       - name: Checkout do repositório
         uses: actions/checkout@v4
+        with:
+          token: ${{ secrets.PAT_TOKEN }}    # <-- usa o PAT no checkout
 
       - uses: anthropics/claude-code-action@v1
         with:
           anthropic_api_key: ${{ secrets.ANTHROPIC_API_KEY }}
-          github_token: ${{ secrets.GITHUB_TOKEN }}    # <-- ADICIONADO
+          github_token: ${{ secrets.PAT_TOKEN }}    # <-- PAT no lugar do GITHUB_TOKEN
           prompt: |
             Analise o projeto Java neste repositório.
             Foco em: testes unitários com JUnit, Javadoc e tratamento de exceções e remoção de código duplicado.

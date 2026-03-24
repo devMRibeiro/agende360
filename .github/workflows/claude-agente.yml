@@ -2,36 +2,48 @@ name: Claude Agente - Every hour
 
 on:
   schedule:
-    - cron: '0 6-15 * * 1-5'   # Das 9h às 18h (UTC), segunda a sexta
-  workflow_dispatch:             # Permite disparar manualmente também
+    - cron: '0 6-15 * * 1-5'   # Das 9h às 18h (UTC-3), segunda a sexta
+  workflow_dispatch:
 
 jobs:
   claude-agent:
     runs-on: ubuntu-latest
-    # Source - ons of the GITHUB_TOKEN to allow deployment to GitHub Pages
-  permissions:
-    contents: read
-    pages: write
-    id-token: write
+    permissions:
+      contents: write
 
     steps:
       - name: Checkout do repositório
         uses: actions/checkout@v4
         with:
-          token: ${{ secrets.PAT_TOKEN }}    # <-- usa o PAT no checkout
+          token: ${{ secrets.PAT_TOKEN }}
 
-      - uses: anthropics/claude-code-action@v1
+      - name: Instalar Node.js
+        uses: actions/setup-node@v4
         with:
-          anthropic_api_key: ${{ secrets.ANTHROPIC_API_KEY }}
-          github_token: ${{ secrets.PAT_TOKEN }}    # <-- PAT no lugar do GITHUB_TOKEN
-          prompt: |
-            Analise o projeto Java neste repositório.
-            Foco em: testes unitários com JUnit, Javadoc e tratamento de exceções e remoção de código duplicado.
-            
+          node-version: '20'
+
+      - name: Instalar Claude Code
+        run: npm install -g @anthropic-ai/claude-code
+
+      - name: Configurar Git
+        run: |
+          git config user.name "Claude Agent"
+          git config user.email "claude-agent@noreply.github.com"
+
+      - name: Rodar Claude Code
+        env:
+          ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
+        run: |
+          claude --dangerously-skip-permissions -p "
+            Analise o projeto Java neste repositório e implemente melhorias incrementais.
+            Foco em: testes unitários com JUnit, Javadoc, refatoração de métodos longos,
+            tratamento de exceções e remoção de código duplicado.
+
             REGRAS IMPORTANTES:
             - Use somente Java tradicional (sem lambdas, streams ou funções anônimas)
             - Não quebre funcionalidades existentes
-            - Ao finalizar, faça commit das mudanças com mensagem descritiva no padrão:
-              "feat: <descrição breve do que foi feito>"
-          claude_args: |
-            --max-turns 20
+            - Ao finalizar, execute: git add -A && git commit -m 'feat: melhorias incrementais pelo agente Claude'
+          "
+
+      - name: Push das mudanças
+        run: git push

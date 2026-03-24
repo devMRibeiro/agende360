@@ -4,18 +4,22 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
+import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.github.devmribeiro.clipply.application.dto.request.LoginRequest;
+import com.github.devmribeiro.clipply.application.dto.response.UserMeResponse;
 import com.github.devmribeiro.clipply.application.model.User;
 import com.github.devmribeiro.clipply.application.repository.UserRepository;
 import com.github.devmribeiro.clipply.security.model.RefreshToken;
+import com.github.devmribeiro.clipply.security.model.UserDetailsImpl;
 import com.github.devmribeiro.clipply.security.service.CookieService;
 import com.github.devmribeiro.clipply.security.service.JwtService;
 import com.github.devmribeiro.clipply.security.service.RefreshTokenService;
+import com.github.devmribeiro.clipply.security.util.SecurityUtils;
 
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
@@ -99,5 +103,15 @@ public class AuthController {
 
 		return ResponseEntity.ok().build();
 	}
-	
+
+	@GetMapping("/me")
+	public ResponseEntity<UserMeResponse> me() {
+		UserDetailsImpl user = SecurityUtils.getAuthenticatedUser();
+		return ResponseEntity.ok(new UserMeResponse(
+				user.getId(),
+				user.getUsername(),
+				user.getCompanyId(),
+				user.getRole())
+		);
+	}
 }

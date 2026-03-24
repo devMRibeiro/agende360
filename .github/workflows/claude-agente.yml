@@ -39,7 +39,6 @@ jobs:
             CONTEUDO="$CONTEUDO\n\n=== $arquivo ===\n$(cat "$arquivo")"
           done < /tmp/arquivos.txt
 
-          # Chama a API do Gemini
           PROMPT="Você é um agente de melhoria de código Java.
           Analise os arquivos abaixo e retorne APENAS os arquivos modificados no formato:
           
@@ -58,17 +57,26 @@ jobs:
             -H "Content-Type: application/json" \
             -d "{\"contents\":[{\"parts\":[{\"text\":$(echo "$PROMPT" | python3 -c 'import json,sys; print(json.dumps(sys.stdin.read()))')}]}]}")
 
+          # Mostra resposta completa para debug
+          echo "=== RESPOSTA DA API ==="
+          echo "$RESPOSTA"
+          echo "======================"
+
           echo "$RESPOSTA" | python3 -c "
           import json, sys, os, re
 
           data = json.load(sys.stdin)
+
+          # Verifica erro da API
+          if 'error' in data:
+              print('ERRO DA API:', data['error'])
+              sys.exit(1)
+
           texto = data['candidates'][0]['content']['parts'][0]['text']
 
-          # Salva resposta para debug
           with open('/tmp/resposta.txt', 'w') as f:
               f.write(texto)
 
-          # Extrai e salva arquivos modificados
           blocos = re.split(r'=== (.+?) ===', texto)
           i = 1
           while i < len(blocos) - 1:

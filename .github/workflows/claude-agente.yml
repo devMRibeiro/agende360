@@ -1,0 +1,31 @@
+name: Claude Agente - Every hour
+
+on:
+  schedule:
+    - cron: '0 6-15 * * 1-5'   # Das 9h às 18h (UTC), segunda a sexta
+  workflow_dispatch:             # Permite disparar manualmente também
+
+jobs:
+  claude-agent:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write            # Necessário para fazer commit
+
+    steps:
+      - name: Checkout do repositório
+        uses: actions/checkout@v4
+
+      - uses: anthropics/claude-code-action@v1
+        with:
+          anthropic_api_key: ${{ secrets.ANTHROPIC_API_KEY }}
+          prompt: |
+            Analise o projeto Java neste repositório.
+            Foco em: testes unitários com JUnit, Javadoc e tratamento de exceções e remoção de código duplicado.
+            
+            REGRAS IMPORTANTES:
+            - Use somente Java tradicional (sem lambdas, streams ou funções anônimas)
+            - Não quebre funcionalidades existentes
+            - Ao finalizar, faça commit das mudanças com mensagem descritiva no padrão:
+              "feat: <descrição breve do que foi feito>"
+          claude_args: |
+            --max-turns 20

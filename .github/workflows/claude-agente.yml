@@ -10,6 +10,8 @@ jobs:
     runs-on: ubuntu-latest
     permissions:
       contents: write            # Necessário para fazer commit
+      id-token: write        # <-- ADICIONADO: necessário para o OIDC token
+      actions: read 
 
     steps:
       - name: Checkout do repositório

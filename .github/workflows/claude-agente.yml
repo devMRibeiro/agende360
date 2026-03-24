@@ -2,11 +2,11 @@ name: Claude Agente - Every hour
 
 on:
   schedule:
-    - cron: '0 6-15 * * 1-5'   # Das 9h às 18h (UTC-3), segunda a sexta
+    - cron: '0 6-15 * * 1-5'
   workflow_dispatch:
 
 jobs:
-  claude-agent:
+  gemini-agent:
     runs-on: ubuntu-latest
     permissions:
       contents: write
@@ -17,33 +17,79 @@ jobs:
         with:
           token: ${{ secrets.PAT_TOKEN }}
 
-      - name: Instalar Node.js
-        uses: actions/setup-node@v4
-        with:
-          node-version: '20'
-
-      - name: Instalar Claude Code
-        run: npm install -g @anthropic-ai/claude-code
-
       - name: Configurar Git
         run: |
-          git config user.name "Claude Agent"
-          git config user.email "claude-agent@noreply.github.com"
+          git config user.name "Gemini Agent"
+          git config user.email "gemini-agent@noreply.github.com"
 
-      - name: Rodar Claude Code
-        env:
-          ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
+      - name: Listar arquivos do projeto
+        id: listar
         run: |
-          claude --dangerously-skip-permissions -p "
-            Analise o projeto Java neste repositório e implemente melhorias incrementais.
-            Foco em: testes unitários com JUnit, Javadoc, refatoração de métodos longos,
-            tratamento de exceções e remoção de código duplicado.
+          find . -name "*.java" | head -30 > /tmp/arquivos.txt
+          echo "Arquivos Java encontrados:"
+          cat /tmp/arquivos.txt
 
-            REGRAS IMPORTANTES:
-            - Use somente Java tradicional (sem lambdas, streams ou funções anônimas)
-            - Não quebre funcionalidades existentes
-            - Ao finalizar, execute: git add -A && git commit -m 'feat: melhorias incrementais pelo agente Claude'
+      - name: Rodar agente Gemini
+        env:
+          GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
+        run: |
+          # Coleta conteúdo dos arquivos Java
+          CONTEUDO=""
+          while IFS= read -r arquivo; do
+            CONTEUDO="$CONTEUDO\n\n=== $arquivo ===\n$(cat "$arquivo")"
+          done < /tmp/arquivos.txt
+
+          # Chama a API do Gemini
+          PROMPT="Você é um agente de melhoria de código Java.
+          Analise os arquivos abaixo e retorne APENAS os arquivos modificados no formato:
+          
+          === caminho/do/arquivo.java ===
+          <conteúdo completo do arquivo>
+          
+          Foco em: testes JUnit, Javadoc, refatoração de métodos longos, tratamento de exceções.
+          REGRAS: Use somente Java tradicional, sem lambdas, streams ou funções anônimas.
+          Não quebre funcionalidades existentes. Modifique no máximo 2 arquivos por execução.
+          
+          ARQUIVOS DO PROJETO:
+          $CONTEUDO"
+
+          RESPOSTA=$(curl -s \
+            "https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=$GEMINI_API_KEY" \
+            -H "Content-Type: application/json" \
+            -d "{\"contents\":[{\"parts\":[{\"text\":$(echo "$PROMPT" | python3 -c 'import json,sys; print(json.dumps(sys.stdin.read()))')}]}]}")
+
+          echo "$RESPOSTA" | python3 -c "
+          import json, sys, os, re
+
+          data = json.load(sys.stdin)
+          texto = data['candidates'][0]['content']['parts'][0]['text']
+
+          # Salva resposta para debug
+          with open('/tmp/resposta.txt', 'w') as f:
+              f.write(texto)
+
+          # Extrai e salva arquivos modificados
+          blocos = re.split(r'=== (.+?) ===', texto)
+          i = 1
+          while i < len(blocos) - 1:
+              caminho = blocos[i].strip()
+              conteudo = blocos[i+1].strip()
+              conteudo = re.sub(r'^(\`\`\`java|\`\`\`)', '', conteudo).strip()
+              conteudo = re.sub(r'\`\`\`$', '', conteudo).strip()
+              if caminho and conteudo and caminho.endswith('.java'):
+                  os.makedirs(os.path.dirname(caminho) if os.path.dirname(caminho) else '.', exist_ok=True)
+                  with open(caminho, 'w') as f:
+                      f.write(conteudo)
+                  print(f'Arquivo atualizado: {caminho}')
+              i += 2
           "
 
-      - name: Push das mudanças
-        run: git push
+      - name: Commit e push das mudanças
+        run: |
+          git add -A
+          if git diff --cached --quiet; then
+            echo "Nenhuma mudança para commitar"
+          else
+            git commit -m "feat: melhorias incrementais pelo agente Gemini"
+            git push
+          fi

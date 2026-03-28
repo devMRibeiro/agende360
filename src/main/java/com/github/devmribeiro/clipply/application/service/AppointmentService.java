@@ -83,26 +83,34 @@ public class AppointmentService {
             throw new IllegalArgumentException("Product is not active");
 
         DayOfWeek dayOfWeek = DayOfWeek.valueOf(date.getDayOfWeek().name());
-        Schedule schedule = scheduleRepository.findByCompanyIdAndDayOfWeek(company.getId(), dayOfWeek);
+        List<Schedule> schedules = scheduleRepository.findByCompanyIdAndDayOfWeek(company.getId(), dayOfWeek);
 
-        if (schedule == null)
+        if (schedules.isEmpty())
             throw new IllegalArgumentException("Company does not work on this day");
 
-        List<LocalTime> slots = new ArrayList<LocalTime>();
-        LocalTime current = schedule.getStartTime();
-        LocalTime end = schedule.getEndTime();
         int duration = product.getDurationMinutes();
+        List<LocalTime> slots = new ArrayList<LocalTime>();
 
-        while (!current.plusMinutes(duration).isAfter(end)) {
-            LocalDateTime slotStart = LocalDateTime.of(date, current);
-            LocalDateTime slotEnd = slotStart.plusMinutes(duration);
+        // Itera sobre cada intervalo do dia (ex: 08-12 e 13-18)
+        int i = 0;
+        while (i < schedules.size()) {
+            Schedule schedule = schedules.get(i);
+            LocalTime current = schedule.getStartTime();
+            LocalTime end = schedule.getEndTime();
 
-            List<Appointment> conflicts = appointmentRepository.findConflicts(professionalId, slotStart, slotEnd);
+            while (!current.plusMinutes(duration).isAfter(end)) {
+                LocalDateTime slotStart = LocalDateTime.of(date, current);
+                LocalDateTime slotEnd = slotStart.plusMinutes(duration);
 
-            if (conflicts.isEmpty())
-                slots.add(current);
+                List<Appointment> conflicts = appointmentRepository.findConflicts(professionalId, slotStart, slotEnd);
 
-            current = current.plusMinutes(duration);
+                if (conflicts.isEmpty())
+                    slots.add(current);
+
+                current = current.plusMinutes(duration);
+            }
+
+            i++;
         }
 
         return new AvailableSlotsResponse(slots);
@@ -133,16 +141,28 @@ public class AppointmentService {
             throw new IllegalArgumentException("Professional not found");
 
         DayOfWeek dayOfWeek = DayOfWeek.valueOf(request.date().getDayOfWeek().name());
-        Schedule schedule = scheduleRepository.findByCompanyIdAndDayOfWeek(company.getId(), dayOfWeek);
+        List<Schedule> schedules = scheduleRepository.findByCompanyIdAndDayOfWeek(company.getId(), dayOfWeek);
 
-        if (schedule == null)
+        if (schedules.isEmpty())
             throw new IllegalArgumentException("Company does not work on this day");
 
         LocalDateTime startTime = LocalDateTime.of(request.date(), request.startTime());
         LocalDateTime endTime = startTime.plusMinutes(product.getDurationMinutes());
 
-        if (request.startTime().isBefore(schedule.getStartTime()) ||
-                endTime.toLocalTime().isAfter(schedule.getEndTime()))
+        // Verifica se o slot está dentro de algum dos intervalos do dia
+        boolean withinSchedule = false;
+        int i = 0;
+        while (i < schedules.size()) {
+            Schedule schedule = schedules.get(i);
+            if (!request.startTime().isBefore(schedule.getStartTime()) &&
+                    !endTime.toLocalTime().isAfter(schedule.getEndTime())) {
+                withinSchedule = true;
+                break;
+            }
+            i++;
+        }
+
+        if (!withinSchedule)
             throw new IllegalArgumentException("Time slot is outside company working hours");
 
         List<Appointment> conflicts = appointmentRepository.findConflicts(
@@ -268,7 +288,9 @@ public class AppointmentService {
     private List<AppointmentResponse> toResponseList(List<Appointment> appointments) {
         List<AppointmentResponse> result = new ArrayList<AppointmentResponse>(appointments.size());
 
-        for (Appointment appointment : appointments) {
+        int i = 0;
+        while (i < appointments.size()) {
+            Appointment appointment = appointments.get(i);
             User professional = userRepository.findById(appointment.getUserId()).orElse(null);
             Customer customer = customerService.findById(appointment.getCustomerId());
             Product product = productRepository.findById(appointment.getProductId()).orElse(null);
@@ -283,6 +305,8 @@ public class AppointmentService {
                 appointment.getEndTime(),
                 appointment.getStatus()
             ));
+
+            i++;
         }
 
         return result;

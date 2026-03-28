@@ -43,11 +43,19 @@ public class ScheduleService {
     public void create(ScheduleRequest request) {
         UUID companyId = SecurityUtils.getCompanyId();
 
-        if (scheduleRepository.existsByCompanyIdAndDayOfWeek(companyId, request.dayOfWeek()))
-            throw new ConflictException("There is already a schedule for this day of week");
-
         if (request.startTime().isAfter(request.endTime()) || request.startTime().equals(request.endTime()))
             throw new IllegalArgumentException("startTime must be before endTime");
+
+        // UUID.randomUUID() como excludeId garante que nenhum registro existente seja excluído da busca
+        List<Schedule> overlapping = scheduleRepository.findOverlapping(
+                companyId,
+                request.dayOfWeek(),
+                request.startTime(),
+                request.endTime(),
+                UUID.randomUUID());
+
+        if (!overlapping.isEmpty())
+            throw new ConflictException("This time interval overlaps with an existing schedule for this day");
 
         Schedule schedule = new Schedule();
         schedule.setDayOfWeek(request.dayOfWeek());
@@ -70,6 +78,17 @@ public class ScheduleService {
 
         if (request.startTime().isAfter(request.endTime()) || request.startTime().equals(request.endTime()))
             throw new IllegalArgumentException("startTime must be before endTime");
+
+        // Exclui o próprio registro da verificação de sobreposição
+        List<Schedule> overlapping = scheduleRepository.findOverlapping(
+                companyId,
+                request.dayOfWeek(),
+                request.startTime(),
+                request.endTime(),
+                scheduleId);
+
+        if (!overlapping.isEmpty())
+            throw new ConflictException("This time interval overlaps with an existing schedule for this day");
 
         schedule.setDayOfWeek(request.dayOfWeek());
         schedule.setStartTime(request.startTime());

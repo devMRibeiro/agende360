@@ -11,7 +11,7 @@
 	<groupId>com.github.devmribeiro</groupId>
 	<artifactId>clipply</artifactId>
 	<version>0.0.1-SNAPSHOT</version>
-	<packaging>war</packaging>
+	<packaging>jar</packaging>
 	<name>clipply</name>
 	<description>Backend service for scheduling sytem</description>
 	<url/>
@@ -122,6 +122,7 @@
 	</dependencies>
 
 	<build>
+		<finalName>clipply</finalName>
 		<plugins>
 			<plugin>
 				<groupId>org.springframework.boot</groupId>

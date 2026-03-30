@@ -32,12 +32,6 @@ pom.xml.versionsBackup
 pom.xml.next
 release.properties
 
-# Maven wrapper
-.mvn/wrapper/maven-wrapper.jar
-.mvn/wrapper/maven-wrapper.properties
-.mvn/wrapper/maven-wrapper.js
-.mvn/wrapper/maven-wrapper
-
 ### IntelliJ IDEA ###
 .idea/
 *.iml

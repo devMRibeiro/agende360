@@ -8,6 +8,7 @@ public record UserMeResponse(
 		UUID id,
 		String email,
 		UUID companyid,
-		UserRole role
+		UserRole role,
+		boolean isFirstAccess
 	) {
 }

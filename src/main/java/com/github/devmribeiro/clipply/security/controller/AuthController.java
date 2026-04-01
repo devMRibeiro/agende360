@@ -120,7 +120,8 @@ public class AuthController {
 				user.getId(),
 				user.getUsername(),
 				user.getCompanyId(),
-				user.getRole())
+				user.getRole(),
+				user.isFirstAccess())
 		);
 	}
 	

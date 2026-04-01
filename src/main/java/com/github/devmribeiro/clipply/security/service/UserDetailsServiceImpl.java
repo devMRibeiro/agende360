@@ -30,7 +30,8 @@ public class UserDetailsServiceImpl implements UserDetailsService {
 				user.getEmail(),
 				user.getPassword(),
 				user.getCompanyId(),
-				user.getRole()
+				user.getRole(),
+				user.getPasswordChangedAt()
 		);
 	}
 }

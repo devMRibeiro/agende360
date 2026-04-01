@@ -10,14 +10,19 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
+import com.github.devmribeiro.clipply.application.dto.request.ForgotPasswordRequest;
 import com.github.devmribeiro.clipply.application.dto.request.LoginRequest;
+import com.github.devmribeiro.clipply.application.dto.request.NewPasswordRequest;
 import com.github.devmribeiro.clipply.application.dto.response.UserMeResponse;
 import com.github.devmribeiro.clipply.application.model.User;
+import com.github.devmribeiro.clipply.application.repository.PasswordResetTokenRepository;
 import com.github.devmribeiro.clipply.application.repository.UserRepository;
+import com.github.devmribeiro.clipply.application.util.BaseUrlUtils;
 import com.github.devmribeiro.clipply.security.model.RefreshToken;
 import com.github.devmribeiro.clipply.security.model.UserDetailsImpl;
 import com.github.devmribeiro.clipply.security.service.CookieService;
 import com.github.devmribeiro.clipply.security.service.JwtService;
+import com.github.devmribeiro.clipply.security.service.PasswordResetTokenService;
 import com.github.devmribeiro.clipply.security.service.RefreshTokenService;
 import com.github.devmribeiro.clipply.security.util.SecurityUtils;
 
@@ -34,18 +39,22 @@ public class AuthController {
 	private final RefreshTokenService refreshTokenService;
 	private final CookieService cookieService;
 	private final String REFRESH_COOKIE_TOKEN_NAME = "refresh_token";
-
+	private final PasswordResetTokenService resetTokenService;
+	
 	public AuthController(
 			AuthenticationManager authenticationManager,
 			JwtService jwtService,
 			UserRepository userRepository,
 			RefreshTokenService refreshTokenService,
-			CookieService cookieService) {
+			CookieService cookieService,
+			PasswordResetTokenRepository resetTokenRepository,
+			PasswordResetTokenService resetTokenService) {
 		this.authenticationManager = authenticationManager;
 		this.jwtService = jwtService;
 		this.userRepository = userRepository;
 		this.refreshTokenService = refreshTokenService;
 		this.cookieService = cookieService;
+		this.resetTokenService = resetTokenService;
 	}
 	
 	@PostMapping("/login")
@@ -113,5 +122,17 @@ public class AuthController {
 				user.getCompanyId(),
 				user.getRole())
 		);
+	}
+	
+	@PostMapping("/forgot-password")
+	public ResponseEntity<Void> forgotPassword(@RequestBody ForgotPasswordRequest request) {
+		resetTokenService.save(request.email());
+		return ResponseEntity.ok().build();
+	}
+	
+	@PostMapping(BaseUrlUtils.RESET_PASSWORD_BY_TOKEN)
+	public ResponseEntity<Void> resetPassFromToken(@RequestBody NewPasswordRequest request) {
+	    resetTokenService.resetPasswordFromToken(request.token(), request.newPassword());
+	    return ResponseEntity.ok().build();
 	}
 }

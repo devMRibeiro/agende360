@@ -1,0 +1,1 @@
+ALTER TABLE users RENAME password_chaged_at TO password_changed_at; 

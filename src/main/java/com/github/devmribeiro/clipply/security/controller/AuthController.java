@@ -19,7 +19,6 @@ import com.github.devmribeiro.clipply.application.repository.PasswordResetTokenR
 import com.github.devmribeiro.clipply.application.repository.UserRepository;
 import com.github.devmribeiro.clipply.application.util.BaseUrlUtils;
 import com.github.devmribeiro.clipply.security.model.RefreshToken;
-import com.github.devmribeiro.clipply.security.model.UserDetailsImpl;
 import com.github.devmribeiro.clipply.security.service.CookieService;
 import com.github.devmribeiro.clipply.security.service.JwtService;
 import com.github.devmribeiro.clipply.security.service.PasswordResetTokenService;
@@ -115,13 +114,13 @@ public class AuthController {
 
 	@GetMapping("/me")
 	public ResponseEntity<UserMeResponse> me() {
-		UserDetailsImpl user = SecurityUtils.getAuthenticatedUser();
+		User user = userRepository.findByUserId(SecurityUtils.getAuthenticatedUser().getId());
 		return ResponseEntity.ok(new UserMeResponse(
 				user.getId(),
-				user.getUsername(),
+				user.getEmail(),
 				user.getCompanyId(),
 				user.getRole(),
-				user.isFirstAccess())
+				user.getPasswordChangedAt() == null)
 		);
 	}
 	

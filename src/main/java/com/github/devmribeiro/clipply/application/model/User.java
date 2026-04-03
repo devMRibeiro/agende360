@@ -43,7 +43,7 @@ public class User extends BaseEntity {
 	@Column(name = "company_id")
 	private UUID companyId;
 
-	@Column(name = "password_chaged_at")
+	@Column(name = "password_changed_at")
 	private LocalDateTime passwordChangedAt;
 
 	public String getEmail() {

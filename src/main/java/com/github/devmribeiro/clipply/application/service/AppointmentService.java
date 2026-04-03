@@ -190,12 +190,11 @@ public class AppointmentService {
             String cancelUrl = baseUrl + "/api/public/appointment/cancel/" + token;
             String formattedTime = startTime.format(DateTimeFormatter.ofPattern("dd/MM/yyyy HH:mm"));
 
-            emailService.sendAppointmentConfirmation(
+            emailService.sendAppointmentConfirmedEmail(
                 customer.getEmail(),
                 customer.getName(),
-                company.getName(),
                 product.getName(),
-                professional.getName(),
+                formattedTime,
                 formattedTime,
                 cancelUrl
             );

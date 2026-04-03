@@ -1,69 +1,75 @@
 package com.github.devmribeiro.clipply.application.service;
 
-import org.springframework.beans.factory.annotation.Value;
-import org.springframework.http.HttpEntity;
-import org.springframework.http.HttpHeaders;
-import org.springframework.http.MediaType;
-import org.springframework.stereotype.Service;
-import org.springframework.web.client.RestTemplate;
+import java.time.LocalDateTime;
+import java.util.UUID;
 
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.stereotype.Service;
+
+import com.github.devmribeiro.clipply.application.util.EmailTemplateBuilder;
+
+import software.amazon.awssdk.services.ses.SesClient;
+import software.amazon.awssdk.services.ses.model.Body;
+import software.amazon.awssdk.services.ses.model.Content;
+import software.amazon.awssdk.services.ses.model.Destination;
+import software.amazon.awssdk.services.ses.model.Message;
+import software.amazon.awssdk.services.ses.model.MessageRejectedException;
+import software.amazon.awssdk.services.ses.model.SendEmailRequest;
+import software.amazon.awssdk.services.ses.model.SendEmailResponse;
+import software.amazon.awssdk.services.ses.model.SesException;
 
 @Service
 public class EmailService {
 
-    @Value("${resend.api.key}")
-    private String resendApiKey;
+    private static final Logger log = LoggerFactory.getLogger(EmailService.class);
 
-    @Value("${resend.from.email}")
-    private String fromEmail;
+    private final SesClient sesClient;
 
-    private final RestTemplate restTemplate;
-
-    public EmailService() {
-        this.restTemplate = new RestTemplate();
+    public EmailService(SesClient sesClient) {
+        this.sesClient = sesClient;
     }
 
-    public void sendAppointmentConfirmation(
-    		String toEmail,
-    		String customerName,
-            String companyName,
-            String productName,
-            String professionalName,
-            String startTime,
-            String cancelUrl) {
+    public void sendEmail(String to, String subject, String htmlBody) {
 
-        String subject = "Agendamento confirmado - " + companyName;
+        String requestId = UUID.randomUUID().toString();
 
-        String html =
-            "<h2>Olá, " + customerName + "!</h2>" +
-            "<p>Seu agendamento foi confirmado com sucesso.</p>" +
-            "<ul>" +
-            "<li><strong>Empresa:</strong> " + companyName + "</li>" +
-            "<li><strong>Serviço:</strong> " + productName + "</li>" +
-            "<li><strong>Profissional:</strong> " + professionalName + "</li>" +
-            "<li><strong>Horário:</strong> " + startTime + "</li>" +
-            "</ul>" +
-            "<p>Caso precise cancelar, <a href=\"" + cancelUrl + "\">clique aqui</a>.</p>";
+        log.info("[EMAIL][START] requestId={} to={} subject={} time={}", requestId, to, subject, LocalDateTime.now());
 
-        send(toEmail, subject, html);
+        try {
+
+            SendEmailRequest request = SendEmailRequest.builder()
+                    .source("no-reply@seudominio.com")
+                    .destination(Destination.builder()
+                            .toAddresses(to)
+                            .build())
+                    .message(Message.builder()
+                            .subject(Content.builder().data(subject).build())
+                            .body(Body.builder()
+                                    .html(Content.builder().data(htmlBody).build())
+                                    .build())
+                            .build())
+                    .build();
+
+            SendEmailResponse response = sesClient.sendEmail(request);
+
+            log.info("[EMAIL][SUCCESS] requestId={} messageId={} statusCode={}", requestId, response.messageId(), response.sdkHttpResponse().statusCode());
+
+        } catch (MessageRejectedException e) {
+            log.error("[EMAIL][REJECTED] requestId={} reason={} to={}", requestId, e.awsErrorDetails().errorMessage(), to, e);
+            throw new RuntimeException("Email rejected by SES");
+
+        } catch (SesException e) {
+            log.error("[EMAIL][SES_ERROR] requestId={} awsMessage={} statusCode={}", requestId, e.awsErrorDetails().errorMessage(), e.statusCode(), e);
+            throw new RuntimeException("AWS SES error");
+
+        } catch (Exception e) {
+            log.error("[EMAIL][GENERIC_ERROR] requestId={} message={}", requestId, e.getMessage(), e);
+            throw new RuntimeException("Unexpected error sending email");
+        }
     }
-
-    private void send(String to, String subject, String html) {
-        HttpHeaders headers = new HttpHeaders();
-        headers.setContentType(MediaType.APPLICATION_JSON);
-        headers.setBearerAuth(resendApiKey);
-
-        Map<String, Object> body = new HashMap<String, Object>();
-        body.put("from", fromEmail);
-        body.put("to", List.of(to));
-        body.put("subject", subject);
-        body.put("html", html);
-
-        HttpEntity<Map<String, Object>> entity = new HttpEntity<Map<String, Object>>(body, headers);
-
-        restTemplate.postForEntity("https://api.resend.com/emails", entity, String.class);
+    
+    public void sendAppointmentConfirmedEmail(String to, String clientName, String serviceName, String date, String time, String professionalName) {
+        sendEmail(to, "Agendamento confirmado", EmailTemplateBuilder.appointmentConfirmed(clientName, serviceName, date, professionalName));
     }
 }

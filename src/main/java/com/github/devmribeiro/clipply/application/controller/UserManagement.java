@@ -44,7 +44,7 @@ public class UserManagement {
 	}
 	
 	@PatchMapping("/change-password")
-	@PreAuthorize("hasRole('ADMIN')")
+	@PreAuthorize("hasAnyRole('ADMIN', 'PROFESSIONAL')")
 	public ResponseEntity<Void> changePassword(@RequestBody @Valid ChangePasswordRequest request) {
 		userService.changePassword(request, SecurityUtils.getAuthenticatedUser().getUsername());
 		return ResponseEntity.ok().build();

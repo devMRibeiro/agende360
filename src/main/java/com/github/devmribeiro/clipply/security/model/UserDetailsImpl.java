@@ -1,6 +1,5 @@
 package com.github.devmribeiro.clipply.security.model;
 
-import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
@@ -26,15 +25,13 @@ public class UserDetailsImpl implements UserDetails {
 	private final String password;
 	private final UserRole role;
 	private final Collection<? extends GrantedAuthority> authorities;
-	private final LocalDateTime passwordChangedAt;
 	
-	public UserDetailsImpl(UUID id, String email, String password, UUID companyId, UserRole role, LocalDateTime passwordChangedAt) {
+	public UserDetailsImpl(UUID id, String email, String password, UUID companyId, UserRole role) {
 		this.id = id;
         this.email = email;
         this.password = password;
         this.companyId = companyId;
         this.role = role;
-        this.passwordChangedAt = passwordChangedAt;
 
         List<SimpleGrantedAuthority> auths = new ArrayList<SimpleGrantedAuthority>();
         auths.add(new SimpleGrantedAuthority("ROLE_" + role.name()));
@@ -71,9 +68,5 @@ public class UserDetailsImpl implements UserDetails {
 
 	public UUID getId() {
 		return id;
-	}
-	
-	public boolean isFirstAccess() {
-		return passwordChangedAt == null;
 	}
 }

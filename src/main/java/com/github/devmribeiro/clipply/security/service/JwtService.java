@@ -1,6 +1,5 @@
 package com.github.devmribeiro.clipply.security.service;
 
-import java.time.LocalDateTime;
 import java.util.Date;
 import java.util.UUID;
 
@@ -41,7 +40,6 @@ public class JwtService {
                 .claim("role", user.getRole().name())
                 .claim("companyId", user.getCompanyId())
                 .claim("active", user.getActive())
-                .claim("passwordChangedAt", user.getPasswordChangedAt())
                 .issuedAt(new Date())
                 .expiration(new Date(System.currentTimeMillis() + expirationToken))
                 .signWith(getKey())
@@ -92,10 +90,6 @@ public class JwtService {
 	        return null;
 
 	    return UUID.fromString(companyId);
-	}
-	
-	public LocalDateTime extractPasswordChangedAt(String token) {
-		return parseClaims(token).get("passwordChangedAt", LocalDateTime.class);
 	}
 	
 	public boolean isTokenValid(String token, UserDetails userDetails) {

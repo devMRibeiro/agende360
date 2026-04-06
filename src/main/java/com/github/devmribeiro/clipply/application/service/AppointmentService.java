@@ -185,6 +185,8 @@ public class AppointmentService {
         appointment.setStatus(AppointmentStatus.CONFIRMED);
         appointment.setToken(token);
         appointmentRepository.save(appointment);
+        
+        customer.setEmail("mribeiro.dev@hotmail.com");
 
         if (customer.getEmail() != null) {
             String cancelUrl = baseUrl + "/api/public/appointment/cancel/" + token;
@@ -196,6 +198,7 @@ public class AppointmentService {
                 product.getName(),
                 formattedTime,
                 formattedTime,
+                professional.getName(),
                 cancelUrl
             );
         }

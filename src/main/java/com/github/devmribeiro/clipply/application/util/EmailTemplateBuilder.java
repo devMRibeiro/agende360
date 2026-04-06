@@ -2,7 +2,7 @@ package com.github.devmribeiro.clipply.application.util;
 
 public class EmailTemplateBuilder {
 
-    public static String appointmentConfirmed(String clientName, String serviceName, String date, String professionalName) {
+    public static String appointmentConfirmed(String clientName, String serviceName, String date, String professionalName, String cancelLink) {
 
         return "<!DOCTYPE html>" +
                 "<html>" +
@@ -29,7 +29,7 @@ public class EmailTemplateBuilder {
                 "<div class='info'><strong>Profissional:</strong> " + professionalName + "</div>" +
                 "<div class='info'><strong>Data:</strong> " + date + "</div>" +
 
-                "<p>Se precisar reagendar, acesse o sistema.</p>" +
+				"<p>Se precisar cancelar, clique <a href=" + cancelLink + ">aqui</a>.</p>" +
 
                 "<div class='footer'>" +
                 "Este é um email automático, não responda." +

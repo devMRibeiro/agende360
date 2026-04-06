@@ -39,7 +39,7 @@ public class EmailService {
         try {
 
             SendEmailRequest request = SendEmailRequest.builder()
-                    .source("no-reply@seudominio.com")
+                    .source("mail@corestacks.com.br")
                     .destination(Destination.builder()
                             .toAddresses(to)
                             .build())
@@ -69,7 +69,7 @@ public class EmailService {
         }
     }
     
-    public void sendAppointmentConfirmedEmail(String to, String clientName, String serviceName, String date, String time, String professionalName) {
-        sendEmail(to, "Agendamento confirmado", EmailTemplateBuilder.appointmentConfirmed(clientName, serviceName, date, professionalName));
+    public void sendAppointmentConfirmedEmail(String to, String clientName, String serviceName, String date, String time, String professionalName, String cancelLink) {
+        sendEmail(to, "Agendamento confirmado", EmailTemplateBuilder.appointmentConfirmed(clientName, serviceName, date, professionalName, cancelLink));
     }
 }

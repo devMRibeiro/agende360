@@ -6,6 +6,7 @@ import java.time.LocalTime;
 import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 import java.util.UUID;
 
 import org.springframework.beans.factory.annotation.Value;
@@ -28,6 +29,7 @@ import com.github.devmribeiro.clipply.application.repository.ScheduleRepository;
 import com.github.devmribeiro.clipply.application.repository.UserRepository;
 import com.github.devmribeiro.clipply.application.type.AppointmentStatus;
 import com.github.devmribeiro.clipply.application.type.DayOfWeek;
+import com.github.devmribeiro.clipply.messaging.service.EmailService;
 import com.github.devmribeiro.clipply.security.model.UserDetailsImpl;
 import com.github.devmribeiro.clipply.security.util.SecurityUtils;
 
@@ -185,22 +187,24 @@ public class AppointmentService {
         appointment.setStatus(AppointmentStatus.CONFIRMED);
         appointment.setToken(token);
         appointmentRepository.save(appointment);
-        
+
         customer.setEmail("mribeiro.dev@hotmail.com");
 
         if (customer.getEmail() != null) {
             String cancelUrl = baseUrl + "/api/public/appointment/cancel/" + token;
             String formattedTime = startTime.format(DateTimeFormatter.ofPattern("dd/MM/yyyy HH:mm"));
 
-            emailService.sendAppointmentConfirmedEmail(
-                customer.getEmail(),
-                customer.getName(),
-                product.getName(),
-                formattedTime,
-                formattedTime,
-                professional.getName(),
-                cancelUrl
-            );
+            Map<String, String> vars = Map.of(
+            	    "COMPANY_NAME", company.getName(),
+            	    "CLIENT_NAME", customer.getName(),
+            	    "SERVICE_NAME", product.getName(),
+            	    "PROFESSIONAL_NAME", professional.getName(),
+            	    "APPOINTMENT_DATE", formattedTime,
+            	    "CANCEL_LINK", cancelUrl,
+            	    "YEAR", String.valueOf(LocalDateTime.now().getYear())
+        	);
+
+            emailService.sendAppointmentConfirmedEmail(customer.getEmail(), vars);
         }
     }
 

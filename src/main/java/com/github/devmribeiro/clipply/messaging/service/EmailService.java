@@ -1,0 +1,59 @@
+package com.github.devmribeiro.clipply.messaging.service;
+
+import java.time.LocalDateTime;
+import java.util.Map;
+import java.util.UUID;
+
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.stereotype.Service;
+
+import com.github.devmribeiro.clipply.messaging.engine.EmailTemplateEngine;
+import com.resend.Resend;
+import com.resend.core.exception.ResendException;
+import com.resend.services.emails.model.CreateEmailOptions;
+import com.resend.services.emails.model.CreateEmailResponse;
+
+@Service
+public class EmailService {
+	
+	private static final Logger LOGGER = LoggerFactory.getLogger(EmailService.class);
+	
+	@Value("${resend.api-key}")
+    private String resendApiKey;
+	
+	@Value("${resend.from.no-reply}")
+	private String from;
+	
+	private static final String PATH_EMAIL_TEMPLATE_BASE = "emails/template";
+	private static final String PATH_EMAIL_TEMPLATE_APPOINTMENT_CONFIRMED = PATH_EMAIL_TEMPLATE_BASE + "/appointment-confirmed.html";
+
+	private final Resend resend = new Resend(resendApiKey);
+	
+	private void send(String path, String to, String subject, Map<String, String> vars) {
+		
+		UUID requestId = UUID.randomUUID();
+		
+		LOGGER.info("[EMAIL][START] requestId={} to={} subject={} time={}", requestId, to, subject, LocalDateTime.now());
+
+		CreateEmailOptions params = CreateEmailOptions.builder()
+                .from(from)
+                .to(to)
+                .subject(subject)
+                .html(EmailTemplateEngine.render(path, vars))
+                .build();
+		
+		try {
+			CreateEmailResponse response = resend.emails().send(params);
+			LOGGER.info("[EMAIL][SUCCESS] requestId={} messageId={}", requestId, response.getId());
+		} catch (ResendException e) {
+			LOGGER.error("[EMAIL][REJECTED] requestId={} statusCode={} motivo={} to={}", requestId, e.getStatusCode(), e.getCause() ,to);
+			throw new RuntimeException("Error sending email", e);
+		}
+	}
+
+	public void sendAppointmentConfirmedEmail(String to, Map<String, String> vars) {
+		send(PATH_EMAIL_TEMPLATE_APPOINTMENT_CONFIRMED, to, "Agendamento Confirmado✅", vars);
+	}
+}

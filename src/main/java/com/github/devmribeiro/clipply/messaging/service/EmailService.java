@@ -20,8 +20,11 @@ public class EmailService {
 	
 	private static final Logger LOGGER = LoggerFactory.getLogger(EmailService.class);
 	
-	@Value("${resend.api-key}")
-    private String resendApiKey;
+	private final Resend resend;
+	
+	public EmailService(Resend resend) {
+		this.resend = resend;
+	}
 	
 	@Value("${resend.from.no-reply}")
 	private String from;
@@ -29,7 +32,6 @@ public class EmailService {
 	private static final String PATH_EMAIL_TEMPLATE_BASE = "emails/template";
 	private static final String PATH_EMAIL_TEMPLATE_APPOINTMENT_CONFIRMED = PATH_EMAIL_TEMPLATE_BASE + "/appointment-confirmed.html";
 
-	private final Resend resend = new Resend(resendApiKey);
 	
 	private void send(String path, String to, String subject, Map<String, String> vars) {
 		
@@ -48,7 +50,7 @@ public class EmailService {
 			CreateEmailResponse response = resend.emails().send(params);
 			LOGGER.info("[EMAIL][SUCCESS] requestId={} messageId={}", requestId, response.getId());
 		} catch (ResendException e) {
-			LOGGER.error("[EMAIL][REJECTED] requestId={} statusCode={} motivo={} to={}", requestId, e.getStatusCode(), e.getCause() ,to);
+			LOGGER.error("[EMAIL][REJECTED] requestId={} statusCode={} motivo={} to={}", requestId, e.getStatusCode(), e.getCause() , to, e);
 			throw new RuntimeException("Error sending email", e);
 		}
 	}

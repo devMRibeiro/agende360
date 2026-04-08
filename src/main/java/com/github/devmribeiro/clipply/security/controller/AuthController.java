@@ -17,13 +17,13 @@ import com.github.devmribeiro.clipply.application.dto.response.UserMeResponse;
 import com.github.devmribeiro.clipply.application.model.User;
 import com.github.devmribeiro.clipply.application.repository.PasswordResetTokenRepository;
 import com.github.devmribeiro.clipply.application.repository.UserRepository;
+import com.github.devmribeiro.clipply.application.service.UserService;
 import com.github.devmribeiro.clipply.application.util.BaseUrlUtils;
 import com.github.devmribeiro.clipply.security.model.RefreshToken;
 import com.github.devmribeiro.clipply.security.service.CookieService;
 import com.github.devmribeiro.clipply.security.service.JwtService;
 import com.github.devmribeiro.clipply.security.service.PasswordResetTokenService;
 import com.github.devmribeiro.clipply.security.service.RefreshTokenService;
-import com.github.devmribeiro.clipply.security.util.SecurityUtils;
 
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
@@ -39,6 +39,7 @@ public class AuthController {
 	private final CookieService cookieService;
 	private final String REFRESH_COOKIE_TOKEN_NAME = "refresh_token";
 	private final PasswordResetTokenService resetTokenService;
+	private final UserService userService;
 	
 	public AuthController(
 			AuthenticationManager authenticationManager,
@@ -47,13 +48,15 @@ public class AuthController {
 			RefreshTokenService refreshTokenService,
 			CookieService cookieService,
 			PasswordResetTokenRepository resetTokenRepository,
-			PasswordResetTokenService resetTokenService) {
+			PasswordResetTokenService resetTokenService,
+			UserService userService) {
 		this.authenticationManager = authenticationManager;
 		this.jwtService = jwtService;
 		this.userRepository = userRepository;
 		this.refreshTokenService = refreshTokenService;
 		this.cookieService = cookieService;
 		this.resetTokenService = resetTokenService;
+		this.userService = userService;
 	}
 	
 	@PostMapping("/login")
@@ -114,14 +117,7 @@ public class AuthController {
 
 	@GetMapping("/me")
 	public ResponseEntity<UserMeResponse> me() {
-		User user = userRepository.findByUserId(SecurityUtils.getAuthenticatedUser().getId());
-		return ResponseEntity.ok(new UserMeResponse(
-				user.getId(),
-				user.getEmail(),
-				user.getCompanyId(),
-				user.getRole(),
-				user.getPasswordChangedAt() == null)
-		);
+		return ResponseEntity.ok(userService.me());
 	}
 	
 	@PostMapping("/forgot-password")

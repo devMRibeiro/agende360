@@ -10,10 +10,13 @@ import org.springframework.stereotype.Service;
 
 import com.github.devmribeiro.clipply.application.dto.request.ChangePasswordRequest;
 import com.github.devmribeiro.clipply.application.dto.request.RegisterProfessionalRequest;
+import com.github.devmribeiro.clipply.application.dto.response.UserMeResponse;
 import com.github.devmribeiro.clipply.application.dto.response.UserResponse;
 import com.github.devmribeiro.clipply.application.exception.ConflictException;
 import com.github.devmribeiro.clipply.application.exception.IllegalArgumentException;
+import com.github.devmribeiro.clipply.application.model.Company;
 import com.github.devmribeiro.clipply.application.model.User;
+import com.github.devmribeiro.clipply.application.repository.CompanyRepository;
 import com.github.devmribeiro.clipply.application.repository.UserRepository;
 import com.github.devmribeiro.clipply.security.repository.RefreshTokenRepository;
 import com.github.devmribeiro.clipply.security.util.PasswordUtil;
@@ -27,14 +30,17 @@ public class UserService {
 	private final UserRepository userRepository;
 	private final PasswordEncoder encoder;
 	private final RefreshTokenRepository refreshTokenRepository;
+	private final CompanyRepository companyRepository;
 	
 	public UserService(
 			UserRepository userRepository,
 			PasswordEncoder encoder,
-			RefreshTokenRepository refreshTokenRepository) {
+			RefreshTokenRepository refreshTokenRepository,
+			CompanyRepository companyRepository) {
 		this.userRepository = userRepository;
 		this.encoder = encoder;
 		this.refreshTokenRepository = refreshTokenRepository;
+		this.companyRepository = companyRepository;
 	}
 
 	public List<UserResponse> list(UUID companyId) {
@@ -82,5 +88,19 @@ public class UserService {
 		user.setPasswordChangedAt(LocalDateTime.now());
 		userRepository.save(user);
 		refreshTokenRepository.deleteByUser(user);
+	}
+	
+	@Transactional
+	public UserMeResponse me() {
+		User user = userRepository.findByUserId(SecurityUtils.getAuthenticatedUser().getId());
+		Company company = companyRepository.findByCompanyId(user.getCompanyId());
+		return new UserMeResponse(
+				user.getId(),
+				user.getEmail(),
+				user.getCompanyId(),
+				company.getName(),
+				user.getRole(),
+				user.getPasswordChangedAt() == null
+		);
 	}
 }

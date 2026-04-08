@@ -1,11 +1,13 @@
 package com.github.devmribeiro.clipply.application.repository;
 
+import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.UUID;
 
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
+import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
 import com.github.devmribeiro.clipply.application.model.Appointment;
@@ -32,4 +34,9 @@ public interface AppointmentRepository extends JpaRepository<Appointment, UUID> 
     List<Appointment> findConflicts(UUID userId, LocalDateTime startTime, LocalDateTime endTime);
 
     Appointment findByToken(String token);
+    
+    @Query("SELECT a FROM Appointment a WHERE a.userId = :professionalId " +
+    	   "AND CAST(a.startTime AS date) = :date " + 
+    	   "AND a.status != 'CANCELLED'")
+	List<Appointment> findByProfessionalIdAndDate(@Param("professionalId") UUID professionalId, @Param("date") LocalDate date);
 }

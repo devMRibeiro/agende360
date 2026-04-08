@@ -31,9 +31,13 @@ public class EmailService {
 	
 	private static final String PATH_EMAIL_TEMPLATE_BASE = "emails/template";
 	private static final String PATH_EMAIL_TEMPLATE_APPOINTMENT_CONFIRMED = PATH_EMAIL_TEMPLATE_BASE + "/appointment-confirmed.html";
-
 	
 	private void send(String path, String to, String subject, Map<String, String> vars) {
+		
+		if (to == null || to.isBlank()) {
+			LOGGER.error("[EMAIL][ERROR] The recipient was not informed");
+			return;
+		}
 		
 		UUID requestId = UUID.randomUUID();
 		

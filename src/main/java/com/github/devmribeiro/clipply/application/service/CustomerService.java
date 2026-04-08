@@ -37,7 +37,7 @@ public class CustomerService {
     }
 
     // Usado internamente pelo AppointmentService
-    public Customer findOrCreate(String name, String phone) {
+    public Customer findOrCreate(String name, String phone, String email) {
         Customer customer = customerRepository.findByPhone(phone);
 
         if (customer != null)
@@ -46,6 +46,7 @@ public class CustomerService {
         Customer newCustomer = new Customer();
         newCustomer.setName(name);
         newCustomer.setPhone(phone);
+        newCustomer.setEmail(email);
         return customerRepository.save(newCustomer);
     }
 

@@ -76,7 +76,7 @@ public class AppointmentService {
         if (!company.getActive())
             throw new IllegalArgumentException("Company is not active");
 
-        Product product = productRepository.findById(productId).orElse(null);
+        Product product = productRepository.findByProductId(productId);
 
         if (product == null || !product.getCompany().equals(company.getId()))
             throw new IllegalArgumentException("Product not found");
@@ -93,31 +93,45 @@ public class AppointmentService {
         int duration = product.getDurationMinutes();
         List<LocalTime> slots = new ArrayList<LocalTime>();
 
-        // Itera sobre cada intervalo do dia (ex: 08-12 e 13-18)
-        int i = 0;
-        while (i < schedules.size()) {
-            Schedule schedule = schedules.get(i);
-            LocalTime current = schedule.getStartTime();
-            LocalTime end = schedule.getEndTime();
+        List<Appointment> appointments = appointmentRepository.findByProfessionalIdAndDate(professionalId, date);
 
-            while (!current.plusMinutes(duration).isAfter(end)) {
-                LocalDateTime slotStart = LocalDateTime.of(date, current);
-                LocalDateTime slotEnd = slotStart.plusMinutes(duration);
+    	int i = 0;
+    	while (i < schedules.size()) {
+    	    Schedule schedule = schedules.get(i);
+    	    LocalTime current = schedule.getStartTime();
+    	    LocalTime end = schedule.getEndTime();
 
-                List<Appointment> conflicts = appointmentRepository.findConflicts(professionalId, slotStart, slotEnd);
+    	    while (!current.plusMinutes(duration).isAfter(end)) {
+    	        LocalDateTime slotStart = LocalDateTime.of(date, current);
+    	        LocalDateTime slotEnd = slotStart.plusMinutes(duration);
 
-                if (conflicts.isEmpty())
-                    slots.add(current);
+    	        if (!hasConflict(appointments, slotStart, slotEnd))
+    	            slots.add(current);
 
-                current = current.plusMinutes(duration);
-            }
+    	        current = current.plusMinutes(duration);
+    	    }
 
-            i++;
-        }
+    	    i++;
+    	}
 
         return new AvailableSlotsResponse(slots);
     }
 
+	private boolean hasConflict(List<Appointment> appointments, LocalDateTime slotStart, LocalDateTime slotEnd) {
+		int i = 0;
+		while (i < appointments.size()) {
+			Appointment a = appointments.get(i);
+
+			boolean overlaps = slotStart.isBefore(a.getEndTime()) && slotEnd.isAfter(a.getStartTime());
+
+			if (overlaps)
+				return true;
+
+			i++;
+		}
+		return false;
+	}
+    
     @Transactional
     public void create(String slug, AppointmentRequest request) {
 
@@ -173,10 +187,11 @@ public class AppointmentService {
         if (!conflicts.isEmpty())
             throw new IllegalArgumentException("This time slot is already taken");
 
-        Customer customer = customerService.findOrCreate(request.customerName(), request.customerPhone());
+        Customer customer = customerService.findOrCreate(request.customerName(), request.customerPhone(), request.customerEmail());
 
         String token = UUID.randomUUID().toString();
 
+        // Create appointment
         Appointment appointment = new Appointment();
         appointment.setCompanyId(company.getId());
         appointment.setCustomerId(customer.getId());
@@ -188,26 +203,27 @@ public class AppointmentService {
         appointment.setToken(token);
         appointmentRepository.save(appointment);
 
-        customer.setEmail("mribeiro.dev@hotmail.com");
-
-        if (customer.getEmail() != null) {
-            String cancelUrl = baseUrl + "/api/public/appointment/cancel/" + token;
-            String formattedTime = startTime.format(DateTimeFormatter.ofPattern("dd/MM/yyyy HH:mm"));
-
-            Map<String, String> vars = Map.of(
-            	    "COMPANY_NAME", company.getName(),
-            	    "CLIENT_NAME", customer.getName(),
-            	    "SERVICE_NAME", product.getName(),
-            	    "PROFESSIONAL_NAME", professional.getName(),
-            	    "APPOINTMENT_DATE", formattedTime,
-            	    "CANCEL_LINK", cancelUrl,
-            	    "YEAR", String.valueOf(LocalDateTime.now().getYear())
-        	);
-
-            emailService.sendAppointmentConfirmedEmail(customer.getEmail(), vars);
-        }
+        // Send email confirmation
+        sendEmailConfirmation(customer, company, product, professional, startTime, token);
     }
+    
+    private void sendEmailConfirmation(Customer customer, Company company, Product product, User professional, LocalDateTime startTime, String token) {
+        String cancelUrl = baseUrl + "/api/public/appointment/cancel/" + token;
+        String formattedTime = startTime.format(DateTimeFormatter.ofPattern("dd/MM/yyyy HH:mm"));
 
+        Map<String, String> vars = Map.of(
+        	    "COMPANY_NAME", company.getName(),
+        	    "CLIENT_NAME", customer.getName(),
+        	    "SERVICE_NAME", product.getName(),
+        	    "PROFESSIONAL_NAME", professional.getName(),
+        	    "APPOINTMENT_DATE", formattedTime,
+        	    "CANCEL_LINK", cancelUrl,
+        	    "YEAR", String.valueOf(LocalDateTime.now().getYear())
+    	);
+
+        emailService.sendAppointmentConfirmedEmail(customer.getEmail(), vars);
+    }
+    
     public void cancel(String token) {
         Appointment appointment = appointmentRepository.findByToken(token);
 

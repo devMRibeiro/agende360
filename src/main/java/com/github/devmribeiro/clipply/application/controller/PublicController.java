@@ -17,6 +17,7 @@ import org.springframework.web.bind.annotation.RestController;
 
 import com.github.devmribeiro.clipply.application.dto.request.AppointmentRequest;
 import com.github.devmribeiro.clipply.application.dto.response.AvailableSlotsResponse;
+import com.github.devmribeiro.clipply.application.dto.response.CompanyPublicResponse;
 import com.github.devmribeiro.clipply.application.dto.response.ProductResponse;
 import com.github.devmribeiro.clipply.application.dto.response.ProfessionalResponse;
 import com.github.devmribeiro.clipply.application.exception.IllegalArgumentException;
@@ -51,6 +52,16 @@ public class PublicController {
         this.userRepository = userRepository;
     }
 
+    @GetMapping("/{slug}")
+    public ResponseEntity<CompanyPublicResponse> getCompanyInfo(@PathVariable String slug) {
+        Company company = companyRepository.findBySlug(slug);
+ 
+        if (company == null || !company.getActive())
+            throw new IllegalArgumentException("Company not found");
+ 
+        return ResponseEntity.ok(new CompanyPublicResponse(company.getName(), company.getSlug()));
+    }
+    
     // ── Listagem pública de serviços da empresa ───────────
     @GetMapping("/{slug}/products")
     public ResponseEntity<List<ProductResponse>> listProducts(@PathVariable String slug) {

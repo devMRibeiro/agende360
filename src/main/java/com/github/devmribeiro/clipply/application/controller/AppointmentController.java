@@ -50,16 +50,24 @@ public class AppointmentController {
     }
 
     @PatchMapping("/{appointmentId}/complete")
-    @PreAuthorize("hasRole('ADMIN')")
+    @PreAuthorize("hasAnyRole('ADMIN', 'PROFESSIONAL')")
     public ResponseEntity<Void> complete(@PathVariable UUID appointmentId) {
         appointmentService.complete(appointmentId);
         return ResponseEntity.ok().build();
     }
 
     @PatchMapping("/{appointmentId}/no-show")
-    @PreAuthorize("hasRole('ADMIN')")
+    @PreAuthorize("hasAnyRole('ADMIN', 'PROFESSIONAL')")
     public ResponseEntity<Void> noShow(@PathVariable UUID appointmentId) {
         appointmentService.noShow(appointmentId);
+        return ResponseEntity.ok().build();
+    }
+
+    // Cancelamento autenticado pelo admin ou profissional
+    @PatchMapping("/{appointmentId}/cancel")
+    @PreAuthorize("hasAnyRole('ADMIN', 'PROFESSIONAL')")
+    public ResponseEntity<Void> cancel(@PathVariable UUID appointmentId) {
+        appointmentService.cancelByAdmin(appointmentId);
         return ResponseEntity.ok().build();
     }
 }

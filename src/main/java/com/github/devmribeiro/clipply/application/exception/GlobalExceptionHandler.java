@@ -2,6 +2,7 @@ package com.github.devmribeiro.clipply.application.exception;
 
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
 
@@ -24,6 +25,13 @@ public class GlobalExceptionHandler {
 
 	@ExceptionHandler(UnauthorizedException.class)
 	public ResponseEntity<ErrorResponse> handleConflictException(UnauthorizedException ex) {
+		return ResponseEntity
+				.status(HttpStatus.UNAUTHORIZED.value())
+				.body(new ErrorResponse(HttpStatus.UNAUTHORIZED.value(), ex.getMessage()));
+	}
+
+	@ExceptionHandler(BadCredentialsException.class)
+	public ResponseEntity<ErrorResponse> handleConflictException(BadCredentialsException ex) {
 		return ResponseEntity
 				.status(HttpStatus.UNAUTHORIZED.value())
 				.body(new ErrorResponse(HttpStatus.UNAUTHORIZED.value(), ex.getMessage()));

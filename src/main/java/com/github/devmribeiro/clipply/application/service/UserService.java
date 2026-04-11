@@ -93,12 +93,24 @@ public class UserService {
 	@Transactional
 	public UserMeResponse me() {
 		User user = userRepository.findByUserId(SecurityUtils.getAuthenticatedUser().getId());
-		Company company = companyRepository.findByCompanyId(user.getCompanyId());
+		
+		String companyName = null;
+		String companySlug = null;
+		
+		if (user.getCompanyId() != null) {
+			Company company = companyRepository.findByCompanyId(user.getCompanyId());
+			if (company != null) {
+				companyName = company.getName();
+				companySlug = company.getSlug();
+			}
+		}
+		
 		return new UserMeResponse(
 				user.getId(),
 				user.getEmail(),
 				user.getCompanyId(),
-				company.getName(),
+				companyName,
+				companySlug,
 				user.getRole(),
 				user.getPasswordChangedAt() == null
 		);

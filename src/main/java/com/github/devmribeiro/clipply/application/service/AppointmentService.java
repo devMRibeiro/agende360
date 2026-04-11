@@ -76,7 +76,7 @@ public class AppointmentService {
         if (!company.getActive())
             throw new IllegalArgumentException("Company is not active");
 
-        Product product = productRepository.findByProductId(productId);
+        Product product = productRepository.findById(productId).orElse(null);
 
         if (product == null || !product.getCompany().equals(company.getId()))
             throw new IllegalArgumentException("Product not found");
@@ -93,45 +93,30 @@ public class AppointmentService {
         int duration = product.getDurationMinutes();
         List<LocalTime> slots = new ArrayList<LocalTime>();
 
-        List<Appointment> appointments = appointmentRepository.findByProfessionalIdAndDate(professionalId, date);
+        int i = 0;
+        while (i < schedules.size()) {
+            Schedule schedule = schedules.get(i);
+            LocalTime current = schedule.getStartTime();
+            LocalTime end = schedule.getEndTime();
 
-    	int i = 0;
-    	while (i < schedules.size()) {
-    	    Schedule schedule = schedules.get(i);
-    	    LocalTime current = schedule.getStartTime();
-    	    LocalTime end = schedule.getEndTime();
+            while (!current.plusMinutes(duration).isAfter(end)) {
+                LocalDateTime slotStart = LocalDateTime.of(date, current);
+                LocalDateTime slotEnd = slotStart.plusMinutes(duration);
 
-    	    while (!current.plusMinutes(duration).isAfter(end)) {
-    	        LocalDateTime slotStart = LocalDateTime.of(date, current);
-    	        LocalDateTime slotEnd = slotStart.plusMinutes(duration);
+                List<Appointment> conflicts = appointmentRepository.findConflicts(professionalId, slotStart, slotEnd);
 
-    	        if (!hasConflict(appointments, slotStart, slotEnd))
-    	            slots.add(current);
+                if (conflicts.isEmpty())
+                    slots.add(current);
 
-    	        current = current.plusMinutes(duration);
-    	    }
+                current = current.plusMinutes(duration);
+            }
 
-    	    i++;
-    	}
+            i++;
+        }
 
         return new AvailableSlotsResponse(slots);
     }
 
-	private boolean hasConflict(List<Appointment> appointments, LocalDateTime slotStart, LocalDateTime slotEnd) {
-		int i = 0;
-		while (i < appointments.size()) {
-			Appointment a = appointments.get(i);
-
-			boolean overlaps = slotStart.isBefore(a.getEndTime()) && slotEnd.isAfter(a.getStartTime());
-
-			if (overlaps)
-				return true;
-
-			i++;
-		}
-		return false;
-	}
-    
     @Transactional
     public void create(String slug, AppointmentRequest request) {
 
@@ -165,7 +150,6 @@ public class AppointmentService {
         LocalDateTime startTime = LocalDateTime.of(request.date(), request.startTime());
         LocalDateTime endTime = startTime.plusMinutes(product.getDurationMinutes());
 
-        // Verifica se o slot está dentro de algum dos intervalos do dia
         boolean withinSchedule = false;
         int i = 0;
         while (i < schedules.size()) {
@@ -187,11 +171,11 @@ public class AppointmentService {
         if (!conflicts.isEmpty())
             throw new IllegalArgumentException("This time slot is already taken");
 
-        Customer customer = customerService.findOrCreate(request.customerName(), request.customerPhone(), request.customerEmail());
+        Customer customer = customerService.findOrCreate(
+                request.customerName(), request.customerPhone(), request.customerEmail());
 
         String token = UUID.randomUUID().toString();
 
-        // Create appointment
         Appointment appointment = new Appointment();
         appointment.setCompanyId(company.getId());
         appointment.setCustomerId(customer.getId());
@@ -203,31 +187,51 @@ public class AppointmentService {
         appointment.setToken(token);
         appointmentRepository.save(appointment);
 
-        // Send email confirmation
         sendEmailConfirmation(customer, company, product, professional, startTime, token);
     }
-    
-    private void sendEmailConfirmation(Customer customer, Company company, Product product, User professional, LocalDateTime startTime, String token) {
+
+    private void sendEmailConfirmation(Customer customer, Company company, Product product,
+            User professional, LocalDateTime startTime, String token) {
         String cancelUrl = baseUrl + "/api/public/appointment/cancel/" + token;
         String formattedTime = startTime.format(DateTimeFormatter.ofPattern("dd/MM/yyyy HH:mm"));
 
         Map<String, String> vars = Map.of(
-        	    "COMPANY_NAME", company.getName(),
-        	    "CLIENT_NAME", customer.getName(),
-        	    "SERVICE_NAME", product.getName(),
-        	    "PROFESSIONAL_NAME", professional.getName(),
-        	    "APPOINTMENT_DATE", formattedTime,
-        	    "CANCEL_LINK", cancelUrl,
-        	    "YEAR", String.valueOf(LocalDateTime.now().getYear())
-    	);
+                "COMPANY_NAME", company.getName(),
+                "CLIENT_NAME", customer.getName(),
+                "SERVICE_NAME", product.getName(),
+                "PROFESSIONAL_NAME", professional.getName(),
+                "APPOINTMENT_DATE", formattedTime,
+                "CANCEL_LINK", cancelUrl,
+                "YEAR", String.valueOf(LocalDateTime.now().getYear())
+        );
 
         emailService.sendAppointmentConfirmedEmail(customer.getEmail(), vars);
     }
-    
+
+    // Cancelamento via token público (pelo cliente através do link no e-mail)
     public void cancel(String token) {
         Appointment appointment = appointmentRepository.findByToken(token);
 
         if (appointment == null)
+            throw new IllegalArgumentException("Appointment not found");
+
+        if (appointment.getStatus() == AppointmentStatus.CANCELLED)
+            throw new IllegalArgumentException("Appointment is already cancelled");
+
+        if (appointment.getStatus() == AppointmentStatus.COMPLETED)
+            throw new IllegalArgumentException("Completed appointments cannot be cancelled");
+
+        appointment.setStatus(AppointmentStatus.CANCELLED);
+        appointmentRepository.save(appointment);
+    }
+
+    // Cancelamento autenticado (pelo admin ou profissional no painel)
+    public void cancelByAdmin(UUID appointmentId) {
+        UUID companyId = SecurityUtils.getCompanyId();
+
+        Appointment appointment = appointmentRepository.findById(appointmentId).orElse(null);
+
+        if (appointment == null || !appointment.getCompanyId().equals(companyId))
             throw new IllegalArgumentException("Appointment not found");
 
         if (appointment.getStatus() == AppointmentStatus.CANCELLED)
@@ -303,7 +307,8 @@ public class AppointmentService {
         LocalDate today = LocalDate.now();
         LocalDateTime startOfDay = today.atStartOfDay();
         LocalDateTime endOfDay = today.atTime(LocalTime.MAX);
-        List<Appointment> appointments = appointmentRepository.findActiveByUserIdAndDate(user.getId(), startOfDay, endOfDay);
+        List<Appointment> appointments = appointmentRepository.findActiveByUserIdAndDate(
+                user.getId(), startOfDay, endOfDay);
         return toResponseList(appointments);
     }
 
@@ -318,14 +323,14 @@ public class AppointmentService {
             Product product = productRepository.findById(appointment.getProductId()).orElse(null);
 
             result.add(new AppointmentResponse(
-                appointment.getId(),
-                customer != null ? customer.getName() : "",
-                customer != null ? customer.getPhone() : "",
-                product != null ? product.getName() : "",
-                professional != null ? professional.getName() : "",
-                appointment.getStartTime(),
-                appointment.getEndTime(),
-                appointment.getStatus()
+                    appointment.getId(),
+                    customer != null ? customer.getName() : "",
+                    customer != null ? customer.getPhone() : "",
+                    product != null ? product.getName() : "",
+                    professional != null ? professional.getName() : "",
+                    appointment.getStartTime(),
+                    appointment.getEndTime(),
+                    appointment.getStatus()
             ));
 
             i++;

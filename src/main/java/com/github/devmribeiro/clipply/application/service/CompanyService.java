@@ -78,7 +78,7 @@ public class CompanyService {
                 "COMPANY_DOCUMENT", company.getDocument(),
                 "USER_NAME", user.getName(),
                 "USER_EMAIL", user.getEmail(),
-                "TEMP_PASSWORD", user.getPassword(),
+                "TEMP_PASSWORD", defaultPassword,
                 "YEAR", String.valueOf(LocalDateTime.now().getYear())
         );
 

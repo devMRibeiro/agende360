@@ -31,6 +31,7 @@ public class EmailService {
 	
 	private static final String PATH_EMAIL_TEMPLATE_BASE = "emails/template";
 	private static final String PATH_EMAIL_TEMPLATE_APPOINTMENT_CONFIRMED = PATH_EMAIL_TEMPLATE_BASE + "/appointment-confirmed.html";
+	private static final String PATH_EMAIL_USER_REGISTERED = PATH_EMAIL_TEMPLATE_BASE + "/user-registered.html";
 	
 	private void send(String path, String to, String subject, Map<String, String> vars) {
 		
@@ -61,5 +62,9 @@ public class EmailService {
 
 	public void sendAppointmentConfirmedEmail(String to, Map<String, String> vars) {
 		send(PATH_EMAIL_TEMPLATE_APPOINTMENT_CONFIRMED, to, "Agendamento Confirmado✅", vars);
+	}
+
+	public void sendUserAccessEmail(String to, Map<String, String> vars) {
+		send(PATH_EMAIL_USER_REGISTERED, to, "Cadastrado com Sucesso✅", vars);
 	}
 }

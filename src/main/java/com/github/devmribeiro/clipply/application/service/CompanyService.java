@@ -1,5 +1,7 @@
 package com.github.devmribeiro.clipply.application.service;
 
+import java.time.LocalDateTime;
+import java.util.Map;
 import java.util.UUID;
 
 import org.springframework.beans.factory.annotation.Value;
@@ -15,6 +17,7 @@ import com.github.devmribeiro.clipply.application.model.User;
 import com.github.devmribeiro.clipply.application.repository.CompanyRepository;
 import com.github.devmribeiro.clipply.application.repository.UserRepository;
 import com.github.devmribeiro.clipply.application.type.UserRole;
+import com.github.devmribeiro.clipply.messaging.service.EmailService;
 
 import jakarta.transaction.Transactional;
 
@@ -24,16 +27,19 @@ public class CompanyService {
 	private final CompanyRepository companyRepository;
 	private final UserRepository userRepository;
 	private final PasswordEncoder encoder;
+	private final EmailService emailService;
 
 	@Value("${clipply.default-password}")
 	private String defaultPassword;
 
 	public CompanyService(CompanyRepository companyRepository,
 						  UserRepository userRepository,
-						  PasswordEncoder encoder) {
+						  PasswordEncoder encoder,
+						  EmailService emailService) {
 		this.userRepository = userRepository;
 		this.companyRepository = companyRepository;
 		this.encoder = encoder;
+		this.emailService = emailService;
 	}
 
 	@Transactional
@@ -60,9 +66,25 @@ public class CompanyService {
 		user.setCompanyId(company.getId());
 		userRepository.save(user);
 
+		sendAccessCreatedEmail(user, company);
+		
 		return new RegisterCompanyResponse(company.getName(), user.getEmail(), company.getSlug());
 	}
 
+	private void sendAccessCreatedEmail(User user, Company company) {
+        Map<String, String> vars = Map.of(
+                "COMPANY_NAME", company.getName(),
+                "COMPANY_SLUG", company.getSlug(),
+                "COMPANY_DOCUMENT", company.getDocument(),
+                "USER_NAME", user.getName(),
+                "USER_EMAIL", user.getEmail(),
+                "TEMP_PASSWORD", user.getPassword(),
+                "YEAR", String.valueOf(LocalDateTime.now().getYear())
+        );
+
+        emailService.sendUserAccessEmail(user.getEmail(), vars);
+    }
+	
 	private String genSlug(String companyName) {
 		String baseSlug = companyName.toLowerCase().replaceAll("[^a-z0-9\\s-]", "").replaceAll("\\s+", "-");
 		String newSlug = baseSlug;

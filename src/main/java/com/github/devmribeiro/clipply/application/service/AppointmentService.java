@@ -190,8 +190,7 @@ public class AppointmentService {
         sendEmailConfirmation(customer, company, product, professional, startTime, token);
     }
 
-    private void sendEmailConfirmation(Customer customer, Company company, Product product,
-            User professional, LocalDateTime startTime, String token) {
+    private void sendEmailConfirmation(Customer customer, Company company, Product product, User professional, LocalDateTime startTime, String token) {
         String cancelUrl = baseUrl + "/api/public/appointment/cancel/" + token;
         String formattedTime = startTime.format(DateTimeFormatter.ofPattern("dd/MM/yyyy HH:mm"));
 
@@ -297,8 +296,7 @@ public class AppointmentService {
         LocalDate today = LocalDate.now();
         LocalDateTime startOfDay = today.atStartOfDay();
         LocalDateTime endOfDay = today.atTime(LocalTime.MAX);
-        List<Appointment> appointments = appointmentRepository.findActiveByCompanyIdAndDate(
-                companyId, startOfDay, endOfDay);
+        List<Appointment> appointments = appointmentRepository.findActiveByCompanyIdAndDate(companyId, startOfDay, endOfDay);
         return toResponseList(appointments);
     }
 
@@ -307,8 +305,7 @@ public class AppointmentService {
         LocalDate today = LocalDate.now();
         LocalDateTime startOfDay = today.atStartOfDay();
         LocalDateTime endOfDay = today.atTime(LocalTime.MAX);
-        List<Appointment> appointments = appointmentRepository.findActiveByUserIdAndDate(
-                user.getId(), startOfDay, endOfDay);
+        List<Appointment> appointments = appointmentRepository.findActiveByUserIdAndDate(user.getId(), startOfDay, endOfDay);
         return toResponseList(appointments);
     }
 

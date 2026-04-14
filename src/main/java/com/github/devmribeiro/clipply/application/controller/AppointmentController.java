@@ -63,7 +63,6 @@ public class AppointmentController {
         return ResponseEntity.ok().build();
     }
 
-    // Cancelamento autenticado pelo admin ou profissional
     @PatchMapping("/{appointmentId}/cancel")
     @PreAuthorize("hasAnyRole('ADMIN', 'PROFESSIONAL')")
     public ResponseEntity<Void> cancel(@PathVariable UUID appointmentId) {

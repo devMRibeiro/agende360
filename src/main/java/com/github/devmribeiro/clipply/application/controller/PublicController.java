@@ -52,17 +52,18 @@ public class PublicController {
         this.userRepository = userRepository;
     }
 
+    // Public info company
     @GetMapping("/{slug}")
     public ResponseEntity<CompanyPublicResponse> getCompanyInfo(@PathVariable String slug) {
         Company company = companyRepository.findBySlug(slug);
- 
+
         if (company == null || !company.getActive())
             throw new IllegalArgumentException("Company not found");
- 
+
         return ResponseEntity.ok(new CompanyPublicResponse(company.getName(), company.getSlug()));
     }
-    
-    // ── Listagem pública de serviços da empresa ───────────
+
+    // Public listing of products
     @GetMapping("/{slug}/products")
     public ResponseEntity<List<ProductResponse>> listProducts(@PathVariable String slug) {
         Company company = companyRepository.findBySlug(slug);
@@ -78,12 +79,8 @@ public class PublicController {
             Product p = products.get(i);
             if (p.getActive()) {
                 result.add(new ProductResponse(
-                        p.getId(),
-                        p.getName(),
-                        p.getDescription(),
-                        p.getPrice(),
-                        p.getDurationMinutes(),
-                        p.getActive()
+                        p.getId(), p.getName(), p.getDescription(),
+                        p.getPrice(), p.getDurationMinutes(), p.getActive()
                 ));
             }
             i++;
@@ -92,7 +89,7 @@ public class PublicController {
         return ResponseEntity.ok(result);
     }
 
-    // ── Listagem pública de profissionais da empresa ──────
+    // Public listing for professionals
     @GetMapping("/{slug}/professionals")
     public ResponseEntity<List<ProfessionalResponse>> listProfessionals(@PathVariable String slug, @RequestParam UUID productId) {
 
@@ -107,16 +104,15 @@ public class PublicController {
         int i = 0;
         while (i < users.size()) {
             User u = users.get(i);
-            if (u.getActive() && u.getRole() == UserRole.PROFESSIONAL) {
+            if (u.getActive() && u.getRole() == UserRole.PROFESSIONAL)
                 result.add(new ProfessionalResponse(u.getId(), u.getName()));
-            }
             i++;
         }
 
         return ResponseEntity.ok(result);
     }
 
-    // ── Slots disponíveis ─────────────────────────────────
+    // Available slots
     @GetMapping("/{slug}/slots")
     public ResponseEntity<AvailableSlotsResponse> getAvailableSlots(
             @PathVariable String slug,
@@ -126,14 +122,14 @@ public class PublicController {
         return ResponseEntity.ok(appointmentService.getAvailableSlots(slug, professionalId, productId, date));
     }
 
-    // ── Criar agendamento ─────────────────────────────────
+    // Create appointment
     @PostMapping("/{slug}/appointment")
     public ResponseEntity<Void> create(@PathVariable String slug, @RequestBody @Valid AppointmentRequest request) {
         appointmentService.create(slug, request);
         return ResponseEntity.status(HttpStatus.CREATED).build();
     }
 
-    // ── Cancelar agendamento via token ────────────────────
+    // Cancel appointment by token
     @GetMapping("/appointment/cancel/{token}")
     public ResponseEntity<Void> cancel(@PathVariable String token) {
         appointmentService.cancel(token);

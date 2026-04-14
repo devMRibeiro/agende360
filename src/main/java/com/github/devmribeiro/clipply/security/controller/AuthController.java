@@ -10,20 +10,18 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
-import com.github.devmribeiro.clipply.application.dto.request.ForgotPasswordRequest;
 import com.github.devmribeiro.clipply.application.dto.request.LoginRequest;
-import com.github.devmribeiro.clipply.application.dto.request.NewPasswordRequest;
 import com.github.devmribeiro.clipply.application.dto.response.UserMeResponse;
+import com.github.devmribeiro.clipply.application.model.Company;
 import com.github.devmribeiro.clipply.application.model.User;
-import com.github.devmribeiro.clipply.application.repository.PasswordResetTokenRepository;
+import com.github.devmribeiro.clipply.application.repository.CompanyRepository;
 import com.github.devmribeiro.clipply.application.repository.UserRepository;
-import com.github.devmribeiro.clipply.application.service.UserService;
-import com.github.devmribeiro.clipply.application.util.BaseUrlUtils;
 import com.github.devmribeiro.clipply.security.model.RefreshToken;
+import com.github.devmribeiro.clipply.security.model.UserDetailsImpl;
 import com.github.devmribeiro.clipply.security.service.CookieService;
 import com.github.devmribeiro.clipply.security.service.JwtService;
-import com.github.devmribeiro.clipply.security.service.PasswordResetTokenService;
 import com.github.devmribeiro.clipply.security.service.RefreshTokenService;
+import com.github.devmribeiro.clipply.security.util.SecurityUtils;
 
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
@@ -35,80 +33,69 @@ public class AuthController {
 	private final AuthenticationManager authenticationManager;
 	private final JwtService jwtService;
 	private final UserRepository userRepository;
+	private final CompanyRepository companyRepository;
 	private final RefreshTokenService refreshTokenService;
 	private final CookieService cookieService;
 	private final String REFRESH_COOKIE_TOKEN_NAME = "refresh_token";
-	private final PasswordResetTokenService resetTokenService;
-	private final UserService userService;
-	
+
 	public AuthController(
 			AuthenticationManager authenticationManager,
 			JwtService jwtService,
 			UserRepository userRepository,
+			CompanyRepository companyRepository,
 			RefreshTokenService refreshTokenService,
-			CookieService cookieService,
-			PasswordResetTokenRepository resetTokenRepository,
-			PasswordResetTokenService resetTokenService,
-			UserService userService) {
+			CookieService cookieService) {
 		this.authenticationManager = authenticationManager;
 		this.jwtService = jwtService;
 		this.userRepository = userRepository;
+		this.companyRepository = companyRepository;
 		this.refreshTokenService = refreshTokenService;
 		this.cookieService = cookieService;
-		this.resetTokenService = resetTokenService;
-		this.userService = userService;
 	}
-	
+
 	@PostMapping("/login")
-    public ResponseEntity<Void> login(@RequestBody LoginRequest request, HttpServletResponse response) {
+	public ResponseEntity<Void> login(@RequestBody LoginRequest request, HttpServletResponse response) {
 
-        authenticationManager.authenticate(new UsernamePasswordAuthenticationToken(request.email(), request.password()));
+		authenticationManager.authenticate(new UsernamePasswordAuthenticationToken(request.email(), request.password()));
 
-        User user = userRepository.findByEmail(request.email());
+		User user = userRepository.findByEmail(request.email());
 
-        // Generate access token (short-lived)
-        String accessToken = jwtService.generateToken(user);
+		String accessToken = jwtService.generateToken(user);
+		RefreshToken refreshToken = refreshTokenService.createRefreshToken(user);
 
-        // Generate a refresh token (long-lived, stored in the database)
-        RefreshToken refreshToken = refreshTokenService.createRefreshToken(user);
+		response.addCookie(cookieService.createAccessTokenCookie(accessToken));
+		response.addCookie(cookieService.createRefreshTokenCookie(refreshToken.getToken()));
 
-        // Set both as HttpOnly cookies - the body remains empty
-        response.addCookie(cookieService.createAccessTokenCookie(accessToken));
-        response.addCookie(cookieService.createRefreshTokenCookie(refreshToken.getToken()));
-
-        return ResponseEntity.ok().build();
-    }
+		return ResponseEntity.ok().build();
+	}
 
 	@PostMapping("/refresh")
 	public ResponseEntity<Void> refresh(HttpServletRequest request, HttpServletResponse response) {
-		
+
 		String refreshTokenValue = jwtService.getTokenFromCookie(request, REFRESH_COOKIE_TOKEN_NAME);
-		
+
 		if (refreshTokenValue == null)
 			return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
-		
-		// Valid - throws an exception if expired or revoked
+
 		RefreshToken refreshToken = refreshTokenService.validateRefreshToken(refreshTokenValue);
 		User user = refreshToken.getUser();
-		
-		// Generate new access token
+
 		response.addCookie(cookieService.createAccessTokenCookie(jwtService.generateToken(user)));
-		
+
 		return ResponseEntity.ok().build();
 	}
-	
+
 	@PostMapping("/logout")
 	public ResponseEntity<Void> logout(HttpServletRequest request, HttpServletResponse response) {
-		
+
 		String refreshTokenValue = jwtService.getTokenFromCookie(request, REFRESH_COOKIE_TOKEN_NAME);
-		
+
 		if (refreshTokenValue != null) {
 			RefreshToken rf = refreshTokenService.findByToken(refreshTokenValue);
 			if (rf != null)
 				refreshTokenService.revokeByUser(rf.getUser());
 		}
-		
-		// Remove both cookies from the browser (MaxAge = 0)
+
 		response.addCookie(cookieService.clearAccessTokenCookie());
 		response.addCookie(cookieService.clearRefreshTokenCookie());
 
@@ -117,18 +104,30 @@ public class AuthController {
 
 	@GetMapping("/me")
 	public ResponseEntity<UserMeResponse> me() {
-		return ResponseEntity.ok(userService.me());
-	}
-	
-	@PostMapping("/forgot-password")
-	public ResponseEntity<Void> forgotPassword(@RequestBody ForgotPasswordRequest request) {
-		resetTokenService.save(request.email());
-		return ResponseEntity.ok().build();
-	}
-	
-	@PostMapping(BaseUrlUtils.RESET_PASSWORD_BY_TOKEN)
-	public ResponseEntity<Void> resetPassFromToken(@RequestBody NewPasswordRequest request) {
-	    resetTokenService.resetPasswordFromToken(request.token(), request.newPassword());
-	    return ResponseEntity.ok().build();
+		UserDetailsImpl principal = SecurityUtils.getAuthenticatedUser();
+
+		User user = userRepository.findByUserId(principal.getId());
+		boolean firstAccess = user.getPasswordChangedAt() == null;
+
+		String companyName = null;
+		String companySlug = null;
+
+		if (user.getCompanyId() != null) {
+			Company company = companyRepository.findByCompanyId(user.getCompanyId());
+			if (company != null) {
+				companyName = company.getName();
+				companySlug = company.getSlug();
+			}
+		}
+
+		return ResponseEntity.ok(new UserMeResponse(
+				user.getId(),
+				user.getEmail(),
+				user.getCompanyId(),
+				companyName,
+				companySlug,
+				user.getRole(),
+				firstAccess
+		));
 	}
 }

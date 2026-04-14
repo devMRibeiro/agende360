@@ -29,6 +29,9 @@ public class CompanyService {
 	private final PasswordEncoder encoder;
 	private final EmailService emailService;
 
+	@Value("${clipply.base-url}")
+	private String baseUrl;
+	
 	@Value("${clipply.default-password}")
 	private String defaultPassword;
 
@@ -68,13 +71,13 @@ public class CompanyService {
 
 		sendAccessCreatedEmail(user, company);
 		
-		return new RegisterCompanyResponse(company.getName(), user.getEmail(), company.getSlug());
+		return new RegisterCompanyResponse(company.getName(), company.getSlug(), user.getEmail(), user.getName());
 	}
 
 	private void sendAccessCreatedEmail(User user, Company company) {
         Map<String, String> vars = Map.of(
                 "COMPANY_NAME", company.getName(),
-                "COMPANY_SLUG", company.getSlug(),
+                "LINK_PUBLICO", baseUrl + "/"+ company.getSlug(),
                 "COMPANY_DOCUMENT", company.getDocument(),
                 "USER_NAME", user.getName(),
                 "USER_EMAIL", user.getEmail(),

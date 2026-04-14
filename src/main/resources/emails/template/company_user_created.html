@@ -1,116 +1,130 @@
 <!DOCTYPE html>
 <html lang="pt-BR">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>Acesso criado</title>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Acesso criado</title>
 </head>
 
-<body style="margin:0; padding:0; background-color:#0f172a; font-family:Arial, Helvetica, sans-serif;">
+<body style="margin: 0; padding: 0; background-color: #0f172a; font-family: Arial, Helvetica, sans-serif;">
 
-  <table width="100%" cellpadding="0" cellspacing="0" border="0" style="background-color:#0f172a; padding:24px;">
-    <tr>
-      <td align="center">
+	<table width="100%" cellpadding="0" cellspacing="0" border="0" style="background-color: #0f172a; padding: 24px;">
+		<tr>
+			<td align="center">
+				<!-- Card principal -->
+				<table width="100%" max-width="600" cellpadding="0" cellspacing="0" border="0" style="background-color: #111827; border-radius: 12px; padding: 32px;">
+					<!-- Header -->
+					<tr>
+						<td style="text-align: center; padding-bottom: 24px;">
+							<h1 style="color: #ffffff; margin: 0; font-size: 24px;">Acesso criado com sucesso</h1>
+							<p style="color: #9ca3af; margin-top: 8px; font-size: 14px;">{{COMPANY_NAME}}</p>
+						</td>
+					</tr>
 
-        <!-- Card principal -->
-        <table width="100%" max-width="600" cellpadding="0" cellspacing="0" border="0"
-          style="background-color:#111827; border-radius:12px; padding:32px;">
+					<!-- Saudação -->
+					<tr>
+						<td style="color: #e5e7eb; font-size: 16px; padding-bottom: 16px;">Olá, <strong>{{USER_NAME}}</strong>
+						</td>
+					</tr>
 
-          <!-- Header -->
-          <tr>
-            <td style="text-align:center; padding-bottom:24px;">
-              <h1 style="color:#ffffff; margin:0; font-size:24px;">
-                Acesso criado com sucesso
-              </h1>
-              <p style="color:#9ca3af; margin-top:8px; font-size:14px;">
-                {{COMPANY_NAME}}
-              </p>
-            </td>
-          </tr>
+					<!-- Mensagem -->
+					<tr>
+						<td style="color: #e5e7eb; font-size: 14px; padding-bottom: 24px;">
+							Seu acesso ao sistema foi criado. Utilize os dados abaixo para
+							realizar o primeiro login:
+						</td>
+					</tr>
 
-          <!-- Saudação -->
-          <tr>
-            <td style="color:#e5e7eb; font-size:16px; padding-bottom:16px;">
-              Olá, <strong>{{USER_NAME}}</strong>
-            </td>
-          </tr>
+					<!-- Dados da empresa -->
+					<tr>
+						<td style="background-color: #1f2937; border-radius: 8px; padding: 16px;">
 
-          <!-- Mensagem -->
-          <tr>
-            <td style="color:#e5e7eb; font-size:14px; padding-bottom:24px;">
-              Seu acesso ao sistema foi criado. Utilize os dados abaixo para realizar o primeiro login:
-            </td>
-          </tr>
+							<p style="margin: 0 0 12px 0; color: #ffffff; font-size: 14px; font-weight: bold;">Dados da Empresa</p>
 
-          <!-- Dados da empresa -->
-          <tr>
-            <td style="background-color:#1f2937; border-radius:8px; padding:16px; margin-bottom:16px;">
+							<table width="100%" cellpadding="0" cellspacing="0" border="0">
 
-              <p style="margin:0 0 8px 0; color:#9ca3af; font-size:12px;">Empresa</p>
-              <p style="margin:0 0 16px 0; color:#ffffff;">{{COMPANY_NAME}}</p>
+								<tr>
+									<td style="color: #9ca3af; font-size: 12px; padding: 4px 0;">Empresa</td>
+									<td style="color: #ffffff; font-size: 12px; padding: 4px 0; text-align: right;">{{COMPANY_NAME}}</td>
+								</tr>
 
-              <p style="margin:0 0 8px 0; color:#9ca3af; font-size:12px;">Slug</p>
-              <p style="margin:0 0 16px 0; color:#ffffff;">{{COMPANY_SLUG}}</p>
+								<tr>
+									<td style="color: #9ca3af; font-size: 12px; padding: 4px 0;">Link Público</td>
+									<td style="color: #ffffff; font-size: 12px; padding: 4px 0; text-align: right;">{{LINK_PUBLICO}}</td>
+								</tr>
 
-              <p style="margin:0 0 8px 0; color:#9ca3af; font-size:12px;">Documento</p>
-              <p style="margin:0; color:#ffffff;">{{COMPANY_DOCUMENT}}</p>
+								<tr>
+									<td style="color: #9ca3af; font-size: 12px; padding: 4px 0;">Documento</td>
+									<td style="color: #ffffff; font-size: 12px; padding: 4px 0; text-align: right;">{{COMPANY_DOCUMENT}}</td>
+								</tr>
+							</table>
+						</td>
+					</tr>
+					<!-- Espaçamento -->
+					<tr>
+						<td style="height: 16px;"></td>
+					</tr>
 
-            </td>
-          </tr>
+					<!-- Dados do usuário -->
+					<tr>
+						<td style="background-color: #1f2937; border-radius: 8px; padding: 16px;">
 
-          <!-- Dados do usuário -->
-          <tr>
-            <td style="background-color:#1f2937; border-radius:8px; padding:16px; margin-top:16px;">
+							<p style="margin: 0 0 12px 0; color: #ffffff; font-size: 14px; font-weight: bold;">Dados de Acesso</p>
 
-              <p style="margin:0 0 8px 0; color:#9ca3af; font-size:12px;">Nome</p>
-              <p style="margin:0 0 16px 0; color:#ffffff;">{{USER_NAME}}</p>
+							<table width="100%" cellpadding="0" cellspacing="0" border="0">
 
-              <p style="margin:0 0 8px 0; color:#9ca3af; font-size:12px;">Email</p>
-              <p style="margin:0 0 16px 0; color:#ffffff;">{{USER_EMAIL}}</p>
+								<tr>
+									<td style="color: #9ca3af; font-size: 12px; padding: 4px 0;">Nome</td>
+									<td style="color: #ffffff; font-size: 12px; padding: 4px 0; text-align: right;">{{USER_NAME}}</td>
+								</tr>
 
-              <p style="margin:0 0 8px 0; color:#9ca3af; font-size:12px;">Senha temporária</p>
-              <p style="margin:0; color:#ffffff;">{{TEMP_PASSWORD}}</p>
+								<tr>
+									<td style="color: #9ca3af; font-size: 12px; padding: 4px 0;">Email</td>
+									<td style="color: #ffffff; font-size: 12px; padding: 4px 0; text-align: right;">{{USER_EMAIL}}</td>
+								</tr>
 
-            </td>
-          </tr>
+								<tr>
+									<td style="color: #9ca3af; font-size: 12px; padding: 4px 0;">Senha temporária</td>
+									<td style="color: #ffffff; font-size: 12px; padding: 4px 0; text-align: right;">{{TEMP_PASSWORD}}</td>
+								</tr>
+							</table>
+						</td>
+					</tr>
 
-          <!-- Aviso -->
-          <tr>
-            <td style="color:#e5e7eb; font-size:13px; padding-top:24px;">
-              No primeiro acesso com essa senha temporária, você será redirecionado automaticamente para definir uma nova senha.
-            </td>
-          </tr>
+					<!-- Aviso -->
+					<tr>
+						<td style="color: #e5e7eb; font-size: 13px; padding-top: 24px;">
+							No primeiro acesso com essa senha temporária, você será
+							redirecionado automaticamente para definir uma nova senha
+						</td>
+					</tr>
 
-          <!-- Botão -->
-          <tr>
-            <td style="padding-top:24px; text-align:center;">
-              <a href="{{LOGIN_LINK}}"
-                 style="background-color:rgb(22 163 74); color:#ffffff; text-decoration:none; padding:12px 20px; border-radius:6px; font-size:14px; display:inline-block;">
-                Acessar sistema
-              </a>
-            </td>
-          </tr>
+					<!-- Botão -->
+					<tr>
+						<td style="padding-top: 24px; text-align: center;">
+							<a href="{{LOGIN_LINK}}" style="background-color: rgb(22, 163, 74); color: #ffffff; text-decoration: none; padding: 12px 20px; border-radius: 6px; font-size: 14px; display: inline-block;">
+								Acessar sistema
+							</a>
+						</td>
+					</tr>
 
-          <!-- Rodapé -->
-          <tr>
-            <td style="padding-top:24px; text-align:center; font-size:12px; color:#6b7280;">
-              Caso você não reconheça este acesso, entre em contato com o suporte.
-            </td>
-          </tr>
+					<!-- Rodapé -->
+					<tr>
+						<td style="padding-top: 24px; text-align: center; font-size: 12px; color: #6b7280;">
+							Caso você não reconheça este acesso, entre em contato com o
+							suporte.
+						</td>
+					</tr>
+				</table> <!-- Footer externo -->
 
-        </table>
-
-        <!-- Footer externo -->
-        <table width="100%" max-width="600" cellpadding="0" cellspacing="0" border="0" style="margin-top:16px;">
-          <tr>
-            <td style="text-align:center; font-size:12px; color:#6b7280;">
-              © {{YEAR}} CoreStacks. Todos os direitos reservados.
-            </td>
-          </tr>
-        </table>
-
-      </td>
-    </tr>
-  </table>
+				<table width="100%" max-width="600" cellpadding="0" cellspacing="0"
+					border="0" style="margin-top: 16px;">
+					<tr>
+						<td style="text-align: center; font-size: 12px; color: #6b7280;">© {{YEAR}} CoreStacks. Todos os direitos reservados.</td>
+					</tr>
+				</table>
+			</td>
+		</tr>
+	</table>
 </body>
 </html>

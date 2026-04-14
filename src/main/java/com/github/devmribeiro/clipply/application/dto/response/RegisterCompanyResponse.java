@@ -1,8 +1,9 @@
 package com.github.devmribeiro.clipply.application.dto.response;
 
 public record RegisterCompanyResponse(
-		String userName,
+		String companyName,
+		String slug,
 		String email,
-		String slug
+		String userName
 	) {
 }

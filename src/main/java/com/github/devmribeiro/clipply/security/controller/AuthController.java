@@ -10,21 +10,26 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
+import com.github.devmribeiro.clipply.application.dto.request.ForgotPasswordRequest;
 import com.github.devmribeiro.clipply.application.dto.request.LoginRequest;
+import com.github.devmribeiro.clipply.application.dto.request.NewPasswordRequest;
 import com.github.devmribeiro.clipply.application.dto.response.UserMeResponse;
 import com.github.devmribeiro.clipply.application.model.Company;
 import com.github.devmribeiro.clipply.application.model.User;
 import com.github.devmribeiro.clipply.application.repository.CompanyRepository;
 import com.github.devmribeiro.clipply.application.repository.UserRepository;
+import com.github.devmribeiro.clipply.application.util.BaseUrlUtils;
 import com.github.devmribeiro.clipply.security.model.RefreshToken;
 import com.github.devmribeiro.clipply.security.model.UserDetailsImpl;
 import com.github.devmribeiro.clipply.security.service.CookieService;
 import com.github.devmribeiro.clipply.security.service.JwtService;
+import com.github.devmribeiro.clipply.security.service.PasswordResetTokenService;
 import com.github.devmribeiro.clipply.security.service.RefreshTokenService;
 import com.github.devmribeiro.clipply.security.util.SecurityUtils;
 
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
+import jakarta.validation.Valid;
 
 @RestController
 @RequestMapping("/api/auth")
@@ -37,6 +42,7 @@ public class AuthController {
 	private final RefreshTokenService refreshTokenService;
 	private final CookieService cookieService;
 	private final String REFRESH_COOKIE_TOKEN_NAME = "refresh_token";
+	private final PasswordResetTokenService passwordResetTokenService;
 
 	public AuthController(
 			AuthenticationManager authenticationManager,
@@ -44,13 +50,15 @@ public class AuthController {
 			UserRepository userRepository,
 			CompanyRepository companyRepository,
 			RefreshTokenService refreshTokenService,
-			CookieService cookieService) {
+			CookieService cookieService,
+			PasswordResetTokenService passwordResetTokenService) {
 		this.authenticationManager = authenticationManager;
 		this.jwtService = jwtService;
 		this.userRepository = userRepository;
 		this.companyRepository = companyRepository;
 		this.refreshTokenService = refreshTokenService;
 		this.cookieService = cookieService;
+		this.passwordResetTokenService = passwordResetTokenService;
 	}
 
 	@PostMapping("/login")
@@ -129,5 +137,17 @@ public class AuthController {
 				user.getRole(),
 				firstAccess
 		));
+	}
+	
+	@PostMapping("/forgot-password")
+	public ResponseEntity<Void> forgotPassword(@RequestBody @Valid ForgotPasswordRequest request) {
+		passwordResetTokenService.forgotPassword(request.email());
+		return ResponseEntity.ok().build();
+	}
+	
+	@PostMapping("/" + BaseUrlUtils.RESET_PASSWORD_BY_TOKEN)
+	public ResponseEntity<Void> resetPasswordByToken(@RequestBody @Valid NewPasswordRequest request) {
+		passwordResetTokenService.resetPasswordFromToken(request.token(), request.newPassword());
+		return ResponseEntity.ok().build();
 	}
 }

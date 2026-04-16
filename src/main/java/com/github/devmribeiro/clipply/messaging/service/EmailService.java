@@ -32,6 +32,7 @@ public class EmailService {
 	private static final String PATH_EMAIL_TEMPLATE_BASE = "emails/template";
 	private static final String PATH_EMAIL_TEMPLATE_APPOINTMENT_CONFIRMED = PATH_EMAIL_TEMPLATE_BASE + "/appointment_confirmed.html";
 	private static final String PATH_EMAIL_COMPANY_USER_CREATED = PATH_EMAIL_TEMPLATE_BASE + "/company_user_created.html";
+	private static final String PATH_EMAIL_RESET_PASSWORD = PATH_EMAIL_TEMPLATE_BASE + "/reset_password.html";
 	
 	private void send(String path, String to, String subject, Map<String, String> vars) {
 		
@@ -66,5 +67,9 @@ public class EmailService {
 
 	public void sendUserAccessEmail(String to, Map<String, String> vars) {
 		send(PATH_EMAIL_COMPANY_USER_CREATED, to, "Cadastrado com Sucesso✅", vars);
+	}
+	
+	public void sendResetPasswordEmail(String to, Map<String, String> vars) {
+		send(PATH_EMAIL_RESET_PASSWORD, to, "Redefinição de Senha", vars);
 	}
 }

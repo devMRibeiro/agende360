@@ -2,12 +2,17 @@ package com.github.devmribeiro.clipply.security.service;
 
 import java.nio.charset.StandardCharsets;
 import java.security.MessageDigest;
+import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
 import java.util.Base64;
+import java.util.HashMap;
+import java.util.Map;
 import java.util.UUID;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
@@ -17,6 +22,7 @@ import com.github.devmribeiro.clipply.application.model.User;
 import com.github.devmribeiro.clipply.application.repository.PasswordResetTokenRepository;
 import com.github.devmribeiro.clipply.application.repository.UserRepository;
 import com.github.devmribeiro.clipply.application.util.BaseUrlUtils;
+import com.github.devmribeiro.clipply.messaging.service.EmailService;
 
 @Service
 public class PasswordResetTokenService {
@@ -25,31 +31,54 @@ public class PasswordResetTokenService {
 	private final PasswordResetTokenRepository resetTokenRepository;
 	private final UserRepository userRepository;
 	private final PasswordEncoder encoder;
+	private final EmailService emailService;
+	
+	@Value("${clipply.base-url}")
+	private String host;
 	
 	public PasswordResetTokenService(
 			PasswordResetTokenRepository resetTokenRepository,
 			UserRepository userRepository,
-			PasswordEncoder encoder) {
+			PasswordEncoder encoder,
+			EmailService emailService) {
 		this.resetTokenRepository = resetTokenRepository;
 		this.userRepository = userRepository;
 		this.encoder = encoder;
+		this.emailService = emailService;
 	}
 	
-	public void save(String email) {
+	public void forgotPassword(String email) {
+		LOGGER.info("Password reset requested for email={}", email);
+
 		User user = userRepository.findByEmail(email);
 		
 		if (user == null || !user.getActive())
 			return;
-		
-		String rawToken = UUID.randomUUID().toString();
 
+		final String rawToken = UUID.randomUUID().toString();
+
+		final LocalDateTime expirationToken = LocalDateTime.now().plusMinutes(5);
+		
 		PasswordResetToken prt = new PasswordResetToken();
 		prt.setUserId(user.getId());
 		prt.setTokenHash(hash(rawToken));
-		prt.setExpiresAt(LocalDateTime.now().plusMinutes(5));
+		prt.setExpiresAt(expirationToken);
 		resetTokenRepository.save(prt);
 		
-		LOGGER.info("http://localhost:9002/"+ BaseUrlUtils.RESET_PASSWORD_BY_TOKEN + "?token=" + rawToken);
+		sendEmailResetPassword(user, expirationToken, rawToken);
+	}
+	
+	private void sendEmailResetPassword(User user, LocalDateTime expirationToken, String rawToken) {
+		
+		String url = host + "/api/auth/" + BaseUrlUtils.RESET_PASSWORD_BY_TOKEN + "?token=" + rawToken;
+		
+		Map<String, String> hmContentEmail = new HashMap<String, String>();
+		hmContentEmail.put("CLIENT_NAME", user.getName());
+		hmContentEmail.put("RESET_LINK", url);
+		hmContentEmail.put("EXPIRATION_TIME", expirationToken.format(DateTimeFormatter.ofPattern("dd/MM/yyyy HH:mm:ss")).toString());
+		hmContentEmail.put("YEAR", String.valueOf(LocalDate.now().getYear()));
+
+		emailService.sendResetPasswordEmail(user.getEmail(), hmContentEmail);
 	}
 	
 	public void resetPasswordFromToken(String token, String newPassword) {
@@ -73,7 +102,7 @@ public class PasswordResetTokenService {
 		resetTokenRepository.save(prt);
 	}
 	
-	private String hash(String input) {
+	public static String hash(String input) {
 	    try {
 	        MessageDigest md = MessageDigest.getInstance("SHA-256");
 	        byte[] hashed = md.digest(input.getBytes(StandardCharsets.UTF_8));

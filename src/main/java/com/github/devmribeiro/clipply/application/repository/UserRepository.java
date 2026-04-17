@@ -22,4 +22,7 @@ public interface UserRepository extends JpaRepository<User, UUID> {
 	User findByEmailAndCompanyId(String email, UUID companyId);
 	
 	List<User> findByCompanyId(UUID companyId);
+	
+	@Query("select u from User u where u.companyId = :companyId")
+	User getByCompanyId(UUID companyId);
 }

@@ -1,14 +1,15 @@
 package com.github.devmribeiro.clipply.application.service;
 
 import java.time.LocalDateTime;
+import java.util.List;
 import java.util.Map;
-import java.util.UUID;
 
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
 import com.github.devmribeiro.clipply.application.dto.request.RegisterCompanyRequest;
+import com.github.devmribeiro.clipply.application.dto.response.CompanySupportResponse;
 import com.github.devmribeiro.clipply.application.dto.response.RegisterCompanyResponse;
 import com.github.devmribeiro.clipply.application.exception.ConflictException;
 import com.github.devmribeiro.clipply.application.exception.IllegalArgumentException;
@@ -99,14 +100,18 @@ public class CompanyService {
 		return newSlug;
 	}
 
-	public void disable(UUID companyId) {
+	public void disable(String slug) {
 
-		Company company = companyRepository.findByCompanyId(companyId);
+		Company company = companyRepository.findBySlug(slug);
 
 		if (company == null)
 			throw new IllegalArgumentException("company not found");
 
 		company.setActive(false);
 		companyRepository.save(company);
+	}
+	
+	public List<CompanySupportResponse> list() {
+	    return companyRepository.findAllWithUser();
 	}
 }

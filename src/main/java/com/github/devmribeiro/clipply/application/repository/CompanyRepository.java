@@ -1,11 +1,13 @@
 package com.github.devmribeiro.clipply.application.repository;
 
+import java.util.List;
 import java.util.UUID;
 
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.stereotype.Repository;
 
+import com.github.devmribeiro.clipply.application.dto.response.CompanySupportResponse;
 import com.github.devmribeiro.clipply.application.model.Company;
 
 @Repository
@@ -19,4 +21,19 @@ public interface CompanyRepository extends JpaRepository<Company, UUID> {
 	boolean existsBySlug(String slug);
 	
 	Company findBySlug(String slug);
+	
+	@Query("""
+		    SELECT new com.github.devmribeiro.clipply.application.dto.response.CompanySupportResponse(
+		        c.name,
+		        c.slug,
+		        c.document,
+		        c.active,
+		        u.name,
+		        u.phone,
+		        u.email
+		    )
+		    FROM Company c
+		    JOIN User u ON u.companyId = c.id
+		""")
+	List<CompanySupportResponse> findAllWithUser();
 }

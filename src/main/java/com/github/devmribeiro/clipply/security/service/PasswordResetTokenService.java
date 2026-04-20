@@ -70,7 +70,7 @@ public class PasswordResetTokenService {
 	
 	private void sendEmailResetPassword(User user, LocalDateTime expirationToken, String rawToken) {
 		
-		String url = host + "/api/auth/" + BaseUrlUtils.RESET_PASSWORD_BY_TOKEN + "?token=" + rawToken;
+		String url = host + BaseUrlUtils.RESET_PASSWORD_BY_TOKEN + "?token=" + rawToken;
 		
 		Map<String, String> hmContentEmail = new HashMap<String, String>();
 		hmContentEmail.put("CLIENT_NAME", user.getName());

@@ -9,6 +9,7 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
 import com.github.devmribeiro.clipply.application.dto.request.RegisterCompanyRequest;
+import com.github.devmribeiro.clipply.application.dto.response.CompanySettingsResponse;
 import com.github.devmribeiro.clipply.application.dto.response.CompanySupportResponse;
 import com.github.devmribeiro.clipply.application.dto.response.RegisterCompanyResponse;
 import com.github.devmribeiro.clipply.application.exception.ConflictException;
@@ -19,6 +20,8 @@ import com.github.devmribeiro.clipply.application.repository.CompanyRepository;
 import com.github.devmribeiro.clipply.application.repository.UserRepository;
 import com.github.devmribeiro.clipply.application.type.UserRole;
 import com.github.devmribeiro.clipply.messaging.service.EmailService;
+import com.github.devmribeiro.clipply.security.model.UserDetailsImpl;
+import com.github.devmribeiro.clipply.security.util.SecurityUtils;
 
 import jakarta.transaction.Transactional;
 
@@ -113,5 +116,15 @@ public class CompanyService {
 	
 	public List<CompanySupportResponse> list() {
 	    return companyRepository.findAllWithUser();
+	}
+	
+	public CompanySettingsResponse getSettings() {
+		
+		UserDetailsImpl user = SecurityUtils.getAuthenticatedUser();
+		
+		if (!user.getRole().equals(UserRole.ADMIN))
+			return null;
+		
+		return companyRepository.getSettings(user.getId());
 	}
 }

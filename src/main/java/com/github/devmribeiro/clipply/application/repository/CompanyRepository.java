@@ -7,6 +7,7 @@ import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.stereotype.Repository;
 
+import com.github.devmribeiro.clipply.application.dto.response.CompanySettingsResponse;
 import com.github.devmribeiro.clipply.application.dto.response.CompanySupportResponse;
 import com.github.devmribeiro.clipply.application.model.Company;
 
@@ -36,4 +37,17 @@ public interface CompanyRepository extends JpaRepository<Company, UUID> {
 		    JOIN User u ON u.companyId = c.id
 		""")
 	List<CompanySupportResponse> findAllWithUser();
+	
+	@Query("""
+			SELECT new com.github.devmribeiro.clipply.application.dto.response.CompanySettingsResponse(
+				c.name,
+				u.phone,
+				u.email
+			)
+			FROM User u
+			INNER JOIN Company c ON c.id = u.companyId
+			WHERE 
+			u.id = :userId
+		""")
+	CompanySettingsResponse getSettings(UUID userId);
 }

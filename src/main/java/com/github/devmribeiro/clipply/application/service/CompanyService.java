@@ -8,6 +8,7 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
+import com.github.devmribeiro.clipply.application.dto.request.CompanySettingsRequest;
 import com.github.devmribeiro.clipply.application.dto.request.RegisterCompanyRequest;
 import com.github.devmribeiro.clipply.application.dto.response.CompanySettingsResponse;
 import com.github.devmribeiro.clipply.application.dto.response.CompanySupportResponse;
@@ -126,5 +127,21 @@ public class CompanyService {
 			return null;
 		
 		return companyRepository.getSettings(user.getId());
+	}
+
+	@Transactional
+	public void updateSettings(CompanySettingsRequest request) {
+
+	    Company company = companyRepository.findByCompanyId(SecurityUtils.getCompanyId());
+
+	    if (company == null)
+	        throw new IllegalArgumentException("User does not belong to a company");
+
+	    company.setName(request.companyName());
+
+	    User user = userRepository.findByUserId(SecurityUtils.getAuthenticatedUser().getId());
+
+	    user.setEmail(request.email());
+	    user.setPhone(request.phone());
 	}
 }

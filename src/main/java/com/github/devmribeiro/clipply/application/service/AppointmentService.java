@@ -9,6 +9,8 @@ import java.util.List;
 import java.util.Map;
 import java.util.UUID;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
@@ -38,6 +40,8 @@ import jakarta.transaction.Transactional;
 @Service
 public class AppointmentService {
 
+	private static final Logger LOGGER = LoggerFactory.getLogger(AppointmentService.class);
+	
     @Value("${clipply.base-url}")
     private String baseUrl;
 
@@ -334,5 +338,10 @@ public class AppointmentService {
         }
 
         return result;
+    }
+    
+    @Transactional
+    public void processDueAppointments() {
+    	LOGGER.info("[Update Status] - Rows Affected -> {}", appointmentRepository.updateStatus(LocalDateTime.now(), AppointmentStatus.CONFIRMED, AppointmentStatus.COMPLETED));
     }
 }

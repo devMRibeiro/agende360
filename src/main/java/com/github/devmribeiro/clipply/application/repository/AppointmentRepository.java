@@ -6,11 +6,13 @@ import java.util.List;
 import java.util.UUID;
 
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
 import com.github.devmribeiro.clipply.application.model.Appointment;
+import com.github.devmribeiro.clipply.application.type.AppointmentStatus;
 
 @Repository
 public interface AppointmentRepository extends JpaRepository<Appointment, UUID> {
@@ -39,4 +41,8 @@ public interface AppointmentRepository extends JpaRepository<Appointment, UUID> 
     	   "AND CAST(a.startTime AS date) = :date " + 
     	   "AND a.status != 'CANCELLED'")
 	List<Appointment> findByProfessionalIdAndDate(@Param("professionalId") UUID professionalId, @Param("date") LocalDate date);
+
+    @Modifying
+    @Query("UPDATE Appointment a SET a.status = :newStatus WHERE a.endTime < :now AND a.status = :currentStatus")
+    int updateStatus(@Param("now") LocalDateTime now, @Param("currentStatus") AppointmentStatus currentStatus, @Param("newStatus") AppointmentStatus newStatus);
 }

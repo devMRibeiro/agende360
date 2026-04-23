@@ -9,30 +9,42 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.github.devmribeiro.clipply.application.dto.request.CompanySettingsRequest;
+import com.github.devmribeiro.clipply.application.dto.request.SchedulingHorizonRequest;
 import com.github.devmribeiro.clipply.application.dto.response.CompanySettingsResponse;
 import com.github.devmribeiro.clipply.application.service.CompanyService;
+import com.github.devmribeiro.clipply.application.service.CompanySettingsService;
 
 import jakarta.validation.Valid;
 
 @RestController
-@RequestMapping("/api/company")
+@RequestMapping("/api/settings")
 @PreAuthorize("hasRole('ADMIN')")
-public class CompanyController {
+public class SettingsController {
 	
+	private final CompanySettingsService companySettingsService;
 	private final CompanyService companyService;
 	
-	public CompanyController(CompanyService companyService) {
+	public SettingsController(
+			CompanyService companyService,
+			CompanySettingsService companySettingsService) {
+		this.companySettingsService = companySettingsService;
 		this.companyService = companyService;
 	}
 	
-	@GetMapping("/settings")
+	@GetMapping
 	public ResponseEntity<CompanySettingsResponse> getSettings() {
 		return ResponseEntity.ok(companyService.getSettings());
 	}
 	
-	@PutMapping("/settings")
+	@PutMapping
 	public ResponseEntity<Void> updateSettings(@RequestBody @Valid CompanySettingsRequest request) {
 		companyService.updateSettings(request);
+		return ResponseEntity.ok().build();
+	}
+	
+	@PutMapping("/scheduling-horizon")
+	public ResponseEntity<Void> updateSchedulingHorizon(@RequestBody @Valid SchedulingHorizonRequest request) {
+		companySettingsService.updateSchedulingHorizon(request);
 		return ResponseEntity.ok().build();
 	}
 }

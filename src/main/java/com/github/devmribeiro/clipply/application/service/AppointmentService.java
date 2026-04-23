@@ -97,6 +97,8 @@ public class AppointmentService {
         int duration = product.getDurationMinutes();
         List<LocalTime> slots = new ArrayList<LocalTime>();
 
+        LocalDateTime now = LocalDateTime.now();
+        
         int i = 0;
         while (i < schedules.size()) {
             Schedule schedule = schedules.get(i);
@@ -107,6 +109,11 @@ public class AppointmentService {
                 LocalDateTime slotStart = LocalDateTime.of(date, current);
                 LocalDateTime slotEnd = slotStart.plusMinutes(duration);
 
+                if (date.equals(now.toLocalDate()) && slotStart.isBefore(now)) {
+                    current = current.plusMinutes(duration);
+                    continue;
+                }
+                
                 List<Appointment> conflicts = appointmentRepository.findConflicts(professionalId, slotStart, slotEnd);
 
                 if (conflicts.isEmpty())
@@ -145,6 +152,11 @@ public class AppointmentService {
         if (professional == null || !professional.getCompanyId().equals(company.getId()))
             throw new IllegalArgumentException("Professional not found");
 
+        LocalDateTime requestDateTime = LocalDateTime.of(request.date(), request.startTime());
+
+    	if (requestDateTime.isBefore(LocalDateTime.now()))
+    		throw new IllegalArgumentException("The time must be in the future");
+        
         DayOfWeek dayOfWeek = DayOfWeek.valueOf(request.date().getDayOfWeek().name());
         List<Schedule> schedules = scheduleRepository.findByCompanyIdAndDayOfWeek(company.getId(), dayOfWeek);
 
@@ -169,14 +181,12 @@ public class AppointmentService {
         if (!withinSchedule)
             throw new IllegalArgumentException("Time slot is outside company working hours");
 
-        List<Appointment> conflicts = appointmentRepository.findConflicts(
-                request.professionalId(), startTime, endTime);
+        List<Appointment> conflicts = appointmentRepository.findConflicts(request.professionalId(), startTime, endTime);
 
         if (!conflicts.isEmpty())
             throw new IllegalArgumentException("This time slot is already taken");
 
-        Customer customer = customerService.findOrCreate(
-                request.customerName(), request.customerPhone(), request.customerEmail());
+        Customer customer = customerService.findOrCreate(request.customerName(), request.customerPhone(), request.customerEmail());
 
         String token = UUID.randomUUID().toString();
 

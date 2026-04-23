@@ -35,6 +35,7 @@ public interface CompanyRepository extends JpaRepository<Company, UUID> {
 		    )
 		    FROM Company c
 		    JOIN User u ON u.companyId = c.id
+		    WHERE u.role = 'ADMIN'
 		""")
 	List<CompanySupportResponse> findAllWithUser();
 	

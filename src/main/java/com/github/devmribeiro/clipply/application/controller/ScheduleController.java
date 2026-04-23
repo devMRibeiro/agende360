@@ -1,6 +1,5 @@
 package com.github.devmribeiro.clipply.application.controller;
 
-import java.util.List;
 import java.util.UUID;
 
 import org.springframework.http.HttpStatus;
@@ -33,7 +32,7 @@ public class ScheduleController {
     }
 
     @GetMapping
-    public ResponseEntity<List<ScheduleResponse>> list() {
+    public ResponseEntity<ScheduleResponse> list() {
         return ResponseEntity.ok(scheduleService.list());
     }
 

@@ -16,8 +16,10 @@ import com.github.devmribeiro.clipply.application.dto.response.RegisterCompanyRe
 import com.github.devmribeiro.clipply.application.exception.ConflictException;
 import com.github.devmribeiro.clipply.application.exception.IllegalArgumentException;
 import com.github.devmribeiro.clipply.application.model.Company;
+import com.github.devmribeiro.clipply.application.model.CompanySettings;
 import com.github.devmribeiro.clipply.application.model.User;
 import com.github.devmribeiro.clipply.application.repository.CompanyRepository;
+import com.github.devmribeiro.clipply.application.repository.CompanySettingsRespository;
 import com.github.devmribeiro.clipply.application.repository.UserRepository;
 import com.github.devmribeiro.clipply.application.type.UserRole;
 import com.github.devmribeiro.clipply.messaging.service.EmailService;
@@ -30,6 +32,7 @@ import jakarta.transaction.Transactional;
 public class CompanyService {
 
 	private final CompanyRepository companyRepository;
+	private final CompanySettingsRespository companySettingsRepository;
 	private final UserRepository userRepository;
 	private final PasswordEncoder encoder;
 	private final EmailService emailService;
@@ -43,11 +46,13 @@ public class CompanyService {
 	public CompanyService(CompanyRepository companyRepository,
 						  UserRepository userRepository,
 						  PasswordEncoder encoder,
-						  EmailService emailService) {
+						  EmailService emailService,
+						  CompanySettingsRespository companySettingsRepository) {
 		this.userRepository = userRepository;
 		this.companyRepository = companyRepository;
 		this.encoder = encoder;
 		this.emailService = emailService;
+		this.companySettingsRepository = companySettingsRepository;
 	}
 
 	@Transactional
@@ -64,6 +69,11 @@ public class CompanyService {
 		company.setDocument(request.document());
 		company.setSlug(genSlug(request.companyName()));
 		companyRepository.save(company);
+
+		CompanySettings companySettings = new CompanySettings();
+		companySettings.setCompanyId(company.getId());
+		companySettings.setSchedulingHorizon(0);
+		companySettingsRepository.save(companySettings);
 		
 		User user = new User();
 		user.setName(request.userName());

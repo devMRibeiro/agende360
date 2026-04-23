@@ -19,7 +19,7 @@ import com.github.devmribeiro.clipply.application.model.Company;
 import com.github.devmribeiro.clipply.application.model.CompanySettings;
 import com.github.devmribeiro.clipply.application.model.User;
 import com.github.devmribeiro.clipply.application.repository.CompanyRepository;
-import com.github.devmribeiro.clipply.application.repository.CompanySettingsRespository;
+import com.github.devmribeiro.clipply.application.repository.CompanySettingsRepository;
 import com.github.devmribeiro.clipply.application.repository.UserRepository;
 import com.github.devmribeiro.clipply.application.type.UserRole;
 import com.github.devmribeiro.clipply.messaging.service.EmailService;
@@ -32,7 +32,7 @@ import jakarta.transaction.Transactional;
 public class CompanyService {
 
 	private final CompanyRepository companyRepository;
-	private final CompanySettingsRespository companySettingsRepository;
+	private final CompanySettingsRepository companySettingsRepository;
 	private final UserRepository userRepository;
 	private final PasswordEncoder encoder;
 	private final EmailService emailService;
@@ -47,7 +47,7 @@ public class CompanyService {
 						  UserRepository userRepository,
 						  PasswordEncoder encoder,
 						  EmailService emailService,
-						  CompanySettingsRespository companySettingsRepository) {
+						  CompanySettingsRepository companySettingsRepository) {
 		this.userRepository = userRepository;
 		this.companyRepository = companyRepository;
 		this.encoder = encoder;

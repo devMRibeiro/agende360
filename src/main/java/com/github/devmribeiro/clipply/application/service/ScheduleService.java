@@ -12,7 +12,7 @@ import com.github.devmribeiro.clipply.application.dto.response.ScheduleResponseD
 import com.github.devmribeiro.clipply.application.exception.ConflictException;
 import com.github.devmribeiro.clipply.application.exception.IllegalArgumentException;
 import com.github.devmribeiro.clipply.application.model.Schedule;
-import com.github.devmribeiro.clipply.application.repository.CompanySettingsRespository;
+import com.github.devmribeiro.clipply.application.repository.CompanySettingsRepository;
 import com.github.devmribeiro.clipply.application.repository.ScheduleRepository;
 import com.github.devmribeiro.clipply.security.util.SecurityUtils;
 
@@ -22,11 +22,11 @@ import jakarta.transaction.Transactional;
 public class ScheduleService {
 
     private final ScheduleRepository scheduleRepository;
-    private final CompanySettingsRespository companySettingsRespository;
+    private final CompanySettingsRepository companySettingsRespository;
 
     public ScheduleService(
     		ScheduleRepository scheduleRepository,
-    		CompanySettingsRespository companySettingsRespository) {
+    		CompanySettingsRepository companySettingsRespository) {
         this.scheduleRepository = scheduleRepository;
 		this.companySettingsRespository = companySettingsRespository;
     }

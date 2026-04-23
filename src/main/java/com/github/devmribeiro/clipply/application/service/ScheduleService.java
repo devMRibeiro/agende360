@@ -8,28 +8,39 @@ import org.springframework.stereotype.Service;
 
 import com.github.devmribeiro.clipply.application.dto.request.ScheduleRequest;
 import com.github.devmribeiro.clipply.application.dto.response.ScheduleResponse;
+import com.github.devmribeiro.clipply.application.dto.response.ScheduleResponseData;
 import com.github.devmribeiro.clipply.application.exception.ConflictException;
 import com.github.devmribeiro.clipply.application.exception.IllegalArgumentException;
 import com.github.devmribeiro.clipply.application.model.Schedule;
+import com.github.devmribeiro.clipply.application.repository.CompanySettingsRespository;
 import com.github.devmribeiro.clipply.application.repository.ScheduleRepository;
 import com.github.devmribeiro.clipply.security.util.SecurityUtils;
+
+import jakarta.transaction.Transactional;
 
 @Service
 public class ScheduleService {
 
     private final ScheduleRepository scheduleRepository;
+    private final CompanySettingsRespository companySettingsRespository;
 
-    public ScheduleService(ScheduleRepository scheduleRepository) {
+    public ScheduleService(
+    		ScheduleRepository scheduleRepository,
+    		CompanySettingsRespository companySettingsRespository) {
         this.scheduleRepository = scheduleRepository;
+		this.companySettingsRespository = companySettingsRespository;
     }
 
-    public List<ScheduleResponse> list() {
+    @Transactional
+    public ScheduleResponse list() {
         UUID companyId = SecurityUtils.getCompanyId();
         List<Schedule> schedules = scheduleRepository.findByCompanyId(companyId);
-        List<ScheduleResponse> result = new ArrayList<ScheduleResponse>(schedules.size());
+        List<ScheduleResponseData> data = new ArrayList<ScheduleResponseData>(schedules.size());
 
+    	Integer horizon = companySettingsRespository.findByCompanyId(companyId).getSchedulingHorizon();
+        
         for (Schedule schedule : schedules) {
-            result.add(new ScheduleResponse(
+        	data.add(new ScheduleResponseData(
                 schedule.getId(),
                 schedule.getDayOfWeek(),
                 schedule.getStartTime(),
@@ -37,7 +48,7 @@ public class ScheduleService {
             ));
         }
 
-        return result;
+        return new ScheduleResponse(horizon, data);
     }
 
     public void create(ScheduleRequest request) {

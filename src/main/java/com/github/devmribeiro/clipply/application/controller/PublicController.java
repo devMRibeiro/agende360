@@ -28,6 +28,7 @@ import com.github.devmribeiro.clipply.application.repository.CompanyRepository;
 import com.github.devmribeiro.clipply.application.repository.ProductRepository;
 import com.github.devmribeiro.clipply.application.repository.UserRepository;
 import com.github.devmribeiro.clipply.application.service.AppointmentService;
+import com.github.devmribeiro.clipply.application.service.CompanySettingsService;
 import com.github.devmribeiro.clipply.application.type.UserRole;
 
 import jakarta.validation.Valid;
@@ -40,16 +41,19 @@ public class PublicController {
     private final CompanyRepository companyRepository;
     private final ProductRepository productRepository;
     private final UserRepository userRepository;
+    private final CompanySettingsService companySettingsService;
 
     public PublicController(
             AppointmentService appointmentService,
             CompanyRepository companyRepository,
             ProductRepository productRepository,
-            UserRepository userRepository) {
+            UserRepository userRepository,
+            CompanySettingsService companySettingsService) {
         this.appointmentService = appointmentService;
         this.companyRepository = companyRepository;
         this.productRepository = productRepository;
         this.userRepository = userRepository;
+		this.companySettingsService = companySettingsService;
     }
 
     // Public info company
@@ -60,7 +64,9 @@ public class PublicController {
         if (company == null || !company.getActive())
             throw new IllegalArgumentException("Company not found");
 
-        return ResponseEntity.ok(new CompanyPublicResponse(company.getName(), company.getSlug()));
+        int horizon = companySettingsService.getShcedulingHorizon(company.getId());
+
+        return ResponseEntity.ok(new CompanyPublicResponse(company.getName(), company.getSlug(), horizon));
     }
 
     // Public listing of products

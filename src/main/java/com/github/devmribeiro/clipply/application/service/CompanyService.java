@@ -21,6 +21,7 @@ import com.github.devmribeiro.clipply.application.model.User;
 import com.github.devmribeiro.clipply.application.repository.CompanyRepository;
 import com.github.devmribeiro.clipply.application.repository.CompanySettingsRepository;
 import com.github.devmribeiro.clipply.application.repository.UserRepository;
+import com.github.devmribeiro.clipply.application.type.SchedulingHorizon;
 import com.github.devmribeiro.clipply.application.type.UserRole;
 import com.github.devmribeiro.clipply.messaging.service.EmailService;
 import com.github.devmribeiro.clipply.security.model.UserDetailsImpl;
@@ -72,7 +73,7 @@ public class CompanyService {
 
 		CompanySettings companySettings = new CompanySettings();
 		companySettings.setCompanyId(company.getId());
-		companySettings.setSchedulingHorizon(0);
+		companySettings.setSchedulingHorizon(SchedulingHorizon.SEM_LIMITE.getValue());
 		companySettingsRepository.save(companySettings);
 		
 		User user = new User();

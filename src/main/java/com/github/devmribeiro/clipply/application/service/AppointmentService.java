@@ -52,6 +52,7 @@ public class AppointmentService {
     private final UserRepository userRepository;
     private final CustomerService customerService;
     private final EmailService emailService;
+    private final CompanySettingsService companySettingsService;
 
     public AppointmentService(
             AppointmentRepository appointmentRepository,
@@ -60,7 +61,8 @@ public class AppointmentService {
             ScheduleRepository scheduleRepository,
             UserRepository userRepository,
             CustomerService customerService,
-            EmailService emailService) {
+            EmailService emailService,
+            CompanySettingsService companySettingsService) {
         this.appointmentRepository = appointmentRepository;
         this.companyRepository = companyRepository;
         this.productRepository = productRepository;
@@ -68,6 +70,7 @@ public class AppointmentService {
         this.userRepository = userRepository;
         this.customerService = customerService;
         this.emailService = emailService;
+		this.companySettingsService = companySettingsService;
     }
 
     public AvailableSlotsResponse getAvailableSlots(String slug, UUID professionalId, UUID productId, LocalDate date) {
@@ -156,6 +159,9 @@ public class AppointmentService {
 
     	if (requestDateTime.isBefore(LocalDateTime.now()))
     		throw new IllegalArgumentException("The time must be in the future");
+    	
+    	if (request.date().isAfter(LocalDateTime.now().plusDays(companySettingsService.getShcedulingHorizon(company.getId())).toLocalDate()))
+    	    throw new IllegalArgumentException("Date exceeds scheduling horizon");
         
         DayOfWeek dayOfWeek = DayOfWeek.valueOf(request.date().getDayOfWeek().name());
         List<Schedule> schedules = scheduleRepository.findByCompanyIdAndDayOfWeek(company.getId(), dayOfWeek);

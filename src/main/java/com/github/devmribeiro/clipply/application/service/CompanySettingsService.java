@@ -1,5 +1,7 @@
 package com.github.devmribeiro.clipply.application.service;
 
+import java.util.UUID;
+
 import org.springframework.stereotype.Service;
 
 import com.github.devmribeiro.clipply.application.dto.request.SchedulingHorizonRequest;
@@ -22,5 +24,9 @@ public class CompanySettingsService {
 	public void updateSchedulingHorizon(SchedulingHorizonRequest request) {
 		CompanySettings companySettings = companySettingsRespository.findByCompanyId(SecurityUtils.getCompanyId());
 		companySettings.setSchedulingHorizon(request.horizon());
+	}
+	
+	public int getShcedulingHorizon(UUID companyId) {
+		return companySettingsRespository.findByCompanyId(companyId).getSchedulingHorizon();
 	}
 }

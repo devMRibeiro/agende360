@@ -3,6 +3,7 @@ package com.github.devmribeiro.clipply.application.controller;
 import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 import java.util.UUID;
 
 import org.springframework.http.HttpStatus;
@@ -29,6 +30,7 @@ import com.github.devmribeiro.clipply.application.repository.ProductRepository;
 import com.github.devmribeiro.clipply.application.repository.UserRepository;
 import com.github.devmribeiro.clipply.application.service.AppointmentService;
 import com.github.devmribeiro.clipply.application.service.CompanySettingsService;
+import com.github.devmribeiro.clipply.application.service.CustomerService;
 import com.github.devmribeiro.clipply.application.type.UserRole;
 
 import jakarta.validation.Valid;
@@ -42,18 +44,21 @@ public class PublicController {
     private final ProductRepository productRepository;
     private final UserRepository userRepository;
     private final CompanySettingsService companySettingsService;
+    private final CustomerService customerService;
 
     public PublicController(
             AppointmentService appointmentService,
             CompanyRepository companyRepository,
             ProductRepository productRepository,
             UserRepository userRepository,
-            CompanySettingsService companySettingsService) {
+            CompanySettingsService companySettingsService,
+            CustomerService customerService) {
         this.appointmentService = appointmentService;
         this.companyRepository = companyRepository;
         this.productRepository = productRepository;
         this.userRepository = userRepository;
 		this.companySettingsService = companySettingsService;
+		this.customerService = customerService;
     }
 
     // Public info company
@@ -140,5 +145,10 @@ public class PublicController {
     public ResponseEntity<Void> cancel(@PathVariable String token) {
         appointmentService.cancel(token);
         return ResponseEntity.ok().build();
+    }
+    
+    @GetMapping("/check/customer")
+    public ResponseEntity<Map<String, String>> checkCustomerEmail(@RequestBody Map<String, String> request) {
+    	return ResponseEntity.ok(customerService.checkCustomerByPhone(request.get("phone")));
     }
 }

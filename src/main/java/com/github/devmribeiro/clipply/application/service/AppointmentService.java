@@ -205,7 +205,7 @@ public class AppointmentService {
         appointment.setEndTime(endTime);
         appointment.setStatus(AppointmentStatus.CONFIRMED);
         appointment.setToken(token);
-        appointmentRepository.save(appointment);
+        appointmentRepository.saveAndFlush(appointment);
 
         sendEmailConfirmation(customer, company, product, professional, startTime, token);
     }

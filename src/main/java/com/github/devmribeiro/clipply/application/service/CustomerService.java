@@ -64,7 +64,7 @@ public class CustomerService {
     	Customer customer = customerRepository.findByPhone(phone);
     	
     	if (customer == null)
-    		return null;
+    		return new HashMap<String, String>();
 
     	Map<String, String> mapCustomerInfo = new HashMap<String, String>();
     	mapCustomerInfo.put("phone", customer.getPhone());

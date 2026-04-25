@@ -69,6 +69,7 @@ public class CompanyService {
 		company.setName(request.companyName());
 		company.setDocument(request.document());
 		company.setSlug(genSlug(request.companyName()));
+		company.setEndereco(request.endereco());
 		companyRepository.save(company);
 
 		CompanySettings companySettings = new CompanySettings();

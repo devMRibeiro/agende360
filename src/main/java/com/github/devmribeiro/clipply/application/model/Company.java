@@ -1,6 +1,7 @@
 package com.github.devmribeiro.clipply.application.model;
 
 import jakarta.persistence.Column;
+import jakarta.persistence.Embedded;
 import jakarta.persistence.Entity;
 import jakarta.persistence.Index;
 import jakarta.persistence.Table;
@@ -23,6 +24,9 @@ public class Company extends BaseEntity {
 
 	@Column(nullable = false)
 	private Boolean active = true;
+	
+	@Embedded
+	private Endereco endereco;
 
 	public String getName() {
 		return name;
@@ -54,5 +58,13 @@ public class Company extends BaseEntity {
 
 	public void setActive(Boolean active) {
 		this.active = active;
+	}
+
+	public Endereco getEndereco() {
+		return endereco;
+	}
+
+	public void setEndereco(Endereco endereco) {
+		this.endereco = endereco;
 	}
 }

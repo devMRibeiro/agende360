@@ -1,7 +1,10 @@
 package com.github.devmribeiro.clipply.application.dto.request;
 
+import com.github.devmribeiro.clipply.application.model.Endereco;
+
 import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.NotNull;
 
 public record RegisterCompanyRequest(
 
@@ -19,6 +22,9 @@ public record RegisterCompanyRequest(
 		String document,
 		
 		@NotBlank
-		String phone
+		String phone,
+		
+		@NotNull
+		Endereco endereco
 	) {
 }

@@ -14,6 +14,7 @@ import com.github.devmribeiro.clipply.application.dto.request.ForgotPasswordRequ
 import com.github.devmribeiro.clipply.application.dto.request.LoginRequest;
 import com.github.devmribeiro.clipply.application.dto.request.NewPasswordRequest;
 import com.github.devmribeiro.clipply.application.dto.response.UserMeResponse;
+import com.github.devmribeiro.clipply.application.exception.ForbiddenException;
 import com.github.devmribeiro.clipply.application.model.Company;
 import com.github.devmribeiro.clipply.application.model.User;
 import com.github.devmribeiro.clipply.application.repository.CompanyRepository;
@@ -67,6 +68,11 @@ public class AuthController {
 		authenticationManager.authenticate(new UsernamePasswordAuthenticationToken(request.email(), request.password()));
 
 		User user = userRepository.findByEmail(request.email());
+		
+		Company company = companyRepository.findByCompanyId(user.getCompanyId());
+		
+		if (company != null && !company.getActive())
+			throw new ForbiddenException("Ops.. Não perca seus agendamentos, entre em contato com o suporte para regularizar.");
 
 		String accessToken = jwtService.generateToken(user);
 		RefreshToken refreshToken = refreshTokenService.createRefreshToken(user);

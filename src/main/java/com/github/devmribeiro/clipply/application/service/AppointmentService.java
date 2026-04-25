@@ -193,6 +193,7 @@ public class AppointmentService {
             throw new IllegalArgumentException("This time slot is already taken");
 
         Customer customer = customerService.findOrCreate(request.customerName(), request.customerPhone(), request.customerEmail());
+        customer.setName(request.customerName());
 
         String token = UUID.randomUUID().toString();
 
@@ -211,7 +212,7 @@ public class AppointmentService {
     }
 
     private void sendEmailConfirmation(Customer customer, Company company, Product product, User professional, LocalDateTime startTime, String token) {
-        String cancelUrl = baseUrl + "/api/public/appointment/cancel/" + token;
+        String cancelUrl = baseUrl + "/appointment/" + company.getSlug() + "/cancel/" + token;
         String formattedTime = startTime.format(DateTimeFormatter.ofPattern("dd/MM/yyyy HH:mm"));
 
         Map<String, String> vars = Map.of(

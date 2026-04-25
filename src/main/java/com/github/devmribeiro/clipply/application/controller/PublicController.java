@@ -147,7 +147,7 @@ public class PublicController {
         return ResponseEntity.ok().build();
     }
     
-    @GetMapping("/check/customer")
+    @PostMapping("/check/customer")
     public ResponseEntity<Map<String, String>> checkCustomerEmail(@RequestBody Map<String, String> request) {
     	return ResponseEntity.ok(customerService.checkCustomerByPhone(request.get("phone")));
     }

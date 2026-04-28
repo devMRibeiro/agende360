@@ -24,14 +24,12 @@ import com.github.devmribeiro.clipply.application.dto.response.ProfessionalRespo
 import com.github.devmribeiro.clipply.application.exception.IllegalArgumentException;
 import com.github.devmribeiro.clipply.application.model.Company;
 import com.github.devmribeiro.clipply.application.model.Product;
-import com.github.devmribeiro.clipply.application.model.User;
 import com.github.devmribeiro.clipply.application.repository.CompanyRepository;
 import com.github.devmribeiro.clipply.application.repository.ProductRepository;
-import com.github.devmribeiro.clipply.application.repository.UserRepository;
 import com.github.devmribeiro.clipply.application.service.AppointmentService;
 import com.github.devmribeiro.clipply.application.service.CompanySettingsService;
 import com.github.devmribeiro.clipply.application.service.CustomerService;
-import com.github.devmribeiro.clipply.application.type.UserRole;
+import com.github.devmribeiro.clipply.application.service.UserService;
 
 import jakarta.validation.Valid;
 
@@ -42,7 +40,7 @@ public class PublicController {
     private final AppointmentService appointmentService;
     private final CompanyRepository companyRepository;
     private final ProductRepository productRepository;
-    private final UserRepository userRepository;
+    private final UserService userService;
     private final CompanySettingsService companySettingsService;
     private final CustomerService customerService;
 
@@ -50,13 +48,13 @@ public class PublicController {
             AppointmentService appointmentService,
             CompanyRepository companyRepository,
             ProductRepository productRepository,
-            UserRepository userRepository,
+            UserService userService,
             CompanySettingsService companySettingsService,
             CustomerService customerService) {
         this.appointmentService = appointmentService;
         this.companyRepository = companyRepository;
         this.productRepository = productRepository;
-        this.userRepository = userRepository;
+        this.userService = userService;
 		this.companySettingsService = companySettingsService;
 		this.customerService = customerService;
     }
@@ -100,27 +98,10 @@ public class PublicController {
         return ResponseEntity.ok(result);
     }
 
-    // Public listing for professionals
+    // Public listing for professionals - for now productId is not used
     @GetMapping("/{slug}/professionals")
     public ResponseEntity<List<ProfessionalResponse>> listProfessionals(@PathVariable String slug, @RequestParam UUID productId) {
-
-        Company company = companyRepository.findBySlug(slug);
-
-        if (company == null || !company.getActive())
-            throw new IllegalArgumentException("Company not found");
-
-        List<User> users = userRepository.findByCompanyId(company.getId());
-        List<ProfessionalResponse> result = new ArrayList<ProfessionalResponse>();
-
-        int i = 0;
-        while (i < users.size()) {
-            User u = users.get(i);
-            if (u.getActive() && u.getRole() == UserRole.PROFESSIONAL)
-                result.add(new ProfessionalResponse(u.getId(), u.getName()));
-            i++;
-        }
-
-        return ResponseEntity.ok(result);
+        return ResponseEntity.ok(userService.listProfessionalsActive(slug));
     }
 
     // Available slots

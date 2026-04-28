@@ -10,6 +10,8 @@ import org.springframework.stereotype.Service;
 
 import com.github.devmribeiro.clipply.application.dto.request.ChangePasswordRequest;
 import com.github.devmribeiro.clipply.application.dto.request.RegisterProfessionalRequest;
+import com.github.devmribeiro.clipply.application.dto.request.UpdateUserRequest;
+import com.github.devmribeiro.clipply.application.dto.response.ProfessionalResponse;
 import com.github.devmribeiro.clipply.application.dto.response.UserMeResponse;
 import com.github.devmribeiro.clipply.application.dto.response.UserResponse;
 import com.github.devmribeiro.clipply.application.exception.ConflictException;
@@ -22,6 +24,7 @@ import com.github.devmribeiro.clipply.security.repository.RefreshTokenRepository
 import com.github.devmribeiro.clipply.security.util.PasswordUtil;
 import com.github.devmribeiro.clipply.security.util.SecurityUtils;
 
+import io.jsonwebtoken.lang.Collections;
 import jakarta.transaction.Transactional;
 
 @Service
@@ -114,5 +117,28 @@ public class UserService {
 				user.getRole(),
 				user.getPasswordChangedAt() == null
 		);
+	}
+	
+	public List<ProfessionalResponse> listProfessionalsActive(String slug) {
+
+		List<User> users = userRepository.listProfessionals(slug);
+        
+        if (users == null || users.isEmpty())
+        	return Collections.emptyList();
+
+        List<ProfessionalResponse> professionalsResponse = new ArrayList<ProfessionalResponse>(users.size());
+        
+        for (User u : users)
+        	professionalsResponse.add(new ProfessionalResponse(u.getId(), u.getName()));
+        
+        return professionalsResponse;
+	}
+	
+	@Transactional
+	public void updateUser(UpdateUserRequest request) {
+		User user = userRepository.findByUserId(SecurityUtils.getAuthenticatedUser().getId());
+		user.setName(request.name());
+		user.setPhone(request.phone());
+		user.setIsProfessional(request.isProfessional());
 	}
 }

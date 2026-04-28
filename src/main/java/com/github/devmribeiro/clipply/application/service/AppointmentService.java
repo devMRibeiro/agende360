@@ -230,7 +230,7 @@ public class AppointmentService {
 	    vars.put("CIDADE", company.getEndereco().getCidade());
 	    vars.put("ESTADO", company.getEndereco().getEstado());
 	    vars.put("CEP", company.getEndereco().getCep());
-	    vars.put("COMPLEMENTO", company.getEndereco().getComplemento());
+	    vars.put("COMPLEMENTO", company.getEndereco().getComplemento() == null ? "" : company.getEndereco().getComplemento());
 
         emailService.sendAppointmentConfirmedEmail(customer.getEmail(), vars);
     }

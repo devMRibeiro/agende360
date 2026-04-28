@@ -4,6 +4,7 @@ import java.util.List;
 import java.util.UUID;
 
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.stereotype.Repository;
 
@@ -35,4 +36,8 @@ public interface UserRepository extends JpaRepository<User, UUID> {
 			(u.role = UserRole.PROFESSIONAL or (u.role = UserRole.ADMIN and u.isProfessional = true)) 
 			""")
 	List<User> listProfessionals(String slug);
+	
+	@Modifying
+	@Query("update User u set u.isProfessional = :isProfessional where u.id = :userId and u.role = UserRole.ADMIN")
+	void toggleProfessionalUser(UUID userId, Boolean isProfessional);
 }

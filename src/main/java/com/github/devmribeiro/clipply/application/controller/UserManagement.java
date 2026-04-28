@@ -1,6 +1,7 @@
 package com.github.devmribeiro.clipply.application.controller;
 
 import java.util.List;
+import java.util.Map;
 
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -8,6 +9,7 @@ import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PatchMapping;
 import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
@@ -51,10 +53,17 @@ public class UserManagement {
 		return ResponseEntity.ok().build();
 	}
 	
-	@PostMapping("/update/admin")
+	@PutMapping("/user")
 	@PreAuthorize("hasRole('ADMIN')")
 	public ResponseEntity<Void> updateUserAdmin(@RequestBody UpdateUserRequest request) {
 		userService.updateUser(request);
+		return ResponseEntity.ok().build();
+	}
+	
+	@PatchMapping("/user/professional")
+	@PreAuthorize("hasRole('ADMIN')")
+	public ResponseEntity<Void> toggleProfessionalUser(@RequestBody Map<String, Boolean> request) {
+		userService.toogleProfessionalUser(request.get("isProfessional"));
 		return ResponseEntity.ok().build();
 	}
 }

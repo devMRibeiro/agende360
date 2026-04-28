@@ -15,11 +15,14 @@ import com.github.devmribeiro.clipply.application.dto.response.ProfessionalRespo
 import com.github.devmribeiro.clipply.application.dto.response.UserMeResponse;
 import com.github.devmribeiro.clipply.application.dto.response.UserResponse;
 import com.github.devmribeiro.clipply.application.exception.ConflictException;
+import com.github.devmribeiro.clipply.application.exception.ForbiddenException;
 import com.github.devmribeiro.clipply.application.exception.IllegalArgumentException;
 import com.github.devmribeiro.clipply.application.model.Company;
 import com.github.devmribeiro.clipply.application.model.User;
 import com.github.devmribeiro.clipply.application.repository.CompanyRepository;
 import com.github.devmribeiro.clipply.application.repository.UserRepository;
+import com.github.devmribeiro.clipply.application.type.UserRole;
+import com.github.devmribeiro.clipply.security.model.UserDetailsImpl;
 import com.github.devmribeiro.clipply.security.repository.RefreshTokenRepository;
 import com.github.devmribeiro.clipply.security.util.PasswordUtil;
 import com.github.devmribeiro.clipply.security.util.SecurityUtils;
@@ -49,9 +52,17 @@ public class UserService {
 	public List<UserResponse> list(UUID companyId) {
 		List<User> users = userRepository.findByCompanyId(companyId);
 		List<UserResponse> result = new ArrayList<UserResponse>(users.size());
-		for (User user : users)
-			result.add(new UserResponse(user.getName(), user.getEmail(), user.getPhone(), user.getActive(), user.getRole()));
-		
+		for (User user : users) {
+			result.add(new UserResponse(
+					user.getId(),
+					user.getName(),
+					user.getEmail(),
+					user.getPhone(),
+					user.getActive(),
+					user.getRole(),
+					user.getIsProfessional())
+			);
+		}
 		return result;
 	}
 	
@@ -136,9 +147,30 @@ public class UserService {
 	
 	@Transactional
 	public void updateUser(UpdateUserRequest request) {
+	    UserDetailsImpl authUser = SecurityUtils.getAuthenticatedUser();
+	    User target = userRepository.findByUserId(request.id());
+
+	    if (!authUser.getRole().equals(UserRole.ADMIN) && !authUser.getId().equals(target.getId()))
+	        throw new ForbiddenException("");
+
+	    target.setName(request.name());
+	    target.setPhone(request.phone());
+
+	    // Regra de email
+	    if (target.getRole() == UserRole.ADMIN && !target.getEmail().equals(request.email()))
+	        throw new IllegalArgumentException("Admin não pode alterar email");
+
+	    target.setEmail(request.email());
+	}
+	
+	@Transactional
+	public void toogleProfessionalUser(Boolean isProfessional) {
+		
 		User user = userRepository.findByUserId(SecurityUtils.getAuthenticatedUser().getId());
-		user.setName(request.name());
-		user.setPhone(request.phone());
-		user.setIsProfessional(request.isProfessional());
+		
+		if (!user.getRole().equals(UserRole.ADMIN))
+			throw new ForbiddenException("");
+		
+		userRepository.toggleProfessionalUser(SecurityUtils.getAuthenticatedUser().getId(), isProfessional);
 	}
 }

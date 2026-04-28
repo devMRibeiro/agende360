@@ -29,7 +29,7 @@ public interface UserRepository extends JpaRepository<User, UUID> {
 	@Query("""
 			select u 
 			from User u
-			inner join company c on c.id = u.companyId and c.companySlug = :slug and c.active = true 
+			inner join Company c on c.id = u.companyId and c.slug = :slug and c.active = true 
 			where 
 			u.active = true and
 			(u.role = UserRole.PROFESSIONAL or (u.role = UserRole.ADMIN and u.isProfessional = true)) 

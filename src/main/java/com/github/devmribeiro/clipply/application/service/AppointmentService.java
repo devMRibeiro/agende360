@@ -5,6 +5,7 @@ import java.time.LocalDateTime;
 import java.time.LocalTime;
 import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;
@@ -215,15 +216,21 @@ public class AppointmentService {
         String cancelUrl = baseUrl + "/appointment/" + company.getSlug() + "/cancel/" + token;
         String formattedTime = startTime.format(DateTimeFormatter.ofPattern("dd/MM/yyyy HH:mm"));
 
-        Map<String, String> vars = Map.of(
-                "COMPANY_NAME", company.getName(),
-                "CLIENT_NAME", customer.getName(),
-                "SERVICE_NAME", product.getName(),
-                "PROFESSIONAL_NAME", professional.getName(),
-                "APPOINTMENT_DATE", formattedTime,
-                "CANCEL_LINK", cancelUrl,
-                "YEAR", String.valueOf(LocalDateTime.now().getYear())
-        );
+        Map<String, String> vars = new HashMap<String, String>();
+	    vars.put("COMPANY_NAME", company.getName());
+	    vars.put("CLIENT_NAME", customer.getName());
+	    vars.put("SERVICE_NAME", product.getName());
+	    vars.put("PROFESSIONAL_NAME", professional.getName());
+	    vars.put("APPOINTMENT_DATE", formattedTime);
+	    vars.put("CANCEL_LINK", cancelUrl);
+	    vars.put("YEAR", String.valueOf(LocalDateTime.now().getYear()));
+	    vars.put("RUA", company.getEndereco().getLogradouro());
+	    vars.put("NUMERO", company.getEndereco().getNumero());
+	    vars.put("BAIRRO", company.getEndereco().getBairro());
+	    vars.put("CIDADE", company.getEndereco().getCidade());
+	    vars.put("ESTADO", company.getEndereco().getEstado());
+	    vars.put("CEP", company.getEndereco().getCep());
+	    vars.put("COMPLEMENTO", company.getEndereco().getComplemento());
 
         emailService.sendAppointmentConfirmedEmail(customer.getEmail(), vars);
     }

@@ -45,6 +45,9 @@ public class User extends BaseEntity {
 
 	@Column(name = "password_changed_at")
 	private LocalDateTime passwordChangedAt;
+	
+	@Column(name = "is_professional")
+	private Boolean isProfessional;
 
 	public String getEmail() {
 		return email;
@@ -108,5 +111,13 @@ public class User extends BaseEntity {
 
 	public void setName(String name) {
 		this.name = name;
+	}
+
+	public Boolean getIsProfessional() {
+		return isProfessional;
+	}
+
+	public void setIsProfessional(Boolean isProfessional) {
+		this.isProfessional = isProfessional;
 	}
 }

@@ -84,6 +84,7 @@ public class CompanyService {
 		user.setPassword(encoder.encode(defaultPassword));
 		user.setRole(UserRole.ADMIN);
 		user.setCompanyId(company.getId());
+		user.setIsProfessional(true);
 		userRepository.save(user);
 
 		sendAccessCreatedEmail(user, company);

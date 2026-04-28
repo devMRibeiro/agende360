@@ -14,6 +14,7 @@ import org.springframework.web.bind.annotation.RestController;
 
 import com.github.devmribeiro.clipply.application.dto.request.ChangePasswordRequest;
 import com.github.devmribeiro.clipply.application.dto.request.RegisterProfessionalRequest;
+import com.github.devmribeiro.clipply.application.dto.request.UpdateUserRequest;
 import com.github.devmribeiro.clipply.application.dto.response.UserResponse;
 import com.github.devmribeiro.clipply.application.service.UserService;
 import com.github.devmribeiro.clipply.security.util.SecurityUtils;
@@ -47,6 +48,13 @@ public class UserManagement {
 	@PreAuthorize("hasAnyRole('ADMIN', 'PROFESSIONAL')")
 	public ResponseEntity<Void> changePassword(@RequestBody @Valid ChangePasswordRequest request) {
 		userService.changePassword(request, SecurityUtils.getAuthenticatedUser().getUsername());
+		return ResponseEntity.ok().build();
+	}
+	
+	@PostMapping("/update/admin")
+	@PreAuthorize("hasRole('ADMIN')")
+	public ResponseEntity<Void> updateUserAdmin(@RequestBody UpdateUserRequest request) {
+		userService.updateUser(request);
 		return ResponseEntity.ok().build();
 	}
 }

@@ -25,4 +25,14 @@ public interface UserRepository extends JpaRepository<User, UUID> {
 	
 	@Query("select u from User u where u.companyId = :companyId")
 	User getByCompanyId(UUID companyId);
+	
+	@Query("""
+			select u 
+			from User u
+			inner join company c on c.id = u.companyId and c.companySlug = :slug and c.active = true 
+			where 
+			u.active = true and
+			(u.role = UserRole.PROFESSIONAL or (u.role = UserRole.ADMIN and u.isProfessional = true)) 
+			""")
+	List<User> listProfessionals(String slug);
 }

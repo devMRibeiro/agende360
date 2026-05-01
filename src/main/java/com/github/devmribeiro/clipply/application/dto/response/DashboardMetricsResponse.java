@@ -5,8 +5,8 @@ import java.util.List;
 
 public record DashboardMetricsResponse(
 		BigDecimal expectedRevenue,
-		Integer totalAppointments,
-		Integer confirmedAppointments,
+		Long totalAppointments,
+		Long confirmedAppointments,
 		Integer occupancyRate,
 		Trend revenueTrend,
 		Trend appointmentsTrend,

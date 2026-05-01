@@ -3,6 +3,7 @@ package com.github.devmribeiro.clipply.application.service;
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Map;
+import java.util.UUID;
 
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.security.crypto.password.PasswordEncoder;
@@ -156,5 +157,9 @@ public class CompanyService {
 
 	    user.setEmail(request.email());
 	    user.setPhone(request.phone());
+	}
+	
+	public Company findByCompanyId(UUID companyId) {
+		return companyRepository.findByCompanyId(companyId);
 	}
 }

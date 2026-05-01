@@ -1,7 +1,9 @@
 package com.github.devmribeiro.clipply.application.dto.response;
 
+import java.math.BigDecimal;
+
 public record Trend(
-		Integer value,
+		BigDecimal value,
 		boolean isPositive
 	) {
 }

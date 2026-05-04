@@ -7,6 +7,8 @@ import java.time.LocalDateTime;
 import java.time.LocalTime;
 import java.time.temporal.ChronoUnit;
 import java.time.temporal.TemporalAdjusters;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.UUID;
 
 import org.springframework.stereotype.Service;
@@ -61,6 +63,12 @@ public class DashboardService {
 		Trend appointmentsTrend = new Trend(appointmentsTrendValue, appointmentsTrendValue.signum() >= 0);
 		Trend revenueTrend = new Trend(revenueTrendValue, revenueTrendValue.signum() >= 0);
 		
+		List<String> insights = buildInsights(
+				revenueTrend.value(),
+				appointmentsTrend.value(),
+				dashboardRepository.getTrend(companyId, currentRange.start(), currentRange.end()),
+				dashboardRepository.getTopServices(companyId, currentRange.start(), currentRange.end()));
+		
 		return new DashboardMetricsResponse(
 				current.expectedRevenue(),
 				current.totalAppointments(),
@@ -68,7 +76,7 @@ public class DashboardService {
 				null,
 				revenueTrend,
 				appointmentsTrend,
-				null
+				insights
 		);
 	}
 	
@@ -76,6 +84,54 @@ public class DashboardService {
 	    LocalDateTime previousStart = currentRange.start().minusDays(ChronoUnit.DAYS.between(currentRange.start().toLocalDate(), currentRange.end().toLocalDate()) + 1);
 	    LocalDateTime previousEnd = currentRange.start().minusSeconds(1);
 	    return new DateRange(previousStart, previousEnd);
+	}
+	
+	private List<String> buildInsights(BigDecimal revenueTrendValue, BigDecimal appointmentsTrendValue, List<Object[]> trend, List<Object[]> topServices) {
+
+	    List<String> insights = new ArrayList<String>();
+
+	    // 1. Receita (trend)
+	    if (revenueTrendValue.compareTo(BigDecimal.ZERO) > 0) {
+	        insights.add("Faturamento cresceu " + revenueTrendValue.abs() + "% em relação ao período anterior");
+	    } else if (revenueTrendValue.compareTo(BigDecimal.ZERO) < 0) {
+	        insights.add("Faturamento caiu " + revenueTrendValue.abs() + "% em relação ao período anterior");
+	    }
+
+	    // 2. Agendamentos (trend)
+	    if (appointmentsTrendValue.compareTo(BigDecimal.ZERO) > 0) {
+	        insights.add("Número de agendamentos aumentou " + appointmentsTrendValue.abs() + "%");
+	    } else if (appointmentsTrendValue.compareTo(BigDecimal.ZERO) < 0) {
+	        insights.add("Número de agendamentos caiu " + appointmentsTrendValue.abs() + "%");
+	    }
+
+	    // 3. Melhor dia
+	    if (trend != null && !trend.isEmpty()) {
+	        Object[] best = trend.get(0);
+
+	        for (int i = 1; i < trend.size(); i++) {
+	            Object[] current = trend.get(i);
+
+	            BigDecimal value = (BigDecimal) current[1];
+	            BigDecimal bestValue = (BigDecimal) best[1];
+
+	            if (value.compareTo(bestValue) > 0) {
+	                best = current;
+	            }
+	        }
+
+	        String label = (String) best[0];
+	        insights.add(label + " foi o dia com maior faturamento");
+	    }
+
+	    // 4. Serviço mais vendido
+	    if (topServices != null && !topServices.isEmpty()) {
+	        Object[] top = topServices.get(0);
+	        String name = (String) top[0];
+
+	        insights.add(name + " é o serviço mais vendido no período");
+	    }
+
+	    return insights;
 	}
 	
 	private DashboardMetricsDTO getExpectedRevenueAndTotalAppointments(LocalDateTime start, LocalDateTime end) {
@@ -135,7 +191,8 @@ public class DashboardService {
 	                : BigDecimal.valueOf(100);
 
 	    return current.subtract(previous)
-	            .divide(previous, 4, RoundingMode.HALF_UP)
-	            .multiply(BigDecimal.valueOf(100));
+	            .divide(previous, 6, RoundingMode.HALF_UP)
+	            .multiply(BigDecimal.valueOf(100))
+	            .setScale(2, RoundingMode.HALF_UP);
 	}
 }

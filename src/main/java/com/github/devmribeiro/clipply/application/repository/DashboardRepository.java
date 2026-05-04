@@ -2,6 +2,7 @@ package com.github.devmribeiro.clipply.application.repository;
 
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
+import java.util.List;
 import java.util.UUID;
 
 import org.springframework.stereotype.Repository;
@@ -68,5 +69,42 @@ public class DashboardRepository {
 		    .setParameter("start", start)
 		    .setParameter("end", end)
 		    .getSingleResult();
+	}
+	
+	public List<Object[]> getTrend(UUID companyId, LocalDateTime start, LocalDateTime end) {
+		return em.createQuery("""
+				SELECT 
+				  TO_CHAR(a.startTime, 'Dy') as label,
+				  SUM(p.price) as value
+				FROM Appointment a
+				JOIN Product p ON p.id = a.productId
+				WHERE a.companyId = :companyId
+				  AND a.startTime BETWEEN :start AND :end
+				GROUP BY label
+				""", Object[].class)
+				.setParameter("companyId", companyId)
+			    .setParameter("start", start)
+			    .setParameter("end", end)
+			    .getResultList();
+	}
+	
+	public List<Object[]> getTopServices(UUID companyId, LocalDateTime start, LocalDateTime end) {
+		return em.createQuery("""
+				SELECT 
+				  p.name,
+				  SUM(p.price),
+				  COUNT(a.id)
+				FROM Appointment a
+				JOIN Product p ON p.id = a.productId
+				WHERE a.companyId = :companyId
+				  AND a.startTime BETWEEN :start AND :end
+				GROUP BY p.name
+				ORDER BY SUM(p.price) DESC
+				LIMIT 1
+				""", Object[].class)
+				.setParameter("companyId", companyId)
+			    .setParameter("start", start)
+			    .setParameter("end", end)
+			    .getResultList();
 	}
 }

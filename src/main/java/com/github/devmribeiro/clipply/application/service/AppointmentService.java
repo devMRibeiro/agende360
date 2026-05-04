@@ -32,6 +32,7 @@ import com.github.devmribeiro.clipply.application.repository.ScheduleRepository;
 import com.github.devmribeiro.clipply.application.repository.UserRepository;
 import com.github.devmribeiro.clipply.application.type.AppointmentStatus;
 import com.github.devmribeiro.clipply.application.type.DayOfWeek;
+import com.github.devmribeiro.clipply.application.type.SchedulingHorizon;
 import com.github.devmribeiro.clipply.messaging.service.EmailService;
 import com.github.devmribeiro.clipply.security.model.UserDetailsImpl;
 import com.github.devmribeiro.clipply.security.util.SecurityUtils;
@@ -161,8 +162,12 @@ public class AppointmentService {
     	if (requestDateTime.isBefore(LocalDateTime.now()))
     		throw new IllegalArgumentException("The time must be in the future");
     	
-    	if (request.date().isAfter(LocalDateTime.now().plusDays(companySettingsService.getShcedulingHorizon(company.getId())).toLocalDate()))
-    	    throw new IllegalArgumentException("Date exceeds scheduling horizon");
+    	int schedulingHorizon = companySettingsService.getShcedulingHorizon(company.getId());
+    	
+    	if (schedulingHorizon != SchedulingHorizon.SEM_LIMITE.getValue()) {
+    		if (request.date().isAfter(LocalDateTime.now().plusDays(schedulingHorizon).toLocalDate()))
+    			throw new IllegalArgumentException("Date exceeds scheduling horizon");
+    	}
         
         DayOfWeek dayOfWeek = DayOfWeek.valueOf(request.date().getDayOfWeek().name());
         List<Schedule> schedules = scheduleRepository.findByCompanyIdAndDayOfWeek(company.getId(), dayOfWeek);

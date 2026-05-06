@@ -7,7 +7,7 @@ import java.util.UUID;
 
 import org.springframework.stereotype.Repository;
 
-import br.com.corestacks.agende360.application.dto.DashboardMetricsDTO;
+import br.com.corestacks.agende360.application.dto.response.DashboardMetricsDTO;
 import jakarta.persistence.EntityManager;
 import jakarta.persistence.PersistenceContext;
 
@@ -16,94 +16,80 @@ public class DashboardRepository {
 
 	@PersistenceContext
 	private EntityManager em;
-	
+
 	public DashboardMetricsDTO getExpectedRevenueAndTotalAppointments(UUID companyId, LocalDateTime start, LocalDateTime end) {
-	    return em.createQuery("""
-	        SELECT new DashboardMetricsDTO(
-	            COALESCE(SUM(p.price), 0),
-	            COUNT(a)
-	        )
-	        FROM Appointment a
-	        INNER JOIN Product p ON p.id = a.productId
-	        INNER JOIN Company c ON c.id = a.companyId
-	        WHERE 
-	            c.id = :companyId
-	            AND c.active = true
-	            AND a.createdAt BETWEEN :start AND :end
-	    """, DashboardMetricsDTO.class)
-	    .setParameter("companyId", companyId)
-	    .setParameter("start", start)
-	    .setParameter("end", end)
-	    .getSingleResult();
+		Object[] row = (Object[]) em.createNativeQuery(
+			"SELECT COALESCE(SUM(p.price), 0), COUNT(a.id) " +
+			"FROM appointment a " +
+			"INNER JOIN product p ON p.id = a.product_id " +
+			"INNER JOIN company c ON c.id = a.company_id " +
+			"WHERE c.id = :companyId " +
+			"AND c.active = true " +
+			"AND a.created_at BETWEEN :start AND :end"
+		)
+		.setParameter("companyId", companyId)
+		.setParameter("start", start)
+		.setParameter("end", end)
+		.getSingleResult();
+
+		BigDecimal expectedRevenue = (BigDecimal) row[0];
+		Long totalAppointments = ((Number) row[1]).longValue();
+
+		return new DashboardMetricsDTO(expectedRevenue, totalAppointments);
 	}
-	
+
 	public Long getTotalAppointmentsConfirmed(UUID companyId, LocalDateTime start, LocalDateTime end) {
-		return em.createQuery("""
-		        SELECT
-		            COUNT(a)
-		        FROM Appointment a
-		        INNER JOIN Company c ON c.id = a.companyId
-		        WHERE 
-		            c.id = :companyId
-		            AND c.active = true
-		            AND a.status NOT IN ('CANCELLED', 'NO_SHOW', 'COMPLETED')
-		            AND a.createdAt BETWEEN :start AND :end
-		    """, Long.class)
-		    .setParameter("companyId", companyId)
-		    .setParameter("start", start)
-		    .setParameter("end", end)
-		    .getSingleResult();
+		Object result = em.createNativeQuery(
+			"SELECT COUNT(a.id) " +
+			"FROM appointment a " +
+			"INNER JOIN company c ON c.id = a.company_id " +
+			"WHERE c.id = :companyId " +
+			"AND c.active = true " +
+			"AND a.status NOT IN ('CANCELLED', 'NO_SHOW', 'COMPLETED') " +
+			"AND a.created_at BETWEEN :start AND :end"
+		)
+		.setParameter("companyId", companyId)
+		.setParameter("start", start)
+		.setParameter("end", end)
+		.getSingleResult();
+
+		return ((Number) result).longValue();
 	}
-	
-	public BigDecimal getRevenueTrend(UUID companyId, LocalDateTime start, LocalDateTime end) {
-		return em.createQuery("""
-		        SELECT COALESCE(SUM(p.price), 0)
-				FROM Appointment a
-				INNER JOIN Product p ON p.id = a.productId
-				WHERE a.companyId = :companyId
-				  AND a.startTime BETWEEN :start AND :end
-				  AND a.status NOT IN ('CANCELLED', 'NO_SHOW');
-		    """, BigDecimal.class)
-		    .setParameter("companyId", companyId)
-		    .setParameter("start", start)
-		    .setParameter("end", end)
-		    .getSingleResult();
-	}
-	
+
+	@SuppressWarnings("unchecked")
 	public List<Object[]> getTrend(UUID companyId, LocalDateTime start, LocalDateTime end) {
-		return em.createQuery("""
-				SELECT 
-				  TO_CHAR(a.startTime, 'Dy') as label,
-				  SUM(p.price) as value
-				FROM Appointment a
-				JOIN Product p ON p.id = a.productId
-				WHERE a.companyId = :companyId
-				  AND a.startTime BETWEEN :start AND :end
-				GROUP BY label
-				""", Object[].class)
-				.setParameter("companyId", companyId)
-			    .setParameter("start", start)
-			    .setParameter("end", end)
-			    .getResultList();
+		return em.createNativeQuery(
+			"SELECT TO_CHAR(a.start_time, 'Dy') AS label, COALESCE(SUM(p.price), 0) AS value " +
+			"FROM appointment a " +
+			"INNER JOIN product p ON p.id = a.product_id " +
+			"WHERE a.company_id = :companyId " +
+			"AND a.start_time BETWEEN :start AND :end " +
+			"AND a.status NOT IN ('CANCELLED', 'NO_SHOW') " +
+			"GROUP BY TO_CHAR(a.start_time, 'Dy') " +
+			"ORDER BY MIN(a.start_time)"
+		)
+		.setParameter("companyId", companyId)
+		.setParameter("start", start)
+		.setParameter("end", end)
+		.getResultList();
 	}
-	
+
+	@SuppressWarnings("unchecked")
 	public List<Object[]> getTopServices(UUID companyId, LocalDateTime start, LocalDateTime end) {
-		return em.createQuery("""
-				SELECT 
-				  p.name,
-				  SUM(p.price),
-				  COUNT(a.id)
-				FROM Appointment a
-				JOIN Product p ON p.id = a.productId
-				WHERE a.companyId = :companyId
-				  AND a.startTime BETWEEN :start AND :end
-				GROUP BY p.name
-				ORDER BY SUM(p.price) DESC
-				LIMIT 1
-				""", Object[].class)
-				.setParameter("companyId", companyId)
-			    .setParameter("start", start)
-			    .setParameter("end", end)
-			    .getResultList();
+		return em.createNativeQuery(
+			"SELECT p.name, COALESCE(SUM(p.price), 0), COUNT(a.id) " +
+			"FROM appointment a " +
+			"INNER JOIN product p ON p.id = a.product_id " +
+			"WHERE a.company_id = :companyId " +
+			"AND a.start_time BETWEEN :start AND :end " +
+			"AND a.status NOT IN ('CANCELLED', 'NO_SHOW') " +
+			"GROUP BY p.name " +
+			"ORDER BY SUM(p.price) DESC " +
+			"LIMIT 5"
+		)
+		.setParameter("companyId", companyId)
+		.setParameter("start", start)
+		.setParameter("end", end)
+		.getResultList();
 	}
 }

@@ -18,14 +18,14 @@ import br.com.corestacks.agende360.application.type.PeriodFilter;
 @PreAuthorize("hasRole('ADMIN')")
 public class DashboardController {
 
-	private final DashboardService dashboardService;
-	
-	public DashboardController(DashboardService dashboardService) {
-		this.dashboardService = dashboardService;
-	}
-	
-	@PostMapping("/metrics")
-	public ResponseEntity<DashboardMetricsResponse> getMetrics(@RequestBody Map<String, PeriodFilter> request) {
-		return ResponseEntity.ok(dashboardService.getMetrics(request.get("period")));
-	}
+    private final DashboardService dashboardService;
+
+    public DashboardController(DashboardService dashboardService) {
+        this.dashboardService = dashboardService;
+    }
+
+    @PostMapping("/metrics")
+    public ResponseEntity<DashboardMetricsResponse> getMetrics(@RequestBody Map<String, PeriodFilter> request) {
+        return ResponseEntity.ok(dashboardService.getMetrics(request.get("period")));
+    }
 }

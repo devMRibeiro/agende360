@@ -7,9 +7,10 @@ public record DashboardMetricsResponse(
 		BigDecimal expectedRevenue,
 		Long totalAppointments,
 		Long confirmedAppointments,
-		Integer occupancyRate,
 		Trend revenueTrend,
 		Trend appointmentsTrend,
+		List<TrendPoint> chart,
+		List<TopServiceItem> topServices,
 		List<String> insights
-	){
+	) {
 }

@@ -1,4 +1,4 @@
-package br.com.corestacks.agende360.application.dto;
+package br.com.corestacks.agende360.application.dto.response;
 
 import java.time.LocalDateTime;
 

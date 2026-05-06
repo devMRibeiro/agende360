@@ -1,0 +1,53 @@
+package br.com.corestacks.agende360.application.exception;
+
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
+import org.springframework.security.authentication.BadCredentialsException;
+import org.springframework.web.bind.annotation.ExceptionHandler;
+import org.springframework.web.bind.annotation.RestControllerAdvice;
+
+@RestControllerAdvice
+public class GlobalExceptionHandler {
+
+	@ExceptionHandler(IllegalArgumentException.class)
+	public ResponseEntity<ErrorResponse> handleIllegalArgumentException(IllegalArgumentException ex) {
+		return ResponseEntity
+				.status(HttpStatus.BAD_REQUEST.value())
+				.body(new ErrorResponse(HttpStatus.BAD_REQUEST.value(), ex.getMessage()));
+	}
+
+	@ExceptionHandler(ConflictException.class)
+	public ResponseEntity<ErrorResponse> handleConflictException(ConflictException ex) {
+		return ResponseEntity
+				.status(HttpStatus.CONFLICT.value())
+				.body(new ErrorResponse(HttpStatus.CONFLICT.value(), ex.getMessage()));
+	}
+
+	@ExceptionHandler(UnauthorizedException.class)
+	public ResponseEntity<ErrorResponse> handleConflictException(UnauthorizedException ex) {
+		return ResponseEntity
+				.status(HttpStatus.UNAUTHORIZED.value())
+				.body(new ErrorResponse(HttpStatus.UNAUTHORIZED.value(), ex.getMessage()));
+	}
+
+	@ExceptionHandler(BadCredentialsException.class)
+	public ResponseEntity<ErrorResponse> handleConflictException(BadCredentialsException ex) {
+		return ResponseEntity
+				.status(HttpStatus.UNAUTHORIZED.value())
+				.body(new ErrorResponse(HttpStatus.UNAUTHORIZED.value(), ex.getMessage()));
+	}
+
+	@ExceptionHandler(ForbiddenException.class)
+	public ResponseEntity<ErrorResponse> handleForbiddenException(ForbiddenException ex) {
+		return ResponseEntity
+				.status(HttpStatus.FORBIDDEN.value())
+				.body(new ErrorResponse(HttpStatus.FORBIDDEN.value(), ex.getMessage()));
+	}
+
+	@ExceptionHandler(Exception.class)
+	public ResponseEntity<ErrorResponse> handleGeneric(Exception ex) {
+		return ResponseEntity
+				.status(HttpStatus.INTERNAL_SERVER_ERROR.value())
+				.body(new ErrorResponse(HttpStatus.INTERNAL_SERVER_ERROR.value(), ex.getMessage()));
+	}
+}

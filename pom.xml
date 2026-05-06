@@ -9,10 +9,10 @@
 		<relativePath/> <!-- lookup parent from repository -->
 	</parent>
 	<groupId>com.github.devmribeiro</groupId>
-	<artifactId>clipply</artifactId>
+	<artifactId>agende360</artifactId>
 	<version>0.0.1-SNAPSHOT</version>
 	<packaging>jar</packaging>
-	<name>clipply</name>
+	<name>agende360</name>
 	<description>Backend service for scheduling sytem</description>
 	<url/>
 	<licenses>
@@ -128,7 +128,7 @@
 	</dependencies>
 
 	<build>
-		<finalName>clipply</finalName>
+		<finalName>agende360</finalName>
 		<plugins>
 			<plugin>
 				<groupId>org.springframework.boot</groupId>

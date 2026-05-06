@@ -32,6 +32,7 @@ import br.com.corestacks.agende360.application.repository.ScheduleRepository;
 import br.com.corestacks.agende360.application.repository.UserRepository;
 import br.com.corestacks.agende360.application.type.AppointmentStatus;
 import br.com.corestacks.agende360.application.type.DayOfWeek;
+import br.com.corestacks.agende360.application.type.SchedulingHorizon;
 import br.com.corestacks.agende360.messaging.service.EmailService;
 import br.com.corestacks.agende360.security.model.UserDetailsImpl;
 import br.com.corestacks.agende360.security.util.SecurityUtils;
@@ -160,8 +161,12 @@ public class AppointmentService {
     	if (requestDateTime.isBefore(LocalDateTime.now()))
     		throw new IllegalArgumentException("The time must be in the future");
     	
-    	if (request.date().isAfter(LocalDateTime.now().plusDays(companySettingsService.getShcedulingHorizon(company.getId())).toLocalDate()))
-    	    throw new IllegalArgumentException("Date exceeds scheduling horizon");
+    	int schedulingHorizon = companySettingsService.getShcedulingHorizon(company.getId());
+    	
+    	if (schedulingHorizon != SchedulingHorizon.SEM_LIMITE.getValue()) {
+    		if (request.date().isAfter(LocalDateTime.now().plusDays(schedulingHorizon).toLocalDate()))
+    			throw new IllegalArgumentException("Date exceeds scheduling horizon");
+    	}
         
         DayOfWeek dayOfWeek = DayOfWeek.valueOf(request.date().getDayOfWeek().name());
         List<Schedule> schedules = scheduleRepository.findByCompanyIdAndDayOfWeek(company.getId(), dayOfWeek);

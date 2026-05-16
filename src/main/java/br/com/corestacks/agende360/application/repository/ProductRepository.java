@@ -5,6 +5,7 @@ import java.util.UUID;
 
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
+import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
 import br.com.corestacks.agende360.application.model.Product;
@@ -17,5 +18,11 @@ public interface ProductRepository extends JpaRepository<Product, UUID> {
 	
     boolean existsByNameAndCompanyId(String name, UUID companyId);
 
-    List<Product> findByCompanyId(UUID companyId);
+    @Query("""
+    	    SELECT p
+    	    FROM Product p
+    	    WHERE p.companyId = :companyId
+    	    AND (:active IS NULL OR p.active = :active)
+    	""")
+	List<Product> findByCompanyIdAndActive(@Param("companyId") UUID companyId, @Param("active") Boolean active);
 }

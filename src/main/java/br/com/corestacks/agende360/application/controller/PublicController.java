@@ -79,7 +79,7 @@ public class PublicController {
         if (company == null || !company.getActive())
             throw new IllegalArgumentException("Company not found");
 
-        List<Product> products = productRepository.findByCompanyId(company.getId());
+        List<Product> products = productRepository.findByCompanyIdAndActive(company.getId(), true);
         List<ProductResponse> result = new ArrayList<ProductResponse>(products.size());
 
         int i = 0;

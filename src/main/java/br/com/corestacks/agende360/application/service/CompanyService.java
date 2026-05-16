@@ -22,6 +22,10 @@ import br.com.corestacks.agende360.application.model.User;
 import br.com.corestacks.agende360.application.repository.CompanyRepository;
 import br.com.corestacks.agende360.application.repository.CompanySettingsRepository;
 import br.com.corestacks.agende360.application.repository.UserRepository;
+import br.com.corestacks.agende360.application.subscription.dto.request.SubscriptionCreate;
+import br.com.corestacks.agende360.application.subscription.service.SubscriptionService;
+import br.com.corestacks.agende360.application.subscription.type.SubscriptionPlan;
+import br.com.corestacks.agende360.application.subscription.type.SubscriptionStatus;
 import br.com.corestacks.agende360.application.type.SchedulingHorizon;
 import br.com.corestacks.agende360.application.type.UserRole;
 import br.com.corestacks.agende360.messaging.service.EmailService;
@@ -37,6 +41,7 @@ public class CompanyService {
 	private final UserRepository userRepository;
 	private final PasswordEncoder encoder;
 	private final EmailService emailService;
+	private final SubscriptionService subscriptionService;
 
 	@Value("${SYSTEM.BASE-URL}")
 	private String baseUrl;
@@ -48,12 +53,14 @@ public class CompanyService {
 						  UserRepository userRepository,
 						  PasswordEncoder encoder,
 						  EmailService emailService,
-						  CompanySettingsRepository companySettingsRepository) {
+						  CompanySettingsRepository companySettingsRepository,
+						  SubscriptionService subscriptionService) {
 		this.userRepository = userRepository;
 		this.companyRepository = companyRepository;
 		this.encoder = encoder;
 		this.emailService = emailService;
 		this.companySettingsRepository = companySettingsRepository;
+		this.subscriptionService = subscriptionService;
 	}
 
 	@Transactional
@@ -89,9 +96,19 @@ public class CompanyService {
 
 		sendAccessCreatedEmail(user, company);
 		
+		LocalDateTime now = LocalDateTime.now();
+
+		subscriptionService.createSubscription(
+				new SubscriptionCreate(
+						company.getId(),
+						SubscriptionPlan.TRIAL,
+						SubscriptionStatus.TRIALING,
+						now,
+						now.plusDays(14)));
+
 		return new RegisterCompanyResponse(company.getName(), company.getSlug(), user.getEmail(), user.getName());
 	}
-
+	
 	private void sendAccessCreatedEmail(User user, Company company) {
         Map<String, String> vars = Map.of(
                 "COMPANY_NAME", company.getName(),

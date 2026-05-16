@@ -21,6 +21,7 @@ import br.com.corestacks.agende360.application.model.Company;
 import br.com.corestacks.agende360.application.model.User;
 import br.com.corestacks.agende360.application.repository.CompanyRepository;
 import br.com.corestacks.agende360.application.repository.UserRepository;
+import br.com.corestacks.agende360.application.subscription.service.FeatureGateService;
 import br.com.corestacks.agende360.application.type.UserRole;
 import br.com.corestacks.agende360.security.model.UserDetailsImpl;
 import br.com.corestacks.agende360.security.repository.RefreshTokenRepository;
@@ -36,16 +37,19 @@ public class UserService {
 	private final PasswordEncoder encoder;
 	private final RefreshTokenRepository refreshTokenRepository;
 	private final CompanyRepository companyRepository;
+	private final FeatureGateService featureGateService;
 	
 	public UserService(
 			UserRepository userRepository,
 			PasswordEncoder encoder,
 			RefreshTokenRepository refreshTokenRepository,
-			CompanyRepository companyRepository) {
+			CompanyRepository companyRepository,
+			FeatureGateService featureGateService) {
 		this.userRepository = userRepository;
 		this.encoder = encoder;
 		this.refreshTokenRepository = refreshTokenRepository;
 		this.companyRepository = companyRepository;
+		this.featureGateService = featureGateService;
 	}
 
 	public List<UserResponse> list(UUID companyId) {
@@ -69,6 +73,8 @@ public class UserService {
 
 		if (userRepository.existsByEmail(request.email()))
 			throw new ConflictException("There is already user with that email");
+		
+		featureGateService.checkProfessionalsLimit(SecurityUtils.getCompanyId(), userRepository.listProfessionals(SecurityUtils.getCompanyId(), null).size());
 
 		User user = new User();
 		user.setName(request.name());
@@ -131,7 +137,7 @@ public class UserService {
 	
 	public List<ProfessionalResponse> listProfessionalsActive(String slug) {
 
-		List<User> users = userRepository.listProfessionals(slug);
+		List<User> users = userRepository.listProfessionals(null, slug);
         
         if (users == null || users.isEmpty())
         	return Collections.emptyList();

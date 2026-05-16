@@ -13,20 +13,23 @@ import br.com.corestacks.agende360.application.exception.ConflictException;
 import br.com.corestacks.agende360.application.exception.IllegalArgumentException;
 import br.com.corestacks.agende360.application.model.Product;
 import br.com.corestacks.agende360.application.repository.ProductRepository;
+import br.com.corestacks.agende360.application.subscription.service.FeatureGateService;
 import br.com.corestacks.agende360.security.util.SecurityUtils;
 
 @Service
 public class ProductService {
 
     private final ProductRepository productRepository;
+    private final FeatureGateService featureGateService;
 
-    public ProductService(ProductRepository productRepository) {
+    public ProductService(ProductRepository productRepository, FeatureGateService featureGateService) {
         this.productRepository = productRepository;
+		this.featureGateService = featureGateService;
     }
 
     public List<ProductResponse> list() {
         UUID companyId = SecurityUtils.getCompanyId();
-        List<Product> products = productRepository.findByCompanyId(companyId);
+        List<Product> products = productRepository.findByCompanyIdAndActive(companyId, null);
         List<ProductResponse> result = new ArrayList<ProductResponse>(products.size());
 
         for (Product product : products) {
@@ -67,6 +70,8 @@ public class ProductService {
     public void create(ProductCreateRequest request) {
         UUID companyId = SecurityUtils.getCompanyId();
 
+        featureGateService.checkServicesLimit(companyId, productRepository.findByCompanyIdAndActive(companyId, true).size());
+        
         if (productRepository.existsByNameAndCompanyId(request.name(), companyId))
             throw new ConflictException("There is already a product with that name");
 

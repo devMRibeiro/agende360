@@ -22,6 +22,7 @@ import br.com.corestacks.agende360.application.dto.response.TrendPoint;
 import br.com.corestacks.agende360.application.exception.IllegalArgumentException;
 import br.com.corestacks.agende360.application.model.Company;
 import br.com.corestacks.agende360.application.repository.DashboardRepository;
+import br.com.corestacks.agende360.application.subscription.service.FeatureGateService;
 import br.com.corestacks.agende360.application.type.PeriodFilter;
 import br.com.corestacks.agende360.application.type.UserRole;
 import br.com.corestacks.agende360.security.model.UserDetailsImpl;
@@ -32,17 +33,22 @@ public class DashboardService {
 
 	private final DashboardRepository dashboardRepository;
 	private final CompanyService companyService;
+	private final FeatureGateService featureGateService;
 
 	public DashboardService(
 			DashboardRepository dashboardRepository,
-			CompanyService companyService) {
+			CompanyService companyService,
+			FeatureGateService featureGateService) {
 		this.dashboardRepository = dashboardRepository;
 		this.companyService = companyService;
+		this.featureGateService = featureGateService;
 	}
 
 	public DashboardMetricsResponse getMetrics(PeriodFilter periodFilter) {
-
 		UUID companyId = SecurityUtils.getCompanyId();
+		
+		featureGateService.checkAdvancedDashboard(companyId);
+
 		UserDetailsImpl user = SecurityUtils.getAuthenticatedUser();
 		Company company = companyService.findByCompanyId(companyId);
 

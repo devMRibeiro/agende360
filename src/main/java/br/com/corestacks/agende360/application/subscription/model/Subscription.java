@@ -21,11 +21,11 @@ public class Subscription extends BaseEntity {
 	@Column(nullable = false)
 	private SubscriptionStatus status;
 	
-	@Column(name = "stripe_customer_id")
-	private UUID stripCustomerId;
-	
 	@Column(name = "stripe_subscription_id")
-	private UUID stripeSubscriptionId;
+	private String stripeSubscriptionId;
+
+	@Column(name = "stripe_customer_id")
+	private String stripCustomerId;
 	
 	@Column(name = "current_period_start")
 	private LocalDateTime currentPeriodStart;
@@ -54,16 +54,16 @@ public class Subscription extends BaseEntity {
 	public void setStatus(SubscriptionStatus status) {
 		this.status = status;
 	}
-	public UUID getStripCustomerId() {
+	public String getStripCustomerId() {
 		return stripCustomerId;
 	}
-	public void setStripCustomerId(UUID stripCustomerId) {
+	public void setStripCustomerId(String stripCustomerId) {
 		this.stripCustomerId = stripCustomerId;
 	}
-	public UUID getStripeSubscriptionId() {
+	public String getStripeSubscriptionId() {
 		return stripeSubscriptionId;
 	}
-	public void setStripeSubscriptionId(UUID stripeSubscriptionId) {
+	public void setStripeSubscriptionId(String stripeSubscriptionId) {
 		this.stripeSubscriptionId = stripeSubscriptionId;
 	}
 	public LocalDateTime getCurrentPeriodStart() {

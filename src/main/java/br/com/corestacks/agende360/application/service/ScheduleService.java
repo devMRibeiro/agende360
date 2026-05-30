@@ -14,7 +14,6 @@ import br.com.corestacks.agende360.application.exception.IllegalArgumentExceptio
 import br.com.corestacks.agende360.application.model.Schedule;
 import br.com.corestacks.agende360.application.repository.CompanySettingsRepository;
 import br.com.corestacks.agende360.application.repository.ScheduleRepository;
-import br.com.corestacks.agende360.application.subscription.service.FeatureGateService;
 import br.com.corestacks.agende360.security.util.SecurityUtils;
 import jakarta.transaction.Transactional;
 
@@ -23,15 +22,13 @@ public class ScheduleService {
 
     private final ScheduleRepository scheduleRepository;
     private final CompanySettingsRepository companySettingsRespository;
-    private final FeatureGateService featureGateService;
+//    private final FeatureGateService featureGateService;
 
     public ScheduleService(
     		ScheduleRepository scheduleRepository,
-    		CompanySettingsRepository companySettingsRespository,
-    		FeatureGateService featureGateService) {
+    		CompanySettingsRepository companySettingsRespository) {
         this.scheduleRepository = scheduleRepository;
 		this.companySettingsRespository = companySettingsRespository;
-		this.featureGateService = featureGateService;
     }
 
     @Transactional
@@ -57,7 +54,7 @@ public class ScheduleService {
     public void create(ScheduleRequest request) {
         UUID companyId = SecurityUtils.getCompanyId();
 
-        featureGateService.checkIntervalsPerDayLimit(companyId, scheduleRepository.findByCompanyIdAndDayOfWeek(companyId, request.dayOfWeek()).size());
+//        featureGateService.checkIntervalsPerDayLimit(companyId, scheduleRepository.findByCompanyIdAndDayOfWeek(companyId, request.dayOfWeek()).size());
         
         if (request.startTime().isAfter(request.endTime()) || request.startTime().equals(request.endTime()))
             throw new IllegalArgumentException("startTime must be before endTime");

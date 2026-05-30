@@ -9,8 +9,6 @@ import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestHeader;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
 
 import com.stripe.exception.StripeException;
 
@@ -20,8 +18,8 @@ import br.com.corestacks.agende360.application.subscription.type.SubscriptionPla
 import br.com.corestacks.agende360.security.util.SecurityUtils;
 import jakarta.servlet.http.HttpServletRequest;
 
-@RestController
-@RequestMapping("/api/billing")
+//@RestController
+//@RequestMapping("/api/billing")
 public class BillingController {
 
     private final BillingService billingService;

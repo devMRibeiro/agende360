@@ -7,7 +7,6 @@ import java.util.UUID;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.stereotype.Service;
 
 import com.stripe.StripeClient;
 import com.stripe.exception.StripeException;
@@ -23,7 +22,7 @@ import br.com.corestacks.agende360.application.subscription.repository.Subscript
 import br.com.corestacks.agende360.application.subscription.type.SubscriptionStatus;
 import jakarta.transaction.Transactional;
 
-@Service
+//@Service
 public class StripeWebhookService {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(StripeWebhookService.class);

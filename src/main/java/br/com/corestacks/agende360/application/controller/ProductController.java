@@ -19,6 +19,7 @@ import br.com.corestacks.agende360.application.dto.request.ProductCreateRequest;
 import br.com.corestacks.agende360.application.dto.request.ProductUpdateRequest;
 import br.com.corestacks.agende360.application.dto.response.ProductResponse;
 import br.com.corestacks.agende360.application.service.ProductService;
+import br.com.corestacks.agende360.security.util.SecurityUtils;
 import jakarta.validation.Valid;
 
 @RestController
@@ -34,7 +35,7 @@ public class ProductController {
 
     @GetMapping
     public ResponseEntity<List<ProductResponse>> list() {
-        return ResponseEntity.ok(productService.list());
+        return ResponseEntity.ok(productService.list(SecurityUtils.getCompanyId(), null));
     }
 
     @GetMapping("/{productId}")

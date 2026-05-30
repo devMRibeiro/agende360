@@ -11,6 +11,7 @@ import org.springframework.stereotype.Service;
 
 import br.com.corestacks.agende360.application.dto.request.CompanySettingsRequest;
 import br.com.corestacks.agende360.application.dto.request.RegisterCompanyRequest;
+import br.com.corestacks.agende360.application.dto.response.CompanyPublicResponse;
 import br.com.corestacks.agende360.application.dto.response.CompanySettingsResponse;
 import br.com.corestacks.agende360.application.dto.response.CompanySupportResponse;
 import br.com.corestacks.agende360.application.dto.response.RegisterCompanyResponse;
@@ -42,6 +43,7 @@ public class CompanyService {
 	private final PasswordEncoder encoder;
 	private final EmailService emailService;
 	private final SubscriptionService subscriptionService;
+	private final CompanySettingsService companySettingsService;
 
 	@Value("${SYSTEM.BASE-URL}")
 	private String baseUrl;
@@ -54,13 +56,15 @@ public class CompanyService {
 						  PasswordEncoder encoder,
 						  EmailService emailService,
 						  CompanySettingsRepository companySettingsRepository,
-						  SubscriptionService subscriptionService) {
+						  SubscriptionService subscriptionService,
+						  CompanySettingsService companySettingsService) {
 		this.userRepository = userRepository;
 		this.companyRepository = companyRepository;
 		this.encoder = encoder;
 		this.emailService = emailService;
 		this.companySettingsRepository = companySettingsRepository;
 		this.subscriptionService = subscriptionService;
+		this.companySettingsService = companySettingsService;
 	}
 
 	@Transactional
@@ -177,5 +181,16 @@ public class CompanyService {
 	
 	public Company findByCompanyId(UUID companyId) {
 		return companyRepository.findByCompanyId(companyId);
+	}
+	
+	public CompanyPublicResponse getCompanyInfo(String slug) {
+		Company company = companyRepository.findBySlug(slug);
+
+        if (company == null || !company.getActive())
+            throw new IllegalArgumentException("Company not found");
+
+        int horizon = companySettingsService.getShcedulingHorizon(company.getId());
+        
+        return new CompanyPublicResponse(company.getName(), company.getSlug(), horizon);
 	}
 }

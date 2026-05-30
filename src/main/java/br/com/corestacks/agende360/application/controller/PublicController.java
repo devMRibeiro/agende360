@@ -1,7 +1,6 @@
 package br.com.corestacks.agende360.application.controller;
 
 import java.time.LocalDate;
-import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;
@@ -21,14 +20,11 @@ import br.com.corestacks.agende360.application.dto.response.AvailableSlotsRespon
 import br.com.corestacks.agende360.application.dto.response.CompanyPublicResponse;
 import br.com.corestacks.agende360.application.dto.response.ProductResponse;
 import br.com.corestacks.agende360.application.dto.response.ProfessionalResponse;
-import br.com.corestacks.agende360.application.exception.IllegalArgumentException;
-import br.com.corestacks.agende360.application.model.Company;
-import br.com.corestacks.agende360.application.model.Product;
-import br.com.corestacks.agende360.application.repository.CompanyRepository;
-import br.com.corestacks.agende360.application.repository.ProductRepository;
 import br.com.corestacks.agende360.application.service.AppointmentService;
+import br.com.corestacks.agende360.application.service.CompanyService;
 import br.com.corestacks.agende360.application.service.CompanySettingsService;
 import br.com.corestacks.agende360.application.service.CustomerService;
+import br.com.corestacks.agende360.application.service.ProductService;
 import br.com.corestacks.agende360.application.service.UserService;
 import jakarta.validation.Valid;
 
@@ -37,64 +33,35 @@ import jakarta.validation.Valid;
 public class PublicController {
 
     private final AppointmentService appointmentService;
-    private final CompanyRepository companyRepository;
-    private final ProductRepository productRepository;
     private final UserService userService;
-    private final CompanySettingsService companySettingsService;
+    private final CompanyService companyService;
     private final CustomerService customerService;
+    private final ProductService productService;
 
     public PublicController(
             AppointmentService appointmentService,
-            CompanyRepository companyRepository,
-            ProductRepository productRepository,
             UserService userService,
             CompanySettingsService companySettingsService,
-            CustomerService customerService) {
+            CustomerService customerService,
+            ProductService productService,
+            CompanyService companyService) {
         this.appointmentService = appointmentService;
-        this.companyRepository = companyRepository;
-        this.productRepository = productRepository;
         this.userService = userService;
-		this.companySettingsService = companySettingsService;
+		this.companyService = companyService;
 		this.customerService = customerService;
+		this.productService = productService;
     }
 
     // Public info company
     @GetMapping("/{slug}")
     public ResponseEntity<CompanyPublicResponse> getCompanyInfo(@PathVariable String slug) {
-        Company company = companyRepository.findBySlug(slug);
-
-        if (company == null || !company.getActive())
-            throw new IllegalArgumentException("Company not found");
-
-        int horizon = companySettingsService.getShcedulingHorizon(company.getId());
-
-        return ResponseEntity.ok(new CompanyPublicResponse(company.getName(), company.getSlug(), horizon));
+        return ResponseEntity.ok(companyService.getCompanyInfo(slug));
     }
 
     // Public listing of products
     @GetMapping("/{slug}/products")
     public ResponseEntity<List<ProductResponse>> listProducts(@PathVariable String slug) {
-        Company company = companyRepository.findBySlug(slug);
-
-        if (company == null || !company.getActive())
-            throw new IllegalArgumentException("Company not found");
-
-        List<Product> products = productRepository.findByCompanyIdAndActive(company.getId(), true);
-        List<ProductResponse> result = new ArrayList<ProductResponse>(products.size());
-
-        int i = 0;
-        while (i < products.size()) {
-            Product p = products.get(i);
-            if (p.getActive()) {
-                result.add(new ProductResponse(
-                        p.getId(), p.getName(), p.getDescription(),
-                        p.getPrice(), p.getDurationMinutes(), p.getActive()
-                ));
-            }
-            i++;
-        }
-
-        return ResponseEntity.ok(result);
+        return ResponseEntity.ok(productService.list(slug));
     }
 
     // Public listing for professionals - for now productId is not used

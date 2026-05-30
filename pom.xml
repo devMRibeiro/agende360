@@ -129,7 +129,13 @@
 		<dependency>
 		    <groupId>com.stripe</groupId>
 		    <artifactId>stripe-java</artifactId>
-		    <version>28.1.0</version>
+		    <version>32.1.0</version>
+		    <scope>compile</scope>
+		</dependency>
+		<!-- Source: https://mvnrepository.com/artifact/com.github.ben-manes.caffeine/caffeine -->
+		<dependency>
+		    <groupId>com.github.ben-manes.caffeine</groupId>
+		    <artifactId>caffeine</artifactId>
 		    <scope>compile</scope>
 		</dependency>
 	</dependencies>

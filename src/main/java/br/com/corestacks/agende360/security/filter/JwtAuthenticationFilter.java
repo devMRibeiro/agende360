@@ -3,6 +3,8 @@ package br.com.corestacks.agende360.security.filter;
 import java.io.IOException;
 import java.util.UUID;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.core.userdetails.UserDetails;
@@ -20,6 +22,8 @@ import jakarta.servlet.http.HttpServletResponse;
 
 @Component
 public class JwtAuthenticationFilter extends OncePerRequestFilter {
+	
+	private static final Logger LOGGER = LoggerFactory.getLogger(JwtAuthenticationFilter.class);
 
 	private final JwtService jwtService;
 	private final String COOKIE_TOKEN_NAME = "access_token";
@@ -31,7 +35,9 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
 	@Override
 	protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response, FilterChain filterChain)
 			throws ServletException, IOException {
-
+		
+		LOGGER.info("REQUESTING ENDPOINT -> {} - FROM -> {}", request.getRequestURL(), getClientIp(request));
+		
 		String token = jwtService.getTokenFromCookie(request, COOKIE_TOKEN_NAME);
 		
 //      If the accessToken is null. It will pass the request to next filter in the chain.
@@ -66,5 +72,19 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
 		}
 
 		filterChain.doFilter(request, response);
+	}
+	
+	public static String getClientIp(HttpServletRequest request) {
+
+	    String xff = request.getHeader("X-Forwarded-For");
+
+	    if (xff != null && !xff.isEmpty()) {
+	        String ip = xff.split(",")[0].trim();
+	        
+	        if (ip != null && ip.startsWith("::ffff:"))
+		        return ip.substring(7);
+	    }
+
+	    return request.getRemoteAddr();
 	}
 }

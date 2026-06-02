@@ -32,12 +32,12 @@ public interface UserRepository extends JpaRepository<User, UUID> {
 			from User u
 			inner join Company c on c.id = u.companyId 
 			where 
-				(c.id = :companyId or c.slug = :slug) and
+				c.slug = :slug and
 				c.active = true and
 				u.active = true and
 				(u.role = UserRole.PROFESSIONAL or (u.role = UserRole.ADMIN and u.isProfessional = true))
 			""")
-	List<User> listProfessionals(UUID companyId, String slug);
+	List<User> listProfessionals(String slug);
 	
 	@Modifying
 	@Query("update User u set u.isProfessional = :isProfessional where u.id = :userId and u.role = UserRole.ADMIN")

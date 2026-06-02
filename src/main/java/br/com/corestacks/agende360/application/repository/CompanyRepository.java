@@ -7,7 +7,6 @@ import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.stereotype.Repository;
 
-import br.com.corestacks.agende360.application.dto.response.CompanySettingsResponse;
 import br.com.corestacks.agende360.application.dto.response.CompanySupportResponse;
 import br.com.corestacks.agende360.application.model.Company;
 
@@ -16,6 +15,8 @@ public interface CompanyRepository extends JpaRepository<Company, UUID> {
 
 	@Query("select c from Company c where c.id = :id")
 	Company findByCompanyId(UUID id);
+
+	Company findByIdOrSlug(UUID id, String slug);
 
 	boolean existsByDocument(String document);
 	
@@ -38,17 +39,4 @@ public interface CompanyRepository extends JpaRepository<Company, UUID> {
 		    WHERE u.role = 'ADMIN'
 		""")
 	List<CompanySupportResponse> findAllWithUser();
-	
-	@Query("""
-			SELECT new br.com.corestacks.agende360.application.dto.response.CompanySettingsResponse(
-				c.name,
-				u.phone,
-				u.email
-			)
-			FROM User u
-			INNER JOIN Company c ON c.id = u.companyId
-			WHERE 
-			u.id = :userId
-		""")
-	CompanySettingsResponse getSettings(UUID userId);
 }

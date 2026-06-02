@@ -5,9 +5,13 @@ import java.util.List;
 import java.util.Map;
 import java.util.UUID;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
+
+import com.github.benmanes.caffeine.cache.Cache;
 
 import br.com.corestacks.agende360.application.dto.request.CompanySettingsRequest;
 import br.com.corestacks.agende360.application.dto.request.RegisterCompanyRequest;
@@ -37,6 +41,8 @@ import jakarta.transaction.Transactional;
 @Service
 public class CompanyService {
 
+	private static final Logger LOGGER = LoggerFactory.getLogger(CompanyService.class);
+	
 	private final CompanyRepository companyRepository;
 	private final CompanySettingsRepository companySettingsRepository;
 	private final UserRepository userRepository;
@@ -44,6 +50,8 @@ public class CompanyService {
 	private final EmailService emailService;
 	private final SubscriptionService subscriptionService;
 	private final CompanySettingsService companySettingsService;
+	private final Cache<String, Company> companysCache;
+	private final Cache<UUID, Map<UUID, User>> usersCache;
 
 	@Value("${SYSTEM.BASE-URL}")
 	private String baseUrl;
@@ -57,7 +65,9 @@ public class CompanyService {
 						  EmailService emailService,
 						  CompanySettingsRepository companySettingsRepository,
 						  SubscriptionService subscriptionService,
-						  CompanySettingsService companySettingsService) {
+						  CompanySettingsService companySettingsService,
+						  Cache<String, Company> companysCache,
+						  Cache<UUID, Map<UUID, User>> usersCache) {
 		this.userRepository = userRepository;
 		this.companyRepository = companyRepository;
 		this.encoder = encoder;
@@ -65,6 +75,8 @@ public class CompanyService {
 		this.companySettingsRepository = companySettingsRepository;
 		this.subscriptionService = subscriptionService;
 		this.companySettingsService = companySettingsService;
+		this.companysCache = companysCache;
+		this.usersCache = usersCache;
 	}
 
 	@Transactional
@@ -155,12 +167,14 @@ public class CompanyService {
 	
 	public CompanySettingsResponse getSettings() {
 		
-		UserDetailsImpl user = SecurityUtils.getAuthenticatedUser();
+		UserDetailsImpl userDetails = SecurityUtils.getAuthenticatedUser();
 		
-		if (!user.getRole().equals(UserRole.ADMIN))
+		if (!userDetails.getRole().equals(UserRole.ADMIN))
 			return null;
 		
-		return companyRepository.getSettings(user.getId());
+		User user = usersCache.getIfPresent(userDetails.getCompanyId()).get(userDetails.getId());
+
+		return new CompanySettingsResponse(user.getName(), user.getPhone(), user.getEmail());
 	}
 
 	@Transactional
@@ -184,11 +198,19 @@ public class CompanyService {
 	}
 	
 	public CompanyPublicResponse getCompanyInfo(String slug) {
-		Company company = companyRepository.findBySlug(slug);
+		
+		Company company = companysCache.getIfPresent(slug);
+		
+		if (company == null) {
+			LOGGER.info("COMPANY: não encontrada no cache. Consultando no banco.");
+			company = companyRepository.findBySlug(slug);
 
-        if (company == null || !company.getActive())
-            throw new IllegalArgumentException("Company not found");
-
+			if (company == null || !company.getActive())
+				throw new IllegalArgumentException("Company not found");
+			
+			companysCache.put(slug, company);
+		}
+		
         int horizon = companySettingsService.getShcedulingHorizon(company.getId());
         
         return new CompanyPublicResponse(company.getName(), company.getSlug(), horizon);

@@ -2,11 +2,17 @@ package br.com.corestacks.agende360.application.service;
 
 import java.time.LocalDateTime;
 import java.util.ArrayList;
+import java.util.Hashtable;
 import java.util.List;
+import java.util.Map;
 import java.util.UUID;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
+
+import com.github.benmanes.caffeine.cache.Cache;
 
 import br.com.corestacks.agende360.application.dto.request.ChangePasswordRequest;
 import br.com.corestacks.agende360.application.dto.request.RegisterProfessionalRequest;
@@ -26,34 +32,56 @@ import br.com.corestacks.agende360.security.model.UserDetailsImpl;
 import br.com.corestacks.agende360.security.repository.RefreshTokenRepository;
 import br.com.corestacks.agende360.security.util.PasswordUtil;
 import br.com.corestacks.agende360.security.util.SecurityUtils;
-import io.jsonwebtoken.lang.Collections;
 import jakarta.transaction.Transactional;
 
 @Service
 public class UserService {
+	
+	private static final Logger LOGGER = LoggerFactory.getLogger(UserService.class);
 
 	private final UserRepository userRepository;
 	private final PasswordEncoder encoder;
 	private final RefreshTokenRepository refreshTokenRepository;
 	private final CompanyRepository companyRepository;
+	private final Cache<UUID, Map<UUID, User>> usersCache;
+	private final Cache<String, Company> companysCache;
+	
 //	private final FeatureGateService featureGateService;
 	
 	public UserService(
 			UserRepository userRepository,
 			PasswordEncoder encoder,
 			RefreshTokenRepository refreshTokenRepository,
-			CompanyRepository companyRepository) {
+			CompanyRepository companyRepository,
+			Cache<UUID, Map<UUID, User>> usersCache,
+			Cache<String, Company> companysCache) {
 		this.userRepository = userRepository;
 		this.encoder = encoder;
 		this.refreshTokenRepository = refreshTokenRepository;
 		this.companyRepository = companyRepository;
+		this.usersCache = usersCache;
+		this.companysCache = companysCache;
 	}
 
-	public List<UserResponse> list(UUID companyId) {
-		List<User> users = userRepository.findByCompanyId(companyId);
-		List<UserResponse> result = new ArrayList<UserResponse>(users.size());
-		for (User user : users) {
-			result.add(new UserResponse(
+	public List<UserResponse> list() {
+
+		UUID companyId = SecurityUtils.getCompanyId();
+		
+		Map<UUID, User> mapUsers = usersCache.getIfPresent(companyId);
+		
+		if (mapUsers == null) {
+			mapUsers = new Hashtable<UUID, User>();
+			List<User> users = userRepository.findByCompanyId(companyId);
+			
+			for (User u : users)
+				mapUsers.put(u.getId(), u);
+			
+			usersCache.put(companyId, mapUsers);
+		}
+		
+		List<UserResponse> response = new ArrayList<UserResponse>(mapUsers.size());
+		for (User user : mapUsers.values()) {
+			response.add(new UserResponse(
 					user.getId(),
 					user.getName(),
 					user.getEmail(),
@@ -63,7 +91,7 @@ public class UserService {
 					user.getIsProfessional())
 			);
 		}
-		return result;
+		return response;
 	}
 	
 	public void create(RegisterProfessionalRequest request) {
@@ -81,6 +109,7 @@ public class UserService {
 		user.setRole(request.role());
 		user.setCompanyId(SecurityUtils.getCompanyId());
 		userRepository.save(user);
+		usersCache.invalidate(SecurityUtils.getCompanyId());
 	}
 	
 	@Transactional
@@ -104,11 +133,27 @@ public class UserService {
 		user.setPasswordChangedAt(LocalDateTime.now());
 		userRepository.save(user);
 		refreshTokenRepository.deleteByUser(user);
+		usersCache.invalidate(SecurityUtils.getCompanyId());
 	}
 	
 	@Transactional
 	public UserMeResponse me() {
-		User user = userRepository.findByUserId(SecurityUtils.getAuthenticatedUser().getId());
+		
+		UUID companyId = SecurityUtils.getCompanyId();
+		
+		Map<UUID, User> mapUsers = usersCache.getIfPresent(companyId);
+		
+		if (mapUsers == null) {
+			mapUsers = new Hashtable<UUID, User>();
+			List<User> users = userRepository.findByCompanyId(companyId);
+			
+			for (User u : users)
+				mapUsers.put(u.getId(), u);
+			
+			usersCache.put(companyId, mapUsers);
+		}
+		
+		User user = mapUsers.get(SecurityUtils.getAuthenticatedUser().getId());
 		
 		String companyName = null;
 		String companySlug = null;
@@ -134,15 +179,41 @@ public class UserService {
 	
 	public List<ProfessionalResponse> listProfessionalsActive(String slug) {
 
-		List<User> users = userRepository.listProfessionals(null, slug);
-        
-        if (users == null || users.isEmpty())
-        	return Collections.emptyList();
-
-        List<ProfessionalResponse> professionalsResponse = new ArrayList<ProfessionalResponse>(users.size());
-        
-        for (User u : users)
-        	professionalsResponse.add(new ProfessionalResponse(u.getId(), u.getName()));
+		// Busca empresa no cache
+		Company company = companysCache.getIfPresent(slug);
+    	
+		// Caso não encontrada, busca no banco de dados
+    	if (company == null) {
+    		LOGGER.info("Company: não encontrada no cache. Consultando no banco.");
+	    	company = companyRepository.findBySlug(slug);
+	    	
+	    	if (company == null || !company.getActive())
+	    		throw new IllegalArgumentException("Company not found");
+	    	
+	    	companysCache.put(company.getSlug(), company);
+    	}
+		
+    	// Busca usuários no cache
+		Map<UUID, User> mapUsers = usersCache.getIfPresent(company.getId());
+		
+		// Caso não encontrado, busca no banco de dados
+		if (mapUsers == null) {
+			LOGGER.info("Users: não encontrado no cache. Consultando no banco.");
+			mapUsers = new Hashtable<UUID, User>();
+			List<User> users = userRepository.findByCompanyId(company.getId());
+			
+			for (User u : users)
+				mapUsers.put(u.getId(), u);
+			
+			usersCache.put(company.getId(), mapUsers);
+		}
+    	
+		// 3. Filtra usuário para profissionais
+		List<ProfessionalResponse> professionalsResponse = new ArrayList<ProfessionalResponse>();
+		for (User u : mapUsers.values()) {
+			if (u.getActive() && (Boolean.TRUE.equals(u.getIsProfessional()) || UserRole.PROFESSIONAL.equals(u.getRole())))
+				professionalsResponse.add(new ProfessionalResponse(u.getId(), u.getName()));
+		}
         
         return professionalsResponse;
 	}
@@ -163,6 +234,7 @@ public class UserService {
 	        throw new IllegalArgumentException("Admin não pode alterar email");
 
 	    target.setEmail(request.email());
+	    usersCache.invalidate(SecurityUtils.getCompanyId());
 	}
 	
 	@Transactional
@@ -174,5 +246,6 @@ public class UserService {
 			throw new ForbiddenException("");
 		
 		userRepository.toggleProfessionalUser(SecurityUtils.getAuthenticatedUser().getId(), isProfessional);
+		usersCache.invalidate(SecurityUtils.getCompanyId());
 	}
 }

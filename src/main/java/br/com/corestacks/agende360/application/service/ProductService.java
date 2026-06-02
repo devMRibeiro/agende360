@@ -4,6 +4,8 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
 
 import com.github.benmanes.caffeine.cache.Cache;
@@ -21,61 +23,67 @@ import br.com.corestacks.agende360.security.util.SecurityUtils;
 @Service
 public class ProductService {
 
+	private static final Logger LOGGER = LoggerFactory.getLogger(ProductService.class);
+	
     private final ProductRepository productRepository;
     private final CompanyRepository companyRepository;
-    private final Cache<UUID, List<ProductResponse>> productsCache;
+    private final Cache<UUID, List<Product>> productsCache;
+    private final Cache<String, Company> companysCache;
     
 //    private final FeatureGateService featureGateService;
 
     public ProductService(
     		ProductRepository productRepository,
     		CompanyRepository companyRepository,
-    		Cache<UUID, List<ProductResponse>> productsCache) {
+    		Cache<UUID, List<Product>> productsCache,
+    		Cache<String, Company> companysCache) {
         this.productRepository = productRepository;
 		this.companyRepository = companyRepository;
 		this.productsCache = productsCache;
+		this.companysCache = companysCache;
     }
 
-    public List<ProductResponse> list(String slug) {
-    	Company company = companyRepository.findBySlug(slug);
+    public List<ProductResponse> list(UUID companyId, String slug, Boolean active) {
+    	Company company = companysCache.getIfPresent(slug);
     	
-    	if (company == null || !company.getActive())
-            throw new IllegalArgumentException("Company not found");
+    	if (company == null) {
+    		
+	    	company = companyId != null ? companyRepository.findByCompanyId(companyId) : companyRepository.findBySlug(slug);
+	    	
+	    	if (company == null || !company.getActive())
+	    		throw new IllegalArgumentException("Company not found");
+	    	
+	    	companysCache.put(company.getSlug(), company);
+    	}
     	
-    	return list(company.getId(), true);
+        // 1. Busca no cache
+        List<Product> products = productsCache.getIfPresent(company.getId());
+        
+        // 2. Se ainda não existe no cache, faz uma busca no banco e adiciona no cache
+        if (products == null) {
+        	LOGGER.info("PRODUCTS: não encontrado no cache. Consultando no banco.");
+        	products = productRepository.findByCompanyId(company.getId());
+        	productsCache.put(company.getId(), products);
+        }
+        
+        List<ProductResponse> productsResponse = new ArrayList<ProductResponse>();
+        
+        // 3. Realiza filtro de produtos ativos
+        for (Product product : products) {
+        	if (product.getActive())
+	        	productsResponse.add(new ProductResponse(
+	                product.getId(),
+	                product.getName(),
+	                product.getDescription(),
+	                product.getPrice(),
+	                product.getDurationMinutes(),
+	                product.getActive()
+	            ));
+        }
+        	
+        return productsResponse;
     }
     
-    public List<ProductResponse> list(UUID companyId, Boolean active) {
-    	Company company = companyRepository.findByCompanyId(companyId);
-    	
-        if (company == null || !company.getActive())
-            throw new IllegalArgumentException("Company not found");
-    	
-        List<ProductResponse> result = productsCache.getIfPresent(company.getId());
-        
-        if (result != null)
-        	return result;
-        
-        List<Product> products = productRepository.findByCompanyIdAndActive(companyId, active);
-
-        result = new ArrayList<ProductResponse>(products.size());
-        
-        for (Product product : products) {
-            result.add(new ProductResponse(
-                product.getId(),
-                product.getName(),
-                product.getDescription(),
-                product.getPrice(),
-                product.getDurationMinutes(),
-                product.getActive()
-            ));
-        }
-
-        productsCache.put(company.getId(), result);
-        
-        return result;
-    }
-
     public ProductResponse findById(UUID productId) {
         UUID companyId = SecurityUtils.getCompanyId();
 
@@ -112,7 +120,6 @@ public class ProductService {
         product.setDurationMinutes(request.durationMinutes());
         product.setCompany(companyId);
         productRepository.save(product);
-        
         productsCache.invalidate(companyId);
     }
 

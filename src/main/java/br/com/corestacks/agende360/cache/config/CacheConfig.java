@@ -1,6 +1,5 @@
 package br.com.corestacks.agende360.cache.config;
 
-import java.util.List;
 import java.util.Map;
 import java.util.UUID;
 
@@ -19,7 +18,7 @@ import br.com.corestacks.agende360.application.model.User;
 public class CacheConfig {
 	
 	@Bean
-	public Cache<UUID, List<Product>> productsCache() {
+	public Cache<UUID, Map<UUID, Product>> productsCache() {
 		return Caffeine.newBuilder()
 				.maximumSize(10000)
 				.recordStats()
@@ -35,7 +34,7 @@ public class CacheConfig {
 	}
 
 	@Bean
-	public Cache<String, Company> companysCache() {
+	public Cache<String, Company> companiesCache() {
 		return Caffeine.newBuilder()
 				.maximumSize(10000)
 				.recordStats()
@@ -43,7 +42,7 @@ public class CacheConfig {
 	}
 
 	@Bean
-	public Cache<UUID, CompanySettings> companySettings() {
+	public Cache<UUID, CompanySettings> companySettingsCache() {
 		return Caffeine.newBuilder()
 				.maximumSize(10000)
 				.recordStats()

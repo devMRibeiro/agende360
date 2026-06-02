@@ -20,13 +20,13 @@ public class CompanySettingsService {
 	private static final Logger LOGGER = LoggerFactory.getLogger(CompanySettingsService.class);
 	
 	private final CompanySettingsRepository companySettingsRespository;
-	private final Cache<UUID, CompanySettings> companysSettingsCache;
+	private final Cache<UUID, CompanySettings> companySettingsCache;
 	
 	public CompanySettingsService(
 			CompanySettingsRepository companySettingsRespository,
-			Cache<UUID, CompanySettings> companysSettingsCache) {
+			Cache<UUID, CompanySettings> companySettingsCache) {
 		this.companySettingsRespository = companySettingsRespository;
-		this.companysSettingsCache = companysSettingsCache;
+		this.companySettingsCache = companySettingsCache;
 	}
 	
 	@Transactional
@@ -37,12 +37,12 @@ public class CompanySettingsService {
 	
 	public int getShcedulingHorizon(UUID companyId) {
 		
-		CompanySettings companySettings = companysSettingsCache.getIfPresent(companyId);
+		CompanySettings companySettings = companySettingsCache.getIfPresent(companyId);
 		
 		if (companySettings == null) {
 			LOGGER.info("COMPANY_SETTINGS: não encontrada no cache. Consultando no banco.");
 			companySettings = companySettingsRespository.findByCompanyId(companyId);
-			companysSettingsCache.put(companyId, companySettings);
+			companySettingsCache.put(companyId, companySettings);
 		}
 		
 		return companySettings.getSchedulingHorizon();

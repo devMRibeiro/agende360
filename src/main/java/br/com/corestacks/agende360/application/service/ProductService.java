@@ -1,7 +1,9 @@
 package br.com.corestacks.agende360.application.service;
 
 import java.util.ArrayList;
+import java.util.Hashtable;
 import java.util.List;
+import java.util.Map;
 import java.util.UUID;
 
 import org.slf4j.Logger;
@@ -27,7 +29,7 @@ public class ProductService {
 	
     private final ProductRepository productRepository;
     private final CompanyRepository companyRepository;
-    private final Cache<UUID, List<Product>> productsCache;
+    private final Cache<UUID, Map<UUID, Product>> productsCache;
     private final Cache<String, Company> companysCache;
     
 //    private final FeatureGateService featureGateService;
@@ -35,7 +37,7 @@ public class ProductService {
     public ProductService(
     		ProductRepository productRepository,
     		CompanyRepository companyRepository,
-    		Cache<UUID, List<Product>> productsCache,
+    		Cache<UUID, Map<UUID, Product>> productsCache,
     		Cache<String, Company> companysCache) {
         this.productRepository = productRepository;
 		this.companyRepository = companyRepository;
@@ -57,19 +59,24 @@ public class ProductService {
     	}
     	
         // 1. Busca no cache
-        List<Product> products = productsCache.getIfPresent(company.getId());
+        Map<UUID, Product> mapProducts = productsCache.getIfPresent(company.getId());
         
         // 2. Se ainda não existe no cache, faz uma busca no banco e adiciona no cache
-        if (products == null) {
+        if (mapProducts == null) {
+        	mapProducts = new Hashtable<UUID, Product>();
         	LOGGER.info("PRODUCTS: não encontrado no cache. Consultando no banco.");
-        	products = productRepository.findByCompanyId(company.getId());
-        	productsCache.put(company.getId(), products);
+        	List<Product> products = productRepository.findByCompanyId(company.getId());
+        	
+        	for (Product p : products)
+        		mapProducts.put(p.getId(), p);
+        	
+        	productsCache.put(company.getId(), mapProducts);
         }
         
         List<ProductResponse> productsResponse = new ArrayList<ProductResponse>();
         
         // 3. Realiza filtro de produtos ativos
-        for (Product product : products) {
+        for (Product product : mapProducts.values()) {
         	if (product.getActive())
 	        	productsResponse.add(new ProductResponse(
 	                product.getId(),

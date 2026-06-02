@@ -50,7 +50,7 @@ public class CompanyService {
 	private final EmailService emailService;
 	private final SubscriptionService subscriptionService;
 	private final CompanySettingsService companySettingsService;
-	private final Cache<String, Company> companysCache;
+	private final Cache<String, Company> companiesCache;
 	private final Cache<UUID, Map<UUID, User>> usersCache;
 
 	@Value("${SYSTEM.BASE-URL}")
@@ -66,7 +66,7 @@ public class CompanyService {
 						  CompanySettingsRepository companySettingsRepository,
 						  SubscriptionService subscriptionService,
 						  CompanySettingsService companySettingsService,
-						  Cache<String, Company> companysCache,
+						  Cache<String, Company> companiesCache,
 						  Cache<UUID, Map<UUID, User>> usersCache) {
 		this.userRepository = userRepository;
 		this.companyRepository = companyRepository;
@@ -75,7 +75,7 @@ public class CompanyService {
 		this.companySettingsRepository = companySettingsRepository;
 		this.subscriptionService = subscriptionService;
 		this.companySettingsService = companySettingsService;
-		this.companysCache = companysCache;
+		this.companiesCache = companiesCache;
 		this.usersCache = usersCache;
 	}
 
@@ -199,7 +199,7 @@ public class CompanyService {
 	
 	public CompanyPublicResponse getCompanyInfo(String slug) {
 		
-		Company company = companysCache.getIfPresent(slug);
+		Company company = companiesCache.getIfPresent(slug);
 		
 		if (company == null) {
 			LOGGER.info("COMPANY: não encontrada no cache. Consultando no banco.");
@@ -208,7 +208,7 @@ public class CompanyService {
 			if (company == null || !company.getActive())
 				throw new IllegalArgumentException("Company not found");
 			
-			companysCache.put(slug, company);
+			companiesCache.put(slug, company);
 		}
 		
         int horizon = companySettingsService.getShcedulingHorizon(company.getId());

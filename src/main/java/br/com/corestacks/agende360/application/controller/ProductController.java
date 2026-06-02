@@ -35,7 +35,7 @@ public class ProductController {
 
     @GetMapping
     public ResponseEntity<List<ProductResponse>> list() {
-        return ResponseEntity.ok(productService.list(SecurityUtils.getCompanyId(), null));
+        return ResponseEntity.ok(productService.list(SecurityUtils.getCompanyId(), null, null));
     }
 
     @GetMapping("/{productId}")

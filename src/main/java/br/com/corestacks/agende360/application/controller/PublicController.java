@@ -61,12 +61,12 @@ public class PublicController {
     // Public listing of products
     @GetMapping("/{slug}/products")
     public ResponseEntity<List<ProductResponse>> listProducts(@PathVariable String slug) {
-        return ResponseEntity.ok(productService.list(slug));
+        return ResponseEntity.ok(productService.list(null, slug, true));
     }
 
     // Public listing for professionals - for now productId is not used
     @GetMapping("/{slug}/professionals")
-    public ResponseEntity<List<ProfessionalResponse>> listProfessionals(@PathVariable String slug, @RequestParam UUID productId) {
+    public ResponseEntity<List<ProfessionalResponse>> listProfessionals(@PathVariable String slug) {
         return ResponseEntity.ok(userService.listProfessionalsActive(slug));
     }
 

@@ -42,7 +42,7 @@ public class UserManagement {
 	@GetMapping("/users")
 	@PreAuthorize("hasRole('ADMIN')")
 	public ResponseEntity<List<UserResponse>> list() {
-		return ResponseEntity.ok(userService.list(SecurityUtils.getCompanyId()));
+		return ResponseEntity.ok(userService.list());
 	}
 	
 	@PatchMapping("/change-password")

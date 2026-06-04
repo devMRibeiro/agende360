@@ -17,35 +17,32 @@ import br.com.corestacks.agende360.application.model.User;
 @Configuration
 public class CacheConfig {
 	
+	private static final long DEFAULT_CACHE_SIZE = 10_000;
+
+	private <K, V> Cache<K, V> buildCache(long maximumSize) {
+	    return Caffeine.newBuilder()
+	            .maximumSize(maximumSize)
+	            .recordStats()
+	            .build();
+	}
+	
 	@Bean
 	public Cache<UUID, Map<UUID, Product>> productsCache() {
-		return Caffeine.newBuilder()
-				.maximumSize(10000)
-				.recordStats()
-				.build();
+		return buildCache(DEFAULT_CACHE_SIZE);
 	}
 	
 	@Bean
 	public Cache<UUID, Map<UUID, User>> usersCache() {
-		return Caffeine.newBuilder()
-				.maximumSize(10000)
-				.recordStats()
-				.build();
+		return buildCache(DEFAULT_CACHE_SIZE);
 	}
 
 	@Bean
 	public Cache<String, Company> companiesCache() {
-		return Caffeine.newBuilder()
-				.maximumSize(10000)
-				.recordStats()
-				.build();
+		return buildCache(DEFAULT_CACHE_SIZE);
 	}
 
 	@Bean
 	public Cache<UUID, CompanySettings> companySettingsCache() {
-		return Caffeine.newBuilder()
-				.maximumSize(10000)
-				.recordStats()
-				.build();
+		return buildCache(DEFAULT_CACHE_SIZE);
 	}
 }

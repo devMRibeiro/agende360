@@ -77,11 +77,11 @@ public class Product extends BaseEntity {
 		this.durationMinutes = durationMinutes;
 	}
 
-	public UUID getCompany() {
+	public UUID getCompanyId() {
 		return companyId;
 	}
 
-	public void setCompany(UUID companyId) {
+	public void setCompanyId(UUID companyId) {
 		this.companyId = companyId;
 	}
 }

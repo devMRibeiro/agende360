@@ -99,7 +99,7 @@ public class ProductService {
         if (product == null)
             throw new IllegalArgumentException("Product not found");
 
-        if (!product.getCompany().equals(companyId))
+        if (!product.getCompanyId().equals(companyId))
             throw new IllegalArgumentException("Product not found");
 
         return new ProductResponse(
@@ -125,7 +125,7 @@ public class ProductService {
         product.setDescription(request.description());
         product.setPrice(request.price());
         product.setDurationMinutes(request.durationMinutes());
-        product.setCompany(companyId);
+        product.setCompanyId(companyId);
         productRepository.save(product);
         productsCache.invalidate(companyId);
     }
@@ -138,7 +138,7 @@ public class ProductService {
         if (product == null)
             throw new IllegalArgumentException("Product not found");
 
-        if (!product.getCompany().equals(companyId))
+        if (!product.getCompanyId().equals(companyId))
             throw new IllegalArgumentException("Product not found");
 
         if (!product.getName().equals(request.name()) && productRepository.existsByNameAndCompanyId(request.name(), companyId))
@@ -160,7 +160,7 @@ public class ProductService {
         if (product == null)
             throw new IllegalArgumentException("Product not found");
 
-        if (!product.getCompany().equals(companyId))
+        if (!product.getCompanyId().equals(companyId))
             throw new IllegalArgumentException("Product not found");
 
         if (!product.getActive())
@@ -179,7 +179,7 @@ public class ProductService {
         if (product == null)
             throw new IllegalArgumentException("Product not found");
 
-        if (!product.getCompany().equals(companyId))
+        if (!product.getCompanyId().equals(companyId))
             throw new IllegalArgumentException("Product not found");
 
         if (product.getActive())

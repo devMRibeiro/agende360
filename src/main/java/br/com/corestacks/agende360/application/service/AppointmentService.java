@@ -15,6 +15,8 @@ import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
+import com.github.benmanes.caffeine.cache.Cache;
+
 import br.com.corestacks.agende360.application.dto.request.AppointmentRequest;
 import br.com.corestacks.agende360.application.dto.response.AppointmentResponse;
 import br.com.corestacks.agende360.application.dto.response.AvailableSlotsResponse;
@@ -54,6 +56,8 @@ public class AppointmentService {
     private final CustomerService customerService;
     private final EmailService emailService;
     private final CompanySettingsService companySettingsService;
+    private final Cache<String, Company> companiesCache;
+    private final Cache<UUID, Map<UUID, Product>> productsCache;
 
     public AppointmentService(
             AppointmentRepository appointmentRepository,
@@ -63,7 +67,9 @@ public class AppointmentService {
             UserRepository userRepository,
             CustomerService customerService,
             EmailService emailService,
-            CompanySettingsService companySettingsService) {
+            CompanySettingsService companySettingsService,
+            Cache<String, Company> companiesCache,
+            Cache<UUID, Map<UUID, Product>> productsCache) {
         this.appointmentRepository = appointmentRepository;
         this.companyRepository = companyRepository;
         this.productRepository = productRepository;
@@ -72,25 +78,32 @@ public class AppointmentService {
         this.customerService = customerService;
         this.emailService = emailService;
 		this.companySettingsService = companySettingsService;
+		this.companiesCache = companiesCache;
+		this.productsCache = productsCache;
     }
 
     public AvailableSlotsResponse getAvailableSlots(String slug, UUID professionalId, UUID productId, LocalDate date) {
 
-        Company company = companyRepository.findBySlug(slug);
+    	Company company = companiesCache.getIfPresent(slug);
+    	
+        if (company == null) {
+        	company = companyRepository.findBySlug(slug);
 
-        if (company == null)
-            throw new IllegalArgumentException("Company not found");
+        	if (company == null)
+        		throw new IllegalArgumentException("Company not found");
+        }
 
         if (!company.getActive())
             throw new IllegalArgumentException("Company is not active");
 
-        Product product = productRepository.findById(productId).orElse(null);
-
-        if (product == null || !product.getCompany().equals(company.getId()))
-            throw new IllegalArgumentException("Product not found");
-
-        if (!product.getActive())
-            throw new IllegalArgumentException("Product is not active");
+        Product product = productsCache.getIfPresent(company.getId()).get(productId);
+        
+        if (product == null) {
+        	product = productRepository.findById(productId).orElse(null);
+        	
+        	if (product == null || !product.getCompanyId().equals(company.getId()) || !product.getActive())
+				throw new IllegalArgumentException("Product not found");
+        }
 
         DayOfWeek dayOfWeek = DayOfWeek.valueOf(date.getDayOfWeek().name());
         List<Schedule> schedules = scheduleRepository.findByCompanyIdAndDayOfWeek(company.getId(), dayOfWeek);
@@ -101,6 +114,11 @@ public class AppointmentService {
         int duration = product.getDurationMinutes();
         List<LocalTime> slots = new ArrayList<LocalTime>();
 
+        LocalDateTime startOfDay = date.atStartOfDay();
+        LocalDateTime endOfDay = date.plusDays(1).atStartOfDay();
+
+        List<Appointment> appointments = appointmentRepository.findAppointmentsInPeriod(professionalId, startOfDay, endOfDay);
+        
         LocalDateTime now = LocalDateTime.now();
         
         int i = 0;
@@ -108,8 +126,9 @@ public class AppointmentService {
             Schedule schedule = schedules.get(i);
             LocalTime current = schedule.getStartTime();
             LocalTime end = schedule.getEndTime();
-
+            
             while (!current.plusMinutes(duration).isAfter(end)) {
+
                 LocalDateTime slotStart = LocalDateTime.of(date, current);
                 LocalDateTime slotEnd = slotStart.plusMinutes(duration);
 
@@ -117,10 +136,17 @@ public class AppointmentService {
                     current = current.plusMinutes(duration);
                     continue;
                 }
-                
-                List<Appointment> conflicts = appointmentRepository.findConflicts(professionalId, slotStart, slotEnd);
 
-                if (conflicts.isEmpty())
+                boolean hasConflict = false;
+
+                for (Appointment appointment : appointments) {
+                    if (slotStart.isBefore(appointment.getEndTime()) && slotEnd.isAfter(appointment.getStartTime())) {
+                        hasConflict = true;
+                        break;
+                    }
+                }
+
+                if (!hasConflict)
                     slots.add(current);
 
                 current = current.plusMinutes(duration);
@@ -131,7 +157,7 @@ public class AppointmentService {
 
         return new AvailableSlotsResponse(slots);
     }
-
+    
     @Transactional
     public void create(String slug, AppointmentRequest request) {
 
@@ -145,7 +171,7 @@ public class AppointmentService {
 
         Product product = productRepository.findById(request.productId()).orElse(null);
 
-        if (product == null || !product.getCompany().equals(company.getId()))
+        if (product == null || !product.getCompanyId().equals(company.getId()))
             throw new IllegalArgumentException("Product not found");
 
         if (!product.getActive())

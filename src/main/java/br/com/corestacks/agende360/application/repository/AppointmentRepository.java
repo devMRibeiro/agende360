@@ -45,4 +45,7 @@ public interface AppointmentRepository extends JpaRepository<Appointment, UUID> 
     @Modifying
     @Query("UPDATE Appointment a SET a.status = :newStatus WHERE a.endTime < :now AND a.status = :currentStatus")
     int updateStatus(@Param("now") LocalDateTime now, @Param("currentStatus") AppointmentStatus currentStatus, @Param("newStatus") AppointmentStatus newStatus);
+    
+    @Query("SELECT a FROM Appointment a WHERE a.userId = :professionalId AND a.startTime < :endOfDay AND a.endTime > :startOfDay")
+    List<Appointment> findAppointmentsInPeriod(UUID professionalId, LocalDateTime startOfDay, LocalDateTime endOfDay);
 }

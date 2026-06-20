@@ -52,7 +52,7 @@ public class SecurityConfig {
 	        	    .requestMatchers("/api/auth/**").permitAll()
 	        	    .requestMatchers("/api/public/**").permitAll()
 	        	    .requestMatchers("/api/agende360/**").hasRole(UserRole.SUPPORT.name())
-//	        	    .requestMatchers("/api/billing/webhook").permitAll()
+	        	    .requestMatchers("/api/webhook/meta").permitAll()
 	        	    .anyRequest().authenticated()
         	)
 	        .authenticationProvider(authenticationProvider())

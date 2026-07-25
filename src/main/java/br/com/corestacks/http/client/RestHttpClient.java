@@ -31,4 +31,22 @@ public class RestHttpClient implements HttpClient {
 			throw new HttpException("Error executing HTTP request", e);
 		}
 	}
+
+	@Override
+	public <T> T get(HttpRequest request, Class<T> responseType) {
+		// TODO Auto-generated method stub
+		return null;
+	}
+
+	@Override
+	public <T> T put(HttpRequest request, Class<T> responseType) {
+		// TODO Auto-generated method stub
+		return null;
+	}
+
+	@Override
+	public void delete(HttpRequest request) {
+		// TODO Auto-generated method stub
+		
+	}
 }

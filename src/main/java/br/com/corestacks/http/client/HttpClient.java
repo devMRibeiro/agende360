@@ -13,5 +13,11 @@ import br.com.corestacks.http.model.HttpRequest;
  */
 public interface HttpClient {
 
-	<T> T post(HttpRequest request, Class<T> responseType);
+    <T> T get(HttpRequest request, Class<T> responseType);
+
+    <T> T post(HttpRequest request, Class<T> responseType);
+
+    <T> T put(HttpRequest request, Class<T> responseType);
+
+    void delete(HttpRequest request);
 }

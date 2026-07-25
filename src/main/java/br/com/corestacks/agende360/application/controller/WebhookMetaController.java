@@ -14,7 +14,7 @@ import org.springframework.web.bind.annotation.RestController;
 @RequestMapping("/api/webhook/meta")
 public class WebhookMetaController {
 
-	@Value("${SYSTEM.TOKEN-WEBHOOK}")
+	@Value("${system.token-webhook}")
 	private String webhookMetaToken;
 	
 	@GetMapping

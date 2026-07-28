@@ -1,4 +1,4 @@
-package br.com.corestacks.http.model;
+package br.com.corestacks.agende360.infrastructure.http.model;
 
 import java.util.Map;
 

@@ -35,6 +35,7 @@ import br.com.corestacks.agende360.application.repository.UserRepository;
 import br.com.corestacks.agende360.application.type.AppointmentStatus;
 import br.com.corestacks.agende360.application.type.DayOfWeek;
 import br.com.corestacks.agende360.application.type.SchedulingHorizon;
+import br.com.corestacks.agende360.infrastructure.whatsapp.service.WhatsAppService;
 import br.com.corestacks.agende360.messaging.service.EmailService;
 import br.com.corestacks.agende360.security.model.UserDetailsImpl;
 import br.com.corestacks.agende360.security.util.SecurityUtils;
@@ -56,6 +57,8 @@ public class AppointmentService {
     private final CustomerService customerService;
     private final EmailService emailService;
     private final CompanySettingsService companySettingsService;
+    private final WhatsAppService whatsAppService;
+
     private final Cache<String, Company> companiesCache;
     private final Cache<UUID, Map<UUID, Product>> productsCache;
 
@@ -68,6 +71,7 @@ public class AppointmentService {
             CustomerService customerService,
             EmailService emailService,
             CompanySettingsService companySettingsService,
+            WhatsAppService whatsAppService,
             Cache<String, Company> companiesCache,
             Cache<UUID, Map<UUID, Product>> productsCache) {
         this.appointmentRepository = appointmentRepository;
@@ -78,6 +82,7 @@ public class AppointmentService {
         this.customerService = customerService;
         this.emailService = emailService;
 		this.companySettingsService = companySettingsService;
+		this.whatsAppService = whatsAppService;
 		this.companiesCache = companiesCache;
 		this.productsCache = productsCache;
     }
@@ -239,9 +244,10 @@ public class AppointmentService {
         appointment.setToken(token);
         appointmentRepository.saveAndFlush(appointment);
 
+        whatsAppService.sendAppointmentConfirmation(appointment, company, customer, product, professional);
         sendEmailConfirmation(customer, company, product, professional, startTime, token);
     }
-
+    
     private void sendEmailConfirmation(Customer customer, Company company, Product product, User professional, LocalDateTime startTime, String token) {
         String cancelUrl = baseUrl + "/appointment/" + company.getSlug() + "/cancel/" + token;
         String formattedTime = startTime.format(DateTimeFormatter.ofPattern("dd/MM/yyyy HH:mm"));

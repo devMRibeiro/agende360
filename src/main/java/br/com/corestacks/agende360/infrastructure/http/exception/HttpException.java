@@ -1,4 +1,4 @@
-package br.com.corestacks.http.exception;
+package br.com.corestacks.agende360.infrastructure.http.exception;
 
 public class HttpException extends RuntimeException {
 	

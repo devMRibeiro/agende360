@@ -1,6 +1,6 @@
-package br.com.corestacks.http.client;
+package br.com.corestacks.agende360.infrastructure.http.client;
 
-import br.com.corestacks.http.model.HttpRequest;
+import br.com.corestacks.agende360.infrastructure.http.model.HttpRequest;
 
 /**
  * 

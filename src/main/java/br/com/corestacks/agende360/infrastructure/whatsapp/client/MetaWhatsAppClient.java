@@ -1,15 +1,15 @@
-package br.com.corestacks.integration.whatsapp.client;
+package br.com.corestacks.agende360.infrastructure.whatsapp.client;
 
 import java.util.HashMap;
 import java.util.Map;
 
 import org.springframework.stereotype.Component;
 
-import br.com.corestacks.http.client.HttpClient;
-import br.com.corestacks.http.model.HttpRequest;
-import br.com.corestacks.integration.whatsapp.dto.WhatsAppMessageResponse;
-import br.com.corestacks.integration.whatsapp.dto.WhatsAppProperties;
-import br.com.corestacks.integration.whatsapp.dto.WhatsappTemplateMessageRequest;
+import br.com.corestacks.agende360.infrastructure.http.client.HttpClient;
+import br.com.corestacks.agende360.infrastructure.http.model.HttpRequest;
+import br.com.corestacks.agende360.infrastructure.whatsapp.dto.WhatsAppMessageResponse;
+import br.com.corestacks.agende360.infrastructure.whatsapp.dto.WhatsAppProperties;
+import br.com.corestacks.agende360.infrastructure.whatsapp.dto.WhatsappTemplateMessageRequest;
 
 @Component
 public class MetaWhatsAppClient implements WhatsAppClient {
@@ -34,6 +34,6 @@ public class MetaWhatsAppClient implements WhatsAppClient {
     }
 
     private String buildUrl() {
-        return String.format("https://graph.facebook.com/v23.0/%s/messages", properties.phoneNumberId());
+        return String.format("https://graph.facebook.com/v25.0/%s/messages", properties.phoneNumberId());
     }
 }

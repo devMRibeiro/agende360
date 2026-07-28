@@ -2,8 +2,6 @@ package br.com.corestacks.agende360.application.subscription.service;
 
 import java.util.UUID;
 
-import org.springframework.stereotype.Service;
-
 import br.com.corestacks.agende360.application.exception.ForbiddenException;
 import br.com.corestacks.agende360.application.subscription.util.PlanFeatures;
 
@@ -12,7 +10,7 @@ import br.com.corestacks.agende360.application.subscription.util.PlanFeatures;
  * - validar acesso
  * - validar limite
  */
-@Service
+//@Service
 public class FeatureGateService {
 
     private final SubscriptionService subscriptionService;

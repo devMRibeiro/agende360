@@ -3,7 +3,6 @@ package br.com.corestacks.agende360.application.subscription.service;
 import java.util.UUID;
 
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.stereotype.Service;
 
 import com.stripe.exception.StripeException;
 import com.stripe.model.checkout.Session;
@@ -13,7 +12,7 @@ import br.com.corestacks.agende360.application.subscription.model.Subscription;
 import br.com.corestacks.agende360.application.subscription.repository.SubscriptionRepository;
 import br.com.corestacks.agende360.application.subscription.type.SubscriptionPlan;
 
-@Service
+//@Service
 public class BillingService {
 
     @Value("${stripe.price.essential}")

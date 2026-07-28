@@ -1,14 +1,17 @@
-package br.com.corestacks.http.client;
+package br.com.corestacks.agende360.infrastructure.http.client;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Component;
 import org.springframework.web.client.RestClient;
 
-import br.com.corestacks.http.exception.HttpException;
-import br.com.corestacks.http.model.HttpRequest;
+import br.com.corestacks.agende360.infrastructure.http.exception.HttpException;
+import br.com.corestacks.agende360.infrastructure.http.model.HttpRequest;
 
 @Component
 public class RestHttpClient implements HttpClient {
 
+	private static final Logger LOGGER = LoggerFactory.getLogger(RestHttpClient.class);
 	private final RestClient restClient;
 	
 	public RestHttpClient(RestClient restClient) {
@@ -28,6 +31,7 @@ public class RestHttpClient implements HttpClient {
 					.body(responseType);
 			
 		} catch (Exception e) {
+			LOGGER.error("Erro ao chamar {}", request.url(), e);
 			throw new HttpException("Error executing HTTP request", e);
 		}
 	}

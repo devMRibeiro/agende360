@@ -1,4 +1,4 @@
-package br.com.corestacks.http.config;
+package br.com.corestacks.agende360.infrastructure.http.config;
 
 
 import java.time.Duration;

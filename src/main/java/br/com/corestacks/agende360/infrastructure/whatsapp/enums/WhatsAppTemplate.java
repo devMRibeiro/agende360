@@ -1,4 +1,4 @@
-package br.com.corestacks.integration.whatsapp.enums;
+package br.com.corestacks.agende360.infrastructure.whatsapp.enums;
 
 public enum WhatsAppTemplate {
 

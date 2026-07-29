@@ -22,7 +22,7 @@ import br.com.corestacks.agende360.application.model.User;
 import br.com.corestacks.agende360.application.repository.PasswordResetTokenRepository;
 import br.com.corestacks.agende360.application.repository.UserRepository;
 import br.com.corestacks.agende360.application.util.BaseUrlUtils;
-import br.com.corestacks.agende360.messaging.service.EmailService;
+import br.com.corestacks.agende360.messaging.email.service.EmailService;
 
 @Service
 public class PasswordResetTokenService {

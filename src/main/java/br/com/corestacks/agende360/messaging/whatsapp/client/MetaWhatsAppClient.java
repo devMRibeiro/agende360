@@ -1,4 +1,4 @@
-package br.com.corestacks.agende360.infrastructure.whatsapp.client;
+package br.com.corestacks.agende360.messaging.whatsapp.client;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -7,9 +7,9 @@ import org.springframework.stereotype.Component;
 
 import br.com.corestacks.agende360.infrastructure.http.client.HttpClient;
 import br.com.corestacks.agende360.infrastructure.http.model.HttpRequest;
-import br.com.corestacks.agende360.infrastructure.whatsapp.dto.WhatsAppMessageResponse;
-import br.com.corestacks.agende360.infrastructure.whatsapp.dto.WhatsAppProperties;
-import br.com.corestacks.agende360.infrastructure.whatsapp.dto.WhatsappTemplateMessageRequest;
+import br.com.corestacks.agende360.messaging.whatsapp.dto.WhatsAppMessageResponse;
+import br.com.corestacks.agende360.messaging.whatsapp.dto.WhatsAppProperties;
+import br.com.corestacks.agende360.messaging.whatsapp.dto.WhatsappTemplateMessageRequest;
 
 @Component
 public class MetaWhatsAppClient implements WhatsAppClient {

@@ -1,4 +1,4 @@
-package br.com.corestacks.agende360.messaging.engine;
+package br.com.corestacks.agende360.messaging.email.engine;
 
 import java.io.InputStream;
 import java.nio.charset.StandardCharsets;

@@ -1,8 +1,8 @@
-package br.com.corestacks.agende360.infrastructure.whatsapp.dto;
+package br.com.corestacks.agende360.messaging.whatsapp.dto;
 
 import java.util.List;
 
-import br.com.corestacks.agende360.infrastructure.whatsapp.enums.WhatsappConstants;
+import br.com.corestacks.agende360.messaging.whatsapp.enums.WhatsappConstants;
 
 public final class WhatsappMessageFactory {
 

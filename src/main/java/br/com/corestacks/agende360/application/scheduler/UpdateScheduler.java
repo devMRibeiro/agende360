@@ -14,7 +14,7 @@ public class UpdateScheduler {
 		this.appointmentService = appointmentService;
 	}
 	
-	@Scheduled(cron = "0 */10 * * * *") // every day at 2:00 AM
+	@Scheduled(cron = "0 */10 * * * *") // every 10 minutes
 	public void run() {
 		appointmentService.processDueAppointments();
 	}

@@ -1,4 +1,4 @@
-package br.com.corestacks.agende360.infrastructure.whatsapp.enums;
+package br.com.corestacks.agende360.messaging.whatsapp.enums;
 
 public enum WhatsappConstants {
 	MESSAGING_PRODUCT_WHATSAPP("whatsapp"),

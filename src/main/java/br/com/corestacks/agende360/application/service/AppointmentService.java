@@ -35,8 +35,9 @@ import br.com.corestacks.agende360.application.repository.UserRepository;
 import br.com.corestacks.agende360.application.type.AppointmentStatus;
 import br.com.corestacks.agende360.application.type.DayOfWeek;
 import br.com.corestacks.agende360.application.type.SchedulingHorizon;
-import br.com.corestacks.agende360.infrastructure.whatsapp.service.WhatsAppService;
-import br.com.corestacks.agende360.messaging.service.EmailService;
+import br.com.corestacks.agende360.messaging.email.service.EmailService;
+import br.com.corestacks.agende360.messaging.whatsapp.dto.AppointmentConfirmationMessage;
+import br.com.corestacks.agende360.messaging.whatsapp.service.WhatsAppService;
 import br.com.corestacks.agende360.security.model.UserDetailsImpl;
 import br.com.corestacks.agende360.security.util.SecurityUtils;
 import jakarta.transaction.Transactional;
@@ -244,7 +245,20 @@ public class AppointmentService {
         appointment.setToken(token);
         appointmentRepository.saveAndFlush(appointment);
 
-        whatsAppService.sendAppointmentConfirmation(appointment, company, customer, product, professional);
+        whatsAppService.sendAppointmentConfirmation(
+        		new AppointmentConfirmationMessage(
+        				customer.getPhone(),
+        				customer.getName(),
+        				appointment.getStartTime(),
+        				company.getEndereco().toString(),
+        				product.getName(),
+        				professional.getName(),
+        				company.getName(),
+        				company.getSlug(),
+        				appointment.getToken()
+				)
+		);
+        
         sendEmailConfirmation(customer, company, product, professional, startTime, token);
     }
     
@@ -260,11 +274,11 @@ public class AppointmentService {
 	    vars.put("APPOINTMENT_DATE", formattedTime);
 	    vars.put("CANCEL_LINK", cancelUrl);
 	    vars.put("YEAR", String.valueOf(LocalDateTime.now().getYear()));
-	    vars.put("RUA", company.getEndereco().getLogradouro());
+	    vars.put("LOGRADOURO", company.getEndereco().getLogradouro());
 	    vars.put("NUMERO", company.getEndereco().getNumero());
 	    vars.put("BAIRRO", company.getEndereco().getBairro());
 	    vars.put("CIDADE", company.getEndereco().getCidade());
-	    vars.put("ESTADO", company.getEndereco().getEstado());
+	    vars.put("UF", company.getEndereco().getUF());
 	    vars.put("CEP", company.getEndereco().getCep());
 	    vars.put("COMPLEMENTO", company.getEndereco().getComplemento() == null ? "" : company.getEndereco().getComplemento());
 

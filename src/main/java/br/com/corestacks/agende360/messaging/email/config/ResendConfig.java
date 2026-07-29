@@ -1,4 +1,4 @@
-package br.com.corestacks.agende360.messaging.config;
+package br.com.corestacks.agende360.messaging.email.config;
 
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;

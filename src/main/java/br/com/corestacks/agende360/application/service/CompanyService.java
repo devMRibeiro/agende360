@@ -27,13 +27,9 @@ import br.com.corestacks.agende360.application.model.User;
 import br.com.corestacks.agende360.application.repository.CompanyRepository;
 import br.com.corestacks.agende360.application.repository.CompanySettingsRepository;
 import br.com.corestacks.agende360.application.repository.UserRepository;
-import br.com.corestacks.agende360.application.subscription.dto.request.SubscriptionCreate;
-import br.com.corestacks.agende360.application.subscription.service.SubscriptionService;
-import br.com.corestacks.agende360.application.subscription.type.SubscriptionPlan;
-import br.com.corestacks.agende360.application.subscription.type.SubscriptionStatus;
 import br.com.corestacks.agende360.application.type.SchedulingHorizon;
 import br.com.corestacks.agende360.application.type.UserRole;
-import br.com.corestacks.agende360.messaging.service.EmailService;
+import br.com.corestacks.agende360.messaging.email.service.EmailService;
 import br.com.corestacks.agende360.security.model.UserDetailsImpl;
 import br.com.corestacks.agende360.security.util.SecurityUtils;
 import jakarta.transaction.Transactional;
@@ -48,7 +44,6 @@ public class CompanyService {
 	private final UserRepository userRepository;
 	private final PasswordEncoder encoder;
 	private final EmailService emailService;
-	private final SubscriptionService subscriptionService;
 	private final CompanySettingsService companySettingsService;
 	private final Cache<String, Company> companiesCache;
 	private final Cache<UUID, Map<UUID, User>> usersCache;
@@ -64,7 +59,6 @@ public class CompanyService {
 						  PasswordEncoder encoder,
 						  EmailService emailService,
 						  CompanySettingsRepository companySettingsRepository,
-						  SubscriptionService subscriptionService,
 						  CompanySettingsService companySettingsService,
 						  Cache<String, Company> companiesCache,
 						  Cache<UUID, Map<UUID, User>> usersCache) {
@@ -73,7 +67,6 @@ public class CompanyService {
 		this.encoder = encoder;
 		this.emailService = emailService;
 		this.companySettingsRepository = companySettingsRepository;
-		this.subscriptionService = subscriptionService;
 		this.companySettingsService = companySettingsService;
 		this.companiesCache = companiesCache;
 		this.usersCache = usersCache;
@@ -112,16 +105,6 @@ public class CompanyService {
 
 		sendAccessCreatedEmail(user, company);
 		
-		LocalDateTime now = LocalDateTime.now();
-
-		subscriptionService.createSubscription(
-				new SubscriptionCreate(
-						company.getId(),
-						SubscriptionPlan.TRIAL,
-						SubscriptionStatus.TRIALING,
-						now,
-						now.plusDays(14)));
-
 		return new RegisterCompanyResponse(company.getName(), company.getSlug(), user.getEmail(), user.getName());
 	}
 	

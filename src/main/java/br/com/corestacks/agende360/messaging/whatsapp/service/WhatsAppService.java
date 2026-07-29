@@ -1,19 +1,15 @@
-package br.com.corestacks.agende360.infrastructure.whatsapp.service;
+package br.com.corestacks.agende360.messaging.whatsapp.service;
 
 import java.time.format.DateTimeFormatter;
 import java.util.List;
 
 import org.springframework.stereotype.Service;
 
-import br.com.corestacks.agende360.application.model.Appointment;
-import br.com.corestacks.agende360.application.model.Company;
-import br.com.corestacks.agende360.application.model.Customer;
-import br.com.corestacks.agende360.application.model.Product;
-import br.com.corestacks.agende360.application.model.User;
-import br.com.corestacks.agende360.infrastructure.whatsapp.client.WhatsAppClient;
-import br.com.corestacks.agende360.infrastructure.whatsapp.dto.Component;
-import br.com.corestacks.agende360.infrastructure.whatsapp.dto.Parameter;
-import br.com.corestacks.agende360.infrastructure.whatsapp.dto.WhatsappMessageFactory;
+import br.com.corestacks.agende360.messaging.whatsapp.client.WhatsAppClient;
+import br.com.corestacks.agende360.messaging.whatsapp.dto.AppointmentConfirmationMessage;
+import br.com.corestacks.agende360.messaging.whatsapp.dto.Component;
+import br.com.corestacks.agende360.messaging.whatsapp.dto.Parameter;
+import br.com.corestacks.agende360.messaging.whatsapp.dto.WhatsappMessageFactory;
 
 @Service
 public class WhatsAppService {
@@ -24,10 +20,10 @@ public class WhatsAppService {
         this.whatsAppClient = whatsAppClient;
     }
 
-    public void sendAppointmentConfirmation(Appointment appointment, Company company, Customer customer, Product product, User professional) {
+    public void sendAppointmentConfirmation(AppointmentConfirmationMessage appointmentDTO) {
 
-    	String formattedDate = appointment.getStartTime().format(DateTimeFormatter.ofPattern("dd/MM/yyyy"));
-    	String formattedTime = appointment.getStartTime().format(DateTimeFormatter.ofPattern("HH:mm"));
+    	String formattedDate = appointmentDTO.appointmentDateTime().format(DateTimeFormatter.ofPattern("dd/MM/yyyy"));
+    	String formattedTime = appointmentDTO.appointmentDateTime().format(DateTimeFormatter.ofPattern("HH:mm"));
     	
         List<Component> components = List.of(
             new Component(
@@ -35,12 +31,13 @@ public class WhatsAppService {
                 null,
                 null,
                 List.of(
-                    new Parameter("text", customer.getName()),
+                    new Parameter("text", appointmentDTO.customerPhone()),
                     new Parameter("text", formattedDate),
                     new Parameter("text", formattedTime),
-                    new Parameter("text", company.getName()),
-                    new Parameter("text", product.getName()),
-                    new Parameter("text", professional.getName())
+                    new Parameter("text", appointmentDTO.companyAddress()),
+                    new Parameter("text", appointmentDTO.productName()),
+                    new Parameter("text", appointmentDTO.professionalName()),
+            		new Parameter("text", appointmentDTO.companyName())
                 )
             ),
             new Component(
@@ -50,14 +47,14 @@ public class WhatsAppService {
                 List.of(
                     new Parameter(
                         "text",
-                        company.getSlug() + "/cancel/" + appointment.getToken()
+                        appointmentDTO.companySlug() + "/cancel/" + appointmentDTO.appointmentToken()
                     )
                 )
             )
         );
 
         whatsAppClient.sendTemplate(WhatsappMessageFactory.createTemplateMessage(
-                "55" + customer.getPhone(),
+                "55" + appointmentDTO.customerPhone(),
                 "appointment_confirmed",
                 components
         ));

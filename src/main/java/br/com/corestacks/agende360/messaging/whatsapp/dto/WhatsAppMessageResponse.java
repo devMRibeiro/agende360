@@ -1,4 +1,4 @@
-package br.com.corestacks.agende360.infrastructure.whatsapp.dto;
+package br.com.corestacks.agende360.messaging.whatsapp.dto;
 
 public record WhatsAppMessageResponse() {
 

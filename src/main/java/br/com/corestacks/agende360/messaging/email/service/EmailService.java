@@ -1,4 +1,4 @@
-package br.com.corestacks.agende360.messaging.service;
+package br.com.corestacks.agende360.messaging.email.service;
 
 import java.time.LocalDateTime;
 import java.util.Map;
@@ -14,7 +14,7 @@ import com.resend.core.exception.ResendException;
 import com.resend.services.emails.model.CreateEmailOptions;
 import com.resend.services.emails.model.CreateEmailResponse;
 
-import br.com.corestacks.agende360.messaging.engine.EmailTemplateEngine;
+import br.com.corestacks.agende360.messaging.email.engine.EmailTemplateEngine;
 
 @Service
 public class EmailService {

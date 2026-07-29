@@ -9,7 +9,7 @@ public class Endereco {
 	private String numero;
 	private String bairro;
 	private String cidade;
-	private String estado;
+	private String uf;
 	private String cep;
 	private String complemento;
 
@@ -37,11 +37,11 @@ public class Endereco {
 	public void setCidade(String cidade) {
 		this.cidade = cidade;
 	}
-	public String getEstado() {
-		return estado;
+	public String getUF() {
+		return uf;
 	}
-	public void setEstado(String estado) {
-		this.estado = estado;
+	public void setUF(String uf) {
+		this.uf = uf;
 	}
 	public String getCep() {
 		return cep;
@@ -54,5 +54,16 @@ public class Endereco {
 	}
 	public void setComplemento(String complemento) {
 		this.complemento = complemento;
+	}
+	@Override
+	public String toString() {
+		return 
+				logradouro + ", " +
+				numero + ", " +
+				bairro + ", " +
+				cidade + "-" +
+				uf + ", " +
+				cep + ", " +
+				complemento;
 	}
 }

@@ -1,0 +1,1 @@
+ALTER TABLE company RENAME estado TO uf; 

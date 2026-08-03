@@ -31,7 +31,7 @@ public class WhatsAppService {
                 null,
                 null,
                 List.of(
-                    new Parameter("text", appointmentDTO.customerPhone()),
+                    new Parameter("text", appointmentDTO.customerName()),
                     new Parameter("text", formattedDate),
                     new Parameter("text", formattedTime),
                     new Parameter("text", appointmentDTO.companyAddress()),

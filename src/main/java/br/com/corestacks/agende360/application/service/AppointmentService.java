@@ -56,7 +56,6 @@ public class AppointmentService {
     private final ScheduleRepository scheduleRepository;
     private final UserRepository userRepository;
     private final CustomerService customerService;
-    private final EmailService emailService;
     private final CompanySettingsService companySettingsService;
     private final WhatsAppService whatsAppService;
 
@@ -81,7 +80,6 @@ public class AppointmentService {
         this.scheduleRepository = scheduleRepository;
         this.userRepository = userRepository;
         this.customerService = customerService;
-        this.emailService = emailService;
 		this.companySettingsService = companySettingsService;
 		this.whatsAppService = whatsAppService;
 		this.companiesCache = companiesCache;

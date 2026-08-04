@@ -48,6 +48,15 @@ public class OutboxEvent {
 
 	@Column(name = "sent_at")
 	private Instant sentAt;
+	
+	@Column(name = "retry_count")
+	private Integer retryCount;
+	
+	@Column(name = "next_attempt_at")
+	private Instant nextAttemptAt;
+	
+	@Column(name = "last_error")
+	private String lastError;
 
 	public UUID getId() {
 		return id;
@@ -119,5 +128,29 @@ public class OutboxEvent {
 
 	public void setSentAt(Instant sentAt) {
 		this.sentAt = sentAt;
+	}
+
+	public Integer getRetryCount() {
+		return retryCount;
+	}
+
+	public void setRetryCount(Integer retryCount) {
+		this.retryCount = retryCount;
+	}
+
+	public Instant getNextAttemptAt() {
+		return nextAttemptAt;
+	}
+
+	public void setNextAttemptAt(Instant nextAttemptAt) {
+		this.nextAttemptAt = nextAttemptAt;
+	}
+
+	public String getLastError() {
+		return lastError;
+	}
+
+	public void setLastError(String lastError) {
+		this.lastError = lastError;
 	}
 }

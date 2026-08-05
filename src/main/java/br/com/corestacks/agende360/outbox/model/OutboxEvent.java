@@ -8,6 +8,7 @@ import org.hibernate.type.SqlTypes;
 
 import com.fasterxml.jackson.databind.JsonNode;
 
+import br.com.corestacks.agende360.outbox.enums.AggregateType;
 import br.com.corestacks.agende360.outbox.enums.OutboxEventType;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
@@ -22,21 +23,19 @@ public class OutboxEvent {
 	@Column(nullable = false)
 	private UUID id;
 
-	@Column(name = "aggregate_type", nullable = false)
-	private String aggregateType;
-
 	@Column(name = "aggregate_id", nullable = false)
-	private Long aggregateId;
+	private UUID aggregateId;
+
+	@Column(name = "aggregate_type", nullable = false)
+	@Enumerated(EnumType.STRING)
+	private AggregateType aggregateType;
 
 	@Column(name = "event_type", nullable = false)
 	@Enumerated(EnumType.STRING)
 	private OutboxEventType eventType;
 
-	@Column(name = "event_version", nullable = false)
-	private String eventVersion;
-
 	@JdbcTypeCode(SqlTypes.JSON)
-	@Column(columnDefinition = "jsonb", nullable = false)
+	@Column(name = "payload", columnDefinition = "jsonb", nullable = false)
 	private JsonNode payload;
 
 	@Column(name = "event_status", nullable = false)
@@ -66,19 +65,19 @@ public class OutboxEvent {
 		this.id = id;
 	}
 
-	public String getAggregateType() {
+	public AggregateType getAggregateType() {
 		return aggregateType;
 	}
 
-	public void setAggregateType(String aggregateType) {
+	public void setAggregateType(AggregateType aggregateType) {
 		this.aggregateType = aggregateType;
 	}
 
-	public Long getAggregateId() {
+	public UUID getAggregateId() {
 		return aggregateId;
 	}
 
-	public void setAggregateId(Long aggregateId) {
+	public void setAggregateId(UUID aggregateId) {
 		this.aggregateId = aggregateId;
 	}
 
@@ -88,14 +87,6 @@ public class OutboxEvent {
 
 	public void setEventType(OutboxEventType eventType) {
 		this.eventType = eventType;
-	}
-
-	public String getEventVersion() {
-		return eventVersion;
-	}
-
-	public void setEventVersion(String eventVersion) {
-		this.eventVersion = eventVersion;
 	}
 
 	public JsonNode getPayload() {
@@ -153,4 +144,69 @@ public class OutboxEvent {
 	public void setLastError(String lastError) {
 		this.lastError = lastError;
 	}
+	
+	public void calculeNextAttempt() {
+		nextAttemptAt = Instant.now().plusSeconds(calculateBackoff(retryCount));
+	}
+	
+	private long calculateBackoff(int retryCount) {
+	    return Math.min((long) Math.pow(2, retryCount) * 30, 3600);
+	}
+	
+	public static Builder builder() {
+        return new Builder();
+    }
+
+    public static class Builder {
+
+        private final OutboxEvent event;
+
+        private Builder() {
+            this.event = new OutboxEvent();
+        }
+
+        public Builder id(UUID id) {
+            event.id = id;
+            return this;
+        }
+
+        public Builder aggregateType(AggregateType aggregateType) {
+            event.aggregateType = aggregateType;
+            return this;
+        }
+
+        public Builder aggregateId(UUID aggregateId) {
+            event.aggregateId = aggregateId;
+            return this;
+        }
+
+        public Builder eventType(OutboxEventType eventType) {
+            event.eventType = eventType;
+            return this;
+        }
+
+        public Builder payload(JsonNode payload) {
+            event.payload = payload;
+            return this;
+        }
+
+        public Builder eventStatus(OutboxStatus eventStatus) {
+            event.eventStatus = eventStatus;
+            return this;
+        }
+
+        public Builder createdAt(Instant createdAt) {
+            event.createdAt = createdAt;
+            return this;
+        }
+
+        public Builder retryCount(Integer retryCount) {
+            event.retryCount = retryCount;
+            return this;
+        }
+
+        public OutboxEvent build() {
+            return event;
+        }
+    }
 }

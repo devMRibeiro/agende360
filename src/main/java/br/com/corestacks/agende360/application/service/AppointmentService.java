@@ -3,9 +3,7 @@ package br.com.corestacks.agende360.application.service;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.LocalTime;
-import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;
@@ -35,9 +33,12 @@ import br.com.corestacks.agende360.application.repository.UserRepository;
 import br.com.corestacks.agende360.application.type.AppointmentStatus;
 import br.com.corestacks.agende360.application.type.DayOfWeek;
 import br.com.corestacks.agende360.application.type.SchedulingHorizon;
-import br.com.corestacks.agende360.messaging.email.service.EmailService;
-import br.com.corestacks.agende360.messaging.whatsapp.dto.AppointmentConfirmationMessage;
-import br.com.corestacks.agende360.messaging.whatsapp.service.WhatsAppService;
+import br.com.corestacks.agende360.messaging.email.dto.AppointmentConfirmationEmail;
+import br.com.corestacks.agende360.messaging.whatsapp.dto.WhatsAppAppointmentConfirmation;
+import br.com.corestacks.agende360.outbox.enums.AggregateType;
+import br.com.corestacks.agende360.outbox.enums.OutboxEventType;
+import br.com.corestacks.agende360.outbox.factory.OutboxEventFactory;
+import br.com.corestacks.agende360.outbox.service.OutboxEventService;
 import br.com.corestacks.agende360.security.model.UserDetailsImpl;
 import br.com.corestacks.agende360.security.util.SecurityUtils;
 import jakarta.transaction.Transactional;
@@ -57,7 +58,8 @@ public class AppointmentService {
     private final UserRepository userRepository;
     private final CustomerService customerService;
     private final CompanySettingsService companySettingsService;
-    private final WhatsAppService whatsAppService;
+    private final OutboxEventService outboxEventService;
+    private final OutboxEventFactory outboxEventFactory;
 
     private final Cache<String, Company> companiesCache;
     private final Cache<UUID, Map<UUID, Product>> productsCache;
@@ -69,11 +71,11 @@ public class AppointmentService {
             ScheduleRepository scheduleRepository,
             UserRepository userRepository,
             CustomerService customerService,
-            EmailService emailService,
             CompanySettingsService companySettingsService,
-            WhatsAppService whatsAppService,
             Cache<String, Company> companiesCache,
-            Cache<UUID, Map<UUID, Product>> productsCache) {
+            Cache<UUID, Map<UUID, Product>> productsCache,
+            OutboxEventService outboxEventService,
+            OutboxEventFactory outboxEventFactory) {
         this.appointmentRepository = appointmentRepository;
         this.companyRepository = companyRepository;
         this.productRepository = productRepository;
@@ -81,7 +83,8 @@ public class AppointmentService {
         this.userRepository = userRepository;
         this.customerService = customerService;
 		this.companySettingsService = companySettingsService;
-		this.whatsAppService = whatsAppService;
+		this.outboxEventService = outboxEventService;
+		this.outboxEventFactory = outboxEventFactory;
 		this.companiesCache = companiesCache;
 		this.productsCache = productsCache;
     }
@@ -241,48 +244,42 @@ public class AppointmentService {
         appointment.setEndTime(endTime);
         appointment.setStatus(AppointmentStatus.CONFIRMED);
         appointment.setToken(token);
-        appointmentRepository.saveAndFlush(appointment);
-
-        whatsAppService.sendAppointmentConfirmation(
-        		new AppointmentConfirmationMessage(
-        				customer.getPhone(),
-        				customer.getName(),
-        				appointment.getStartTime(),
-        				company.getEndereco().toString(),
-        				product.getName(),
-        				professional.getName(),
-        				company.getName(),
-        				company.getSlug(),
-        				appointment.getToken()
-				)
-		);
+        appointmentRepository.save(appointment);
         
-        sendEmailConfirmation(customer, company, product, professional, startTime, token);
+        outboxEventService.saveAll(List.of(
+        	    outboxEventFactory.create(AggregateType.APPOINTMENT, appointment.getId(), OutboxEventType.EMAIL_APPOINTMENT_CONFIRMATION,    buildEmailPayload(company, customer, product, professional, appointment)),
+        	    outboxEventFactory.create(AggregateType.APPOINTMENT, appointment.getId(), OutboxEventType.WHATSAPP_APPOINTMENT_CONFIRMATION, buildWhatsAppPayload(customer, appointment, company, product, professional))
+    	));
     }
     
-    private void sendEmailConfirmation(Customer customer, Company company, Product product, User professional, LocalDateTime startTime, String token) {
-        String cancelUrl = baseUrl + "/appointment/" + company.getSlug() + "/cancel/" + token;
-        String formattedTime = startTime.format(DateTimeFormatter.ofPattern("dd/MM/yyyy HH:mm"));
-
-        Map<String, String> vars = new HashMap<String, String>();
-	    vars.put("COMPANY_NAME", company.getName());
-	    vars.put("CLIENT_NAME", customer.getName());
-	    vars.put("SERVICE_NAME", product.getName());
-	    vars.put("PROFESSIONAL_NAME", professional.getName());
-	    vars.put("APPOINTMENT_DATE", formattedTime);
-	    vars.put("CANCEL_LINK", cancelUrl);
-	    vars.put("YEAR", String.valueOf(LocalDateTime.now().getYear()));
-	    vars.put("LOGRADOURO", company.getEndereco().getLogradouro());
-	    vars.put("NUMERO", company.getEndereco().getNumero());
-	    vars.put("BAIRRO", company.getEndereco().getBairro());
-	    vars.put("CIDADE", company.getEndereco().getCidade());
-	    vars.put("UF", company.getEndereco().getUF());
-	    vars.put("CEP", company.getEndereco().getCep());
-	    vars.put("COMPLEMENTO", company.getEndereco().getComplemento() == null ? "" : company.getEndereco().getComplemento());
-
-        emailService.sendAppointmentConfirmedEmail(customer.getEmail(), vars);
+    private AppointmentConfirmationEmail buildEmailPayload(Company company, Customer customer, Product product, User professional, Appointment appointment) {
+    	return new AppointmentConfirmationEmail(
+    			company.getName(),
+				company.getSlug(),
+				customer.getName(),
+				customer.getEmail(),
+				product.getName(),
+				professional.getName(),
+				baseUrl + "/appointment/" + company.getSlug() + "/cancel/" + appointment.getToken(),
+				appointment.getStartTime(),
+				company.getEndereco()
+		);
     }
-
+    
+    private WhatsAppAppointmentConfirmation buildWhatsAppPayload(Customer customer, Appointment appointment, Company company, Product product, User professional) {
+    	return new WhatsAppAppointmentConfirmation(
+				customer.getPhone(),
+				customer.getName(),
+				appointment.getStartTime(),
+				company.getEndereco().toString(),
+				product.getName(),
+				professional.getName(),
+				company.getName(),
+				company.getSlug(),
+				appointment.getToken()
+		);
+    }
+    
     // Cancelamento via token público (pelo cliente através do link no e-mail)
     public void cancel(String token) {
         Appointment appointment = appointmentRepository.findByToken(token);

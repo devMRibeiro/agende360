@@ -6,7 +6,7 @@ import java.util.List;
 import org.springframework.stereotype.Service;
 
 import br.com.corestacks.agende360.messaging.whatsapp.client.WhatsAppClient;
-import br.com.corestacks.agende360.messaging.whatsapp.dto.AppointmentConfirmationMessage;
+import br.com.corestacks.agende360.messaging.whatsapp.dto.WhatsAppAppointmentConfirmation;
 import br.com.corestacks.agende360.messaging.whatsapp.dto.Component;
 import br.com.corestacks.agende360.messaging.whatsapp.dto.Parameter;
 import br.com.corestacks.agende360.messaging.whatsapp.dto.WhatsappMessageFactory;
@@ -20,7 +20,7 @@ public class WhatsAppService {
         this.whatsAppClient = whatsAppClient;
     }
 
-    public void sendAppointmentConfirmation(AppointmentConfirmationMessage appointmentDTO) {
+    public void sendAppointmentConfirmation(WhatsAppAppointmentConfirmation appointmentDTO) {
 
     	String formattedDate = appointmentDTO.appointmentDateTime().format(DateTimeFormatter.ofPattern("dd/MM/yyyy"));
     	String formattedTime = appointmentDTO.appointmentDateTime().format(DateTimeFormatter.ofPattern("HH:mm"));

@@ -11,8 +11,7 @@ public record AppointmentConfirmationEmail(
 		String customerEmail,
 		String productName,
 		String professionalName,
-		String baseUrl,
-		String appointmentToken,
+		String cancelURL,
 		LocalDateTime appointmentStartTime,
 		Endereco endereco
 	) {

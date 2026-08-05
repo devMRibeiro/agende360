@@ -2,7 +2,7 @@ package br.com.corestacks.agende360.messaging.whatsapp.dto;
 
 import java.time.LocalDateTime;
 
-public record AppointmentConfirmationMessage(
+public record WhatsAppAppointmentConfirmation(
 	    String customerPhone,
 	    String customerName,
 	    LocalDateTime appointmentDateTime,

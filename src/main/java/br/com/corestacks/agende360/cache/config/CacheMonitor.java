@@ -22,12 +22,12 @@ public class CacheMonitor {
 
 	private final Cache<UUID, Map<UUID, Product>> productsCache;
 	private final Cache<UUID, Map<UUID, User>> usersCache;
-	private final Cache<String, Company> companiesCache;
+	private final Cache<UUID, Company> companiesCache;
 	
 	public CacheMonitor(
 			Cache<UUID, Map<UUID, Product>> productsCache,
 			Cache<UUID, Map<UUID, User>> usersCache,
-			Cache<String, Company> companiesCache) {
+			Cache<UUID, Company> companiesCache) {
 		this.productsCache = productsCache;
 		this.usersCache = usersCache;
 		this.companiesCache = companiesCache;

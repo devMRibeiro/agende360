@@ -60,8 +60,8 @@ public class AppointmentService {
     private final CompanySettingsService companySettingsService;
     private final OutboxEventService outboxEventService;
     private final OutboxEventFactory outboxEventFactory;
+    private final CompanyService companyService;
 
-    private final Cache<String, Company> companiesCache;
     private final Cache<UUID, Map<UUID, Product>> productsCache;
 
     public AppointmentService(
@@ -72,10 +72,10 @@ public class AppointmentService {
             UserRepository userRepository,
             CustomerService customerService,
             CompanySettingsService companySettingsService,
-            Cache<String, Company> companiesCache,
             Cache<UUID, Map<UUID, Product>> productsCache,
             OutboxEventService outboxEventService,
-            OutboxEventFactory outboxEventFactory) {
+            OutboxEventFactory outboxEventFactory,
+            CompanyService companyService) {
         this.appointmentRepository = appointmentRepository;
         this.companyRepository = companyRepository;
         this.productRepository = productRepository;
@@ -85,23 +85,16 @@ public class AppointmentService {
 		this.companySettingsService = companySettingsService;
 		this.outboxEventService = outboxEventService;
 		this.outboxEventFactory = outboxEventFactory;
-		this.companiesCache = companiesCache;
+		this.companyService = companyService;
 		this.productsCache = productsCache;
     }
 
     public AvailableSlotsResponse getAvailableSlots(String slug, UUID professionalId, UUID productId, LocalDate date) {
 
-    	Company company = companiesCache.getIfPresent(slug);
+    	Company company = companyService.findByCompanySlug(slug);
     	
-        if (company == null) {
-        	company = companyRepository.findBySlug(slug);
-
-        	if (company == null)
-        		throw new IllegalArgumentException("Company not found");
-        }
-
-        if (!company.getActive())
-            throw new IllegalArgumentException("Company is not active");
+        if (company == null || !company.getActive())
+    		throw new IllegalArgumentException("Company not found or Company is not active");
 
         Product product = productsCache.getIfPresent(company.getId()).get(productId);
         

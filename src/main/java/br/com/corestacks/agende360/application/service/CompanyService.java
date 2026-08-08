@@ -45,7 +45,8 @@ public class CompanyService {
 	private final PasswordEncoder encoder;
 	private final EmailService emailService;
 	private final CompanySettingsService companySettingsService;
-	private final Cache<String, Company> companiesCache;
+	private final Cache<UUID, Company> companiesCache;
+	private final Cache<String, UUID> companyIdsBySlugCache;
 	private final Cache<UUID, Map<UUID, User>> usersCache;
 
 	@Value("${SYSTEM.BASE-URL}")
@@ -60,8 +61,9 @@ public class CompanyService {
 						  EmailService emailService,
 						  CompanySettingsRepository companySettingsRepository,
 						  CompanySettingsService companySettingsService,
-						  Cache<String, Company> companiesCache,
-						  Cache<UUID, Map<UUID, User>> usersCache) {
+						  Cache<UUID, Company> companiesCache,
+						  Cache<UUID, Map<UUID, User>> usersCache,
+						  Cache<String, UUID> companyIdsBySlugCache) {
 		this.userRepository = userRepository;
 		this.companyRepository = companyRepository;
 		this.encoder = encoder;
@@ -69,6 +71,7 @@ public class CompanyService {
 		this.companySettingsRepository = companySettingsRepository;
 		this.companySettingsService = companySettingsService;
 		this.companiesCache = companiesCache;
+		this.companyIdsBySlugCache = companyIdsBySlugCache;
 		this.usersCache = usersCache;
 	}
 
@@ -174,15 +177,54 @@ public class CompanyService {
 
 	    user.setEmail(request.email());
 	    user.setPhone(request.phone());
+
+	    invalidateCompaniesCache(company);
+	    usersCache.invalidate(user.getId());
 	}
 	
 	public Company findByCompanyId(UUID companyId) {
-		return companyRepository.findByCompanyId(companyId);
+		
+		Company company = companiesCache.getIfPresent(companyId);
+    	
+    	if (company == null) {
+    		LOGGER.info("COMPANY: não encontrada no cache. Consultando no banco.");
+	    	company = companyRepository.findByCompanyId(companyId);
+
+	    	if (company == null || !company.getActive())
+	    		throw new IllegalArgumentException("Company not found");
+
+	    	companiesCache.put(companyId, company);
+	    	companyIdsBySlugCache.put(company.getSlug(), companyId);
+    	}
+
+    	return company;
+	}
+	
+	public Company findByCompanySlug(String slug) {
+		
+		UUID companyId = companyIdsBySlugCache.getIfPresent(slug);
+		
+		Company company = companyId != null ? findByCompanyId(companyId) : null;
+    	
+    	if (company == null) {
+    		LOGGER.info("COMPANY: não encontrada no cache. Consultando no banco.");
+	    	company = companyRepository.findByCompanyId(companyId);
+
+	    	if (company == null || !company.getActive())
+	    		throw new IllegalArgumentException("Company not found");
+	    	
+	    	companiesCache.put(companyId, company);
+	    	companyIdsBySlugCache.put(company.getSlug(), companyId);
+    	}
+		
+		return company;
 	}
 	
 	public CompanyPublicResponse getCompanyInfo(String slug) {
 		
-		Company company = companiesCache.getIfPresent(slug);
+		UUID companyId = companyIdsBySlugCache.getIfPresent(slug);
+		
+		Company company = companyId != null ? companiesCache.getIfPresent(companyId) : null;
 		
 		if (company == null) {
 			LOGGER.info("COMPANY: não encontrada no cache. Consultando no banco.");
@@ -191,11 +233,16 @@ public class CompanyService {
 			if (company == null || !company.getActive())
 				throw new IllegalArgumentException("Company not found");
 			
-			companiesCache.put(slug, company);
+			companiesCache.put(companyId, company);
 		}
 		
         int horizon = companySettingsService.getShcedulingHorizon(company.getId());
         
         return new CompanyPublicResponse(company.getName(), company.getSlug(), horizon);
+	}
+	
+	private void invalidateCompaniesCache(Company company) {
+	    companiesCache.invalidate(company.getId());
+	    companyIdsBySlugCache.invalidate(company.getSlug());
 	}
 }

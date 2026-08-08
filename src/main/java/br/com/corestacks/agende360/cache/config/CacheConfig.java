@@ -37,7 +37,12 @@ public class CacheConfig {
 	}
 
 	@Bean
-	public Cache<String, Company> companiesCache() {
+	public Cache<UUID, Company> companiesCache() {
+		return buildCache(DEFAULT_CACHE_SIZE);
+	}
+
+	@Bean
+	public Cache<String, UUID> companyIdsBySlugCache() {
 		return buildCache(DEFAULT_CACHE_SIZE);
 	}
 

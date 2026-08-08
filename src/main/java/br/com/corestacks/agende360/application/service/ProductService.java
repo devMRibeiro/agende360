@@ -28,9 +28,7 @@ public class ProductService {
 	private static final Logger LOGGER = LoggerFactory.getLogger(ProductService.class);
 	
     private final ProductRepository productRepository;
-    private final CompanyRepository companyRepository;
     private final Cache<UUID, Map<UUID, Product>> productsCache;
-    private final Cache<String, Company> companysCache;
     
 //    private final FeatureGateService featureGateService;
 
@@ -38,25 +36,15 @@ public class ProductService {
     		ProductRepository productRepository,
     		CompanyRepository companyRepository,
     		Cache<UUID, Map<UUID, Product>> productsCache,
-    		Cache<String, Company> companysCache) {
+    		Cache<UUID, Company> companysCache) {
         this.productRepository = productRepository;
-		this.companyRepository = companyRepository;
 		this.productsCache = productsCache;
-		this.companysCache = companysCache;
     }
 
-    public List<ProductResponse> list(UUID companyId, String slug, Boolean active) {
-    	Company company = companysCache.getIfPresent(slug);
-    	
-    	if (company == null) {
-    		
-	    	company = companyId != null ? companyRepository.findByCompanyId(companyId) : companyRepository.findBySlug(slug);
-	    	
-	    	if (company == null || !company.getActive())
-	    		throw new IllegalArgumentException("Company not found");
-	    	
-	    	companysCache.put(company.getSlug(), company);
-    	}
+    public List<ProductResponse> list(Company company, Boolean active) {
+
+    	if (company == null || !company.getActive())
+    		throw new IllegalArgumentException("Company not found");
     	
         // 1. Busca no cache
         Map<UUID, Product> mapProducts = productsCache.getIfPresent(company.getId());

@@ -18,6 +18,7 @@ import org.springframework.web.bind.annotation.RestController;
 import br.com.corestacks.agende360.application.dto.request.ProductCreateRequest;
 import br.com.corestacks.agende360.application.dto.request.ProductUpdateRequest;
 import br.com.corestacks.agende360.application.dto.response.ProductResponse;
+import br.com.corestacks.agende360.application.service.CompanyService;
 import br.com.corestacks.agende360.application.service.ProductService;
 import br.com.corestacks.agende360.security.util.SecurityUtils;
 import jakarta.validation.Valid;
@@ -28,14 +29,18 @@ import jakarta.validation.Valid;
 public class ProductController {
 
     private final ProductService productService;
+    private final CompanyService companyService;
 
-    public ProductController(ProductService productService) {
+    public ProductController(
+    		ProductService productService,
+			CompanyService companyService) {
         this.productService = productService;
+		this.companyService = companyService;
     }
 
     @GetMapping
     public ResponseEntity<List<ProductResponse>> list() {
-        return ResponseEntity.ok(productService.list(SecurityUtils.getCompanyId(), null, null));
+        return ResponseEntity.ok(productService.list(companyService.findByCompanyId(SecurityUtils.getCompanyId()), null));
     }
 
     @GetMapping("/{productId}")

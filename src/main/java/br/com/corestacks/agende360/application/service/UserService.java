@@ -44,9 +44,8 @@ public class UserService {
 	private final RefreshTokenRepository refreshTokenRepository;
 	private final CompanyRepository companyRepository;
 	private final Cache<UUID, Map<UUID, User>> usersCache;
-	private final Cache<String, Company> companysCache;
 	
-//	private final FeatureGateService featureGateService;
+	private final CompanyService companyService;
 	
 	public UserService(
 			UserRepository userRepository,
@@ -54,13 +53,13 @@ public class UserService {
 			RefreshTokenRepository refreshTokenRepository,
 			CompanyRepository companyRepository,
 			Cache<UUID, Map<UUID, User>> usersCache,
-			Cache<String, Company> companysCache) {
+			CompanyService companyService) {
 		this.userRepository = userRepository;
 		this.encoder = encoder;
 		this.refreshTokenRepository = refreshTokenRepository;
 		this.companyRepository = companyRepository;
 		this.usersCache = usersCache;
-		this.companysCache = companysCache;
+		this.companyService = companyService;
 	}
 
 	public List<UserResponse> list() {
@@ -179,19 +178,10 @@ public class UserService {
 	
 	public List<ProfessionalResponse> listProfessionalsActive(String slug) {
 
-		// Busca empresa no cache
-		Company company = companysCache.getIfPresent(slug);
+		Company company = companyService.findByCompanySlug(slug);
     	
-		// Caso não encontrada, busca no banco de dados
-    	if (company == null) {
-    		LOGGER.info("Company: não encontrada no cache. Consultando no banco.");
-	    	company = companyRepository.findBySlug(slug);
-	    	
-	    	if (company == null || !company.getActive())
-	    		throw new IllegalArgumentException("Company not found");
-	    	
-	    	companysCache.put(company.getSlug(), company);
-    	}
+    	if (company == null || !company.getActive())
+    		throw new IllegalArgumentException("Company not found or Company is not active");
 		
     	// Busca usuários no cache
 		Map<UUID, User> mapUsers = usersCache.getIfPresent(company.getId());

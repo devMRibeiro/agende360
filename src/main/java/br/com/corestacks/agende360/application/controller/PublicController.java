@@ -61,7 +61,7 @@ public class PublicController {
     // Public listing of products
     @GetMapping("/{slug}/products")
     public ResponseEntity<List<ProductResponse>> listProducts(@PathVariable String slug) {
-        return ResponseEntity.ok(productService.list(null, slug, true));
+        return ResponseEntity.ok(productService.list(companyService.findByCompanySlug(slug), true));
     }
 
     // Public listing for professionals - for now productId is not used

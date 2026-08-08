@@ -14,7 +14,7 @@ public class OutboxEventCleanupScheduler {
 		this.outboxEventService = outboxEventService;
 	}
 
-	@Scheduled(cron = "0 * */1 * * *") // every one hour
+	@Scheduled(cron = "0 0 * * * *") // every one hour
 	public void run() {
 		outboxEventService.deleteOldEvents();
 	}

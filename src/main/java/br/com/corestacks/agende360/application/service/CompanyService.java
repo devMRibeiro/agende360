@@ -208,13 +208,13 @@ public class CompanyService {
     	
     	if (company == null) {
     		LOGGER.info("COMPANY: não encontrada no cache. Consultando no banco.");
-	    	company = companyRepository.findByCompanyId(companyId);
+	    	company = companyRepository.findBySlug(slug);
 
 	    	if (company == null || !company.getActive())
 	    		throw new IllegalArgumentException("Company not found");
 	    	
-	    	companiesCache.put(companyId, company);
-	    	companyIdsBySlugCache.put(company.getSlug(), companyId);
+	    	companiesCache.put(company.getId(), company);
+	    	companyIdsBySlugCache.put(company.getSlug(), company.getId());
     	}
 		
 		return company;

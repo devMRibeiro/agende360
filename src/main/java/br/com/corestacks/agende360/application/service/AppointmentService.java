@@ -177,7 +177,7 @@ public class AppointmentService {
         if (!product.getActive())
             throw new IllegalArgumentException("Product is not active");
 
-        User professional = userRepository.findById(request.professionalId()).orElse(null);
+        User professional = userRepository.findProfessionalById(request.professionalId(), company.getId());
 
         if (professional == null || !professional.getCompanyId().equals(company.getId()))
             throw new IllegalArgumentException("Professional not found");

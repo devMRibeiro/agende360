@@ -2,6 +2,7 @@ package br.com.corestacks.agende360.application.controller;
 
 import java.util.List;
 import java.util.Map;
+import java.util.UUID;
 
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -62,7 +63,14 @@ public class UserManagement {
 	@PatchMapping("/user/professional")
 	@PreAuthorize("hasRole('ADMIN')")
 	public ResponseEntity<Void> toggleProfessionalUser(@RequestBody Map<String, Boolean> request) {
-		userService.toogleProfessionalUser(request.get("isProfessional"));
+		userService.toggleProfessionalUser(request.get("isProfessional"));
+		return ResponseEntity.ok().build();
+	}
+
+	@PatchMapping("/user/active")
+	@PreAuthorize("hasRole('ADMIN')")
+	public ResponseEntity<Void> toggleActiveUser(@RequestBody Map<String, String> request) {
+		userService.toggleActiveUser(UUID.fromString(request.get("id")), Boolean.valueOf(request.get("active")));
 		return ResponseEntity.ok().build();
 	}
 }

@@ -228,7 +228,7 @@ public class UserService {
 	}
 	
 	@Transactional
-	public void toogleProfessionalUser(Boolean isProfessional) {
+	public void toggleProfessionalUser(Boolean isProfessional) {
 		
 		User user = userRepository.findByUserId(SecurityUtils.getAuthenticatedUser().getId());
 		
@@ -236,6 +236,19 @@ public class UserService {
 			throw new ForbiddenException("");
 		
 		userRepository.toggleProfessionalUser(SecurityUtils.getAuthenticatedUser().getId(), isProfessional);
+		usersCache.invalidate(SecurityUtils.getCompanyId());
+	}
+
+	@Transactional
+	public void toggleActiveUser(UUID userId, Boolean active) {
+		
+		UserDetailsImpl userAuth = SecurityUtils.getAuthenticatedUser();
+		User user = userRepository.findByUserId(userId);
+		
+		if (!userAuth.getRole().equals(UserRole.ADMIN) || user == null || !user.getCompanyId().equals(userAuth.getCompanyId()))
+			throw new ForbiddenException("");
+		
+		userRepository.toggleActiveUser(userId, active);
 		usersCache.invalidate(SecurityUtils.getCompanyId());
 	}
 }

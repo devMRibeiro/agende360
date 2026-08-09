@@ -42,4 +42,11 @@ public interface UserRepository extends JpaRepository<User, UUID> {
 	@Modifying
 	@Query("update User u set u.isProfessional = :isProfessional where u.id = :userId and u.role = UserRole.ADMIN")
 	void toggleProfessionalUser(UUID userId, Boolean isProfessional);
+
+	@Modifying
+	@Query("update User u set u.active = :isActive where u.id = :userId")
+	void toggleActiveUser(UUID userId, Boolean isActive);
+
+	@Query("select u from User u where u.id = :id and u.companyId = :companyId and u.active = true")
+	User findProfessionalById(UUID id, UUID companyId);
 }

@@ -33,8 +33,8 @@ import br.com.corestacks.agende360.application.repository.UserRepository;
 import br.com.corestacks.agende360.application.type.AppointmentStatus;
 import br.com.corestacks.agende360.application.type.DayOfWeek;
 import br.com.corestacks.agende360.application.type.SchedulingHorizon;
-import br.com.corestacks.agende360.messaging.email.dto.AppointmentConfirmationEmail;
-import br.com.corestacks.agende360.messaging.whatsapp.dto.WhatsAppAppointmentConfirmation;
+import br.com.corestacks.agende360.messaging.email.dto.AppointmentReminderEmail;
+import br.com.corestacks.agende360.messaging.whatsapp.dto.WhatsAppAppointmentReminder;
 import br.com.corestacks.agende360.outbox.enums.AggregateType;
 import br.com.corestacks.agende360.outbox.enums.OutboxEventType;
 import br.com.corestacks.agende360.outbox.factory.OutboxEventFactory;
@@ -239,14 +239,11 @@ public class AppointmentService {
         appointment.setToken(token);
         appointmentRepository.save(appointment);
         
-        outboxEventService.saveAll(List.of(
-        	    outboxEventFactory.create(AggregateType.APPOINTMENT, appointment.getId(), OutboxEventType.EMAIL_APPOINTMENT_CONFIRMATION,    buildEmailPayload(company, customer, product, professional, appointment)),
-        	    outboxEventFactory.create(AggregateType.APPOINTMENT, appointment.getId(), OutboxEventType.WHATSAPP_APPOINTMENT_CONFIRMATION, buildWhatsAppPayload(customer, appointment, company, product, professional))
-    	));
+        criaLembretes(appointment, customer, company, product, professional);
     }
     
-    private AppointmentConfirmationEmail buildEmailPayload(Company company, Customer customer, Product product, User professional, Appointment appointment) {
-    	return new AppointmentConfirmationEmail(
+    private AppointmentReminderEmail buildEmailPayload(Company company, Customer customer, Product product, User professional, Appointment appointment) {
+    	return new AppointmentReminderEmail(
     			company.getName(),
 				company.getSlug(),
 				customer.getName(),
@@ -259,13 +256,14 @@ public class AppointmentService {
 		);
     }
     
-    private WhatsAppAppointmentConfirmation buildWhatsAppPayload(Customer customer, Appointment appointment, Company company, Product product, User professional) {
-    	return new WhatsAppAppointmentConfirmation(
+    private WhatsAppAppointmentReminder buildWhatsAppPayload(Customer customer, Appointment appointment, Company company, Product product, User professional) {
+    	return new WhatsAppAppointmentReminder(
 				customer.getPhone(),
 				customer.getName(),
 				appointment.getStartTime(),
 				company.getEndereco().toString(),
 				product.getName(),
+				product.getDescription(),
 				professional.getName(),
 				company.getName(),
 				company.getSlug(),
@@ -405,5 +403,20 @@ public class AppointmentService {
     @Transactional
     public void processDueAppointments() {
     	LOGGER.info("[Update Status] - Rows Affected -> {}", appointmentRepository.updateStatus(LocalDateTime.now(), AppointmentStatus.CONFIRMED, AppointmentStatus.COMPLETED));
+    }
+    
+    private void criaLembretes(Appointment appointment, Customer customer, Company company, Product product, User professional) {
+    	
+    	LocalDateTime apptDate = appointment.getStartTime();
+        LocalDateTime lembrete24h = apptDate.minusHours(24);
+
+        // Se a data do agendamento for menor do que 24 horas de NOW, define nextAttemptAt para NOW.
+        LocalDateTime nextAttemptAt = lembrete24h.isBefore(LocalDateTime.now()) ? nextAttemptAt = LocalDateTime.now()
+        																  		: lembrete24h;
+    	
+		outboxEventService.saveAll(List.of(
+				outboxEventFactory.create(AggregateType.APPOINTMENT, appointment.getId(), OutboxEventType.WHATSAPP_APPOINTMENT_REMINDER, buildWhatsAppPayload(customer, appointment, company, product, professional), nextAttemptAt),
+				outboxEventFactory.create(AggregateType.APPOINTMENT, appointment.getId(), OutboxEventType.EMAIL_APPOINTMENT_REMINDER, 	 buildEmailPayload(company, customer, product, professional, appointment), nextAttemptAt)
+		));
     }
 }

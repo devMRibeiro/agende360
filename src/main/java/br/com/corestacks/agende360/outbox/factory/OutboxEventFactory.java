@@ -1,6 +1,6 @@
 package br.com.corestacks.agende360.outbox.factory;
 
-import java.time.Instant;
+import java.time.LocalDateTime;
 import java.util.UUID;
 
 import org.springframework.stereotype.Component;
@@ -22,7 +22,7 @@ public class OutboxEventFactory {
 		this.objectMapper = objectMapper;
 	}
 	
-    public OutboxEvent create(AggregateType aggregateType, UUID aggregateId, OutboxEventType eventType, Object payload) {
+	public OutboxEvent create(AggregateType aggregateType, UUID aggregateId, OutboxEventType eventType, Object payload, LocalDateTime nextAttemptAt) {
         return OutboxEvent.builder()
                 .id(UUID.randomUUID())
                 .aggregateType(aggregateType)
@@ -30,8 +30,9 @@ public class OutboxEventFactory {
                 .eventType(eventType)
                 .payload(objectMapper.convertValue(payload, JsonNode.class))
                 .eventStatus(OutboxStatus.PENDING)
-                .createdAt(Instant.now())
+                .createdAt(LocalDateTime.now())
                 .retryCount(0)
+                .nextAttemptAt(nextAttemptAt)
                 .build();
     }
 }

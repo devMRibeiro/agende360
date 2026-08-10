@@ -1,6 +1,7 @@
 package br.com.corestacks.agende360.outbox.model;
 
 import java.time.Instant;
+import java.time.LocalDateTime;
 import java.util.UUID;
 
 import org.hibernate.annotations.JdbcTypeCode;
@@ -43,7 +44,7 @@ public class OutboxEvent {
 	private OutboxStatus eventStatus;
 
 	@Column(name = "created_at", nullable = false)
-	private Instant createdAt;
+	private LocalDateTime createdAt;
 
 	@Column(name = "sent_at")
 	private Instant sentAt;
@@ -52,7 +53,7 @@ public class OutboxEvent {
 	private Integer retryCount;
 	
 	@Column(name = "next_attempt_at")
-	private Instant nextAttemptAt;
+	private LocalDateTime nextAttemptAt;
 	
 	@Column(name = "last_error")
 	private String lastError;
@@ -105,11 +106,11 @@ public class OutboxEvent {
 		this.eventStatus = eventStatus;
 	}
 
-	public Instant getCreatedAt() {
+	public LocalDateTime getCreatedAt() {
 		return createdAt;
 	}
 
-	public void setCreatedAt(Instant createdAt) {
+	public void setCreatedAt(LocalDateTime createdAt) {
 		this.createdAt = createdAt;
 	}
 
@@ -129,11 +130,11 @@ public class OutboxEvent {
 		this.retryCount = retryCount;
 	}
 
-	public Instant getNextAttemptAt() {
+	public LocalDateTime getNextAttemptAt() {
 		return nextAttemptAt;
 	}
 
-	public void setNextAttemptAt(Instant nextAttemptAt) {
+	public void setNextAttemptAt(LocalDateTime nextAttemptAt) {
 		this.nextAttemptAt = nextAttemptAt;
 	}
 
@@ -146,7 +147,7 @@ public class OutboxEvent {
 	}
 	
 	public void calculeNextAttempt() {
-		nextAttemptAt = Instant.now().plusSeconds(calculateBackoff(retryCount));
+		nextAttemptAt = LocalDateTime.now().plusSeconds(calculateBackoff(retryCount));
 	}
 	
 	private long calculateBackoff(int retryCount) {
@@ -195,7 +196,7 @@ public class OutboxEvent {
             return this;
         }
 
-        public Builder createdAt(Instant createdAt) {
+        public Builder createdAt(LocalDateTime createdAt) {
             event.createdAt = createdAt;
             return this;
         }
@@ -203,6 +204,11 @@ public class OutboxEvent {
         public Builder retryCount(Integer retryCount) {
             event.retryCount = retryCount;
             return this;
+        }
+        
+        public Builder nextAttemptAt(LocalDateTime nextAttemptAt) {
+        	event.nextAttemptAt = nextAttemptAt;
+        	return this;
         }
 
         public OutboxEvent build() {

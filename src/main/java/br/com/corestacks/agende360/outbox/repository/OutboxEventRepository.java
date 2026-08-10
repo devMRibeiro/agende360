@@ -1,6 +1,7 @@
 package br.com.corestacks.agende360.outbox.repository;
 
 import java.time.Instant;
+import java.time.LocalDateTime;
 import java.util.List;
 import java.util.UUID;
 
@@ -17,7 +18,9 @@ import jakarta.transaction.Transactional;
 @Repository
 public interface OutboxEventRepository extends JpaRepository<OutboxEvent, UUID> {
 	
-    List<OutboxEvent> findTop50ByEventStatusOrderByCreatedAtAsc(OutboxStatus status);
+	List<OutboxEvent> findTop50ByEventStatusAndNextAttemptAtLessThanEqualOrderByCreatedAtAsc(OutboxStatus status, LocalDateTime nextAttemptAt);
+	
+//    List<OutboxEvent> findTop50ByEventStatusOrderByCreatedAtAsc(OutboxStatus status);
     
     @Modifying
     @Transactional

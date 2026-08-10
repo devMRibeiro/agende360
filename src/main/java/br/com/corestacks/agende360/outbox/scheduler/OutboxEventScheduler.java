@@ -30,12 +30,10 @@ public class OutboxEventScheduler {
 
 	    List<OutboxEvent> events = outboxEventService.findPending();
 	    
-	    if (events != null && events.size() > 0)
-	    	LOGGER.info("Processando {} eventos", events.size());
-
 	    for (OutboxEvent event : events) {
 			try {
 
+				LOGGER.info("Processando evento -> {}", event.getEventType());
 				outboxPublisherService.publish(event);
 				outboxEventService.markAsProcessed(event);
 

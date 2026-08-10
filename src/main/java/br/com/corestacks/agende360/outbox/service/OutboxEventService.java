@@ -1,6 +1,7 @@
 package br.com.corestacks.agende360.outbox.service;
 
 import java.time.Instant;
+import java.time.LocalDateTime;
 import java.time.temporal.ChronoUnit;
 import java.util.List;
 
@@ -24,7 +25,7 @@ public class OutboxEventService {
     }
 
     public List<OutboxEvent> findPending() {
-        return outboxEventRepository.findTop50ByEventStatusOrderByCreatedAtAsc(OutboxStatus.PENDING);
+        return outboxEventRepository.findTop50ByEventStatusAndNextAttemptAtLessThanEqualOrderByCreatedAtAsc(OutboxStatus.PENDING, LocalDateTime.now());
     }
 
     public void markAsProcessed(OutboxEvent event) {

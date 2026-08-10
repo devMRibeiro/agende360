@@ -6,9 +6,9 @@ import java.util.List;
 import org.springframework.stereotype.Service;
 
 import br.com.corestacks.agende360.messaging.whatsapp.client.WhatsAppClient;
-import br.com.corestacks.agende360.messaging.whatsapp.dto.WhatsAppAppointmentConfirmation;
 import br.com.corestacks.agende360.messaging.whatsapp.dto.Component;
 import br.com.corestacks.agende360.messaging.whatsapp.dto.Parameter;
+import br.com.corestacks.agende360.messaging.whatsapp.dto.WhatsAppAppointmentReminder;
 import br.com.corestacks.agende360.messaging.whatsapp.dto.WhatsappMessageFactory;
 
 @Service
@@ -20,7 +20,7 @@ public class WhatsAppService {
         this.whatsAppClient = whatsAppClient;
     }
 
-    public void sendAppointmentConfirmation(WhatsAppAppointmentConfirmation appointmentDTO) {
+    public void sendAppointmentReminder(WhatsAppAppointmentReminder appointmentDTO) {
 
     	String formattedDate = appointmentDTO.appointmentDateTime().format(DateTimeFormatter.ofPattern("dd/MM/yyyy"));
     	String formattedTime = appointmentDTO.appointmentDateTime().format(DateTimeFormatter.ofPattern("HH:mm"));
@@ -32,12 +32,12 @@ public class WhatsAppService {
                 null,
                 List.of(
                     new Parameter("text", appointmentDTO.customerName()),
+                    new Parameter("text", appointmentDTO.companyName()),
                     new Parameter("text", formattedDate),
                     new Parameter("text", formattedTime),
                     new Parameter("text", appointmentDTO.companyAddress()),
-                    new Parameter("text", appointmentDTO.productName()),
-                    new Parameter("text", appointmentDTO.professionalName()),
-            		new Parameter("text", appointmentDTO.companyName())
+                    new Parameter("text", appointmentDTO.productName() + (appointmentDTO.productDescription() != null ? " (" + appointmentDTO.productDescription() + ")" : "")),
+                    new Parameter("text", appointmentDTO.professionalName())
                 )
             ),
             new Component(
@@ -55,7 +55,7 @@ public class WhatsAppService {
 
         whatsAppClient.sendTemplate(WhatsappMessageFactory.createTemplateMessage(
                 "55" + appointmentDTO.customerPhone(),
-                "appointment_confirmed",
+                "appointment_reminder_2",
                 components
         ));
     }

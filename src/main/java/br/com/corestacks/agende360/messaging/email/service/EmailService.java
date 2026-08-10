@@ -31,7 +31,7 @@ public class EmailService {
 	private String from;
 	
 	private static final String PATH_EMAIL_TEMPLATE_BASE = "emails/template";
-	private static final String PATH_EMAIL_TEMPLATE_APPOINTMENT_CONFIRMED = PATH_EMAIL_TEMPLATE_BASE + "/appointment_confirmed.html";
+	private static final String PATH_EMAIL_TEMPLATE_APPOINTMENT_REMINDER = PATH_EMAIL_TEMPLATE_BASE + "/appointment_reminder.html";
 	private static final String PATH_EMAIL_COMPANY_USER_CREATED = PATH_EMAIL_TEMPLATE_BASE + "/company_user_created.html";
 	private static final String PATH_EMAIL_RESET_PASSWORD = PATH_EMAIL_TEMPLATE_BASE + "/reset_password.html";
 	
@@ -62,8 +62,8 @@ public class EmailService {
 		}
 	}
 
-	public void sendAppointmentConfirmedEmail(String to, Map<String, String> vars) {
-		send(PATH_EMAIL_TEMPLATE_APPOINTMENT_CONFIRMED, to, "Agendamento Confirmado✅", vars);
+	public void sendAppointmentReminderEmail(String to, Map<String, String> vars) {
+		send(PATH_EMAIL_TEMPLATE_APPOINTMENT_REMINDER, to, "Agendamento Confirmado✅", vars);
 	}
 
 	public void sendUserAccessEmail(String to, Map<String, String> vars) {

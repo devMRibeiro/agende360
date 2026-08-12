@@ -18,7 +18,6 @@ public class OutboxEventScheduler {
 	
 	private final OutboxEventService outboxEventService;
 	private final OutboxPublisherService outboxPublisherService;
-	private static final int MAX_RETRIES = 3; 
 	
 	public OutboxEventScheduler(OutboxEventService outboxEventService, OutboxPublisherService outboxPublisherService) {
 		this.outboxEventService = outboxEventService;
@@ -43,7 +42,7 @@ public class OutboxEventScheduler {
 				event.setRetryCount(retry);
 				event.setLastError(e.getMessage());
 
-				if (retry >= MAX_RETRIES) {
+				if (retry >= event.getEventType().getMaxRetries()) {
 				    outboxEventService.markAsFailed(event, e);
 				} else {
 				    outboxEventService.markAsPending(event);

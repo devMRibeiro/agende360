@@ -16,8 +16,10 @@ import jakarta.persistence.Entity;
 import jakarta.persistence.EnumType;
 import jakarta.persistence.Enumerated;
 import jakarta.persistence.Id;
+import jakarta.persistence.Table;
 
-@Entity(name = "outbox_event")
+@Entity
+@Table(name = "outbox_event")
 public class OutboxEvent {
 
 	@Id

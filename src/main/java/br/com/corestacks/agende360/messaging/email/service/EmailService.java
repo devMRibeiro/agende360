@@ -59,6 +59,9 @@ public class EmailService {
 		} catch (ResendException e) {
 			LOGGER.error("[EMAIL][REJECTED] requestId={} statusCode={} motivo={} to={}", requestId, e.getStatusCode(), e.getCause() , to, e);
 			throw new RuntimeException("Error sending email", e);
+		} catch (Exception e) {
+			LOGGER.error("[EMAIL][REJECTED] requestId={} motivo={} to={}", requestId, e.getCause(), to, e);
+			throw new RuntimeException("Error sending email", e);
 		}
 	}
 

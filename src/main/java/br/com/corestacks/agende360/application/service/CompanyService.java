@@ -1,6 +1,5 @@
 package br.com.corestacks.agende360.application.service;
 
-import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;
@@ -29,7 +28,12 @@ import br.com.corestacks.agende360.application.repository.CompanySettingsReposit
 import br.com.corestacks.agende360.application.repository.UserRepository;
 import br.com.corestacks.agende360.application.type.SchedulingHorizon;
 import br.com.corestacks.agende360.application.type.UserRole;
-import br.com.corestacks.agende360.messaging.email.service.EmailService;
+import br.com.corestacks.agende360.application.util.BaseUrlUtils;
+import br.com.corestacks.agende360.messaging.email.dto.CompanyRegistrationEmail;
+import br.com.corestacks.agende360.outbox.enums.AggregateType;
+import br.com.corestacks.agende360.outbox.enums.OutboxEventType;
+import br.com.corestacks.agende360.outbox.factory.OutboxEventFactory;
+import br.com.corestacks.agende360.outbox.service.OutboxEventService;
 import br.com.corestacks.agende360.security.model.UserDetailsImpl;
 import br.com.corestacks.agende360.security.util.SecurityUtils;
 import jakarta.transaction.Transactional;
@@ -43,36 +47,37 @@ public class CompanyService {
 	private final CompanySettingsRepository companySettingsRepository;
 	private final UserRepository userRepository;
 	private final PasswordEncoder encoder;
-	private final EmailService emailService;
 	private final CompanySettingsService companySettingsService;
 	private final Cache<UUID, Company> companiesCache;
 	private final Cache<String, UUID> companyIdsBySlugCache;
 	private final Cache<UUID, Map<UUID, User>> usersCache;
-
-	@Value("${SYSTEM.BASE-URL}")
-	private String baseUrl;
 	
+	private final OutboxEventService outboxEventService;
+	private final OutboxEventFactory outboxEventFactory; 
+
 	@Value("${SYSTEM.DEFAULT-PASSWORD}")
 	private String defaultPassword;
 
 	public CompanyService(CompanyRepository companyRepository,
 						  UserRepository userRepository,
 						  PasswordEncoder encoder,
-						  EmailService emailService,
 						  CompanySettingsRepository companySettingsRepository,
 						  CompanySettingsService companySettingsService,
 						  Cache<UUID, Company> companiesCache,
 						  Cache<UUID, Map<UUID, User>> usersCache,
-						  Cache<String, UUID> companyIdsBySlugCache) {
+						  Cache<String, UUID> companyIdsBySlugCache,
+						  OutboxEventFactory outboxEventFactory,
+						  OutboxEventService outboxEventService) {
 		this.userRepository = userRepository;
 		this.companyRepository = companyRepository;
 		this.encoder = encoder;
-		this.emailService = emailService;
 		this.companySettingsRepository = companySettingsRepository;
 		this.companySettingsService = companySettingsService;
 		this.companiesCache = companiesCache;
 		this.companyIdsBySlugCache = companyIdsBySlugCache;
 		this.usersCache = usersCache;
+		this.outboxEventService = outboxEventService;
+		this.outboxEventFactory = outboxEventFactory;
 	}
 
 	@Transactional
@@ -106,24 +111,21 @@ public class CompanyService {
 		user.setIsProfessional(true);
 		userRepository.save(user);
 
-		sendAccessCreatedEmail(user, company);
+		outboxEventService.saveAll(List.of(outboxEventFactory.create(AggregateType.COMPANY, company.getId(), OutboxEventType.COMPANY_REGISTRATION_EMAIL, buildCompanyRegistrationEmailPayload(company, user), null)));
 		
 		return new RegisterCompanyResponse(company.getName(), company.getSlug(), user.getEmail(), user.getName());
 	}
 	
-	private void sendAccessCreatedEmail(User user, Company company) {
-        Map<String, String> vars = Map.of(
-                "COMPANY_NAME", company.getName(),
-                "LINK_PUBLICO", baseUrl + "/"+ company.getSlug(),
-                "COMPANY_DOCUMENT", company.getDocument(),
-                "USER_NAME", user.getName(),
-                "USER_EMAIL", user.getEmail(),
-                "TEMP_PASSWORD", defaultPassword,
-                "YEAR", String.valueOf(LocalDateTime.now().getYear())
-        );
-
-        emailService.sendUserAccessEmail(user.getEmail(), vars);
-    }
+	private CompanyRegistrationEmail buildCompanyRegistrationEmailPayload(Company company, User user) {
+		return new CompanyRegistrationEmail(
+						company.getName(),
+						BaseUrlUtils.BASE_URL_APPOINTMENT + "/"+ company.getSlug(),
+						company.getDocument(),
+		                user.getName(),
+		                user.getEmail(),
+		                defaultPassword
+		);
+	}
 	
 	private String genSlug(String companyName) {
 		String baseSlug = companyName.toLowerCase().replaceAll("[^a-z0-9\\s-]", "").replaceAll("\\s+", "-");

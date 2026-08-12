@@ -10,7 +10,6 @@ import java.util.UUID;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
 import com.github.benmanes.caffeine.cache.Cache;
@@ -33,6 +32,7 @@ import br.com.corestacks.agende360.application.repository.UserRepository;
 import br.com.corestacks.agende360.application.type.AppointmentStatus;
 import br.com.corestacks.agende360.application.type.DayOfWeek;
 import br.com.corestacks.agende360.application.type.SchedulingHorizon;
+import br.com.corestacks.agende360.application.util.BaseUrlUtils;
 import br.com.corestacks.agende360.messaging.email.dto.AppointmentReminderEmail;
 import br.com.corestacks.agende360.messaging.whatsapp.dto.WhatsAppAppointmentReminder;
 import br.com.corestacks.agende360.outbox.enums.AggregateType;
@@ -48,9 +48,6 @@ public class AppointmentService {
 
 	private static final Logger LOGGER = LoggerFactory.getLogger(AppointmentService.class);
 	
-    @Value("${SYSTEM.BASE-URL}")
-    private String baseUrl;
-
     private final AppointmentRepository appointmentRepository;
     private final CompanyRepository companyRepository;
     private final ProductRepository productRepository;
@@ -250,7 +247,7 @@ public class AppointmentService {
 				customer.getEmail(),
 				product.getName(),
 				professional.getName(),
-				baseUrl + "/appointment/" + company.getSlug() + "/cancel/" + appointment.getToken(),
+				BaseUrlUtils.HOST + "/appointment/" + company.getSlug() + "/cancel/" + appointment.getToken(),
 				appointment.getStartTime(),
 				company.getEndereco()
 		);

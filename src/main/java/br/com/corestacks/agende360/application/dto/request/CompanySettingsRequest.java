@@ -7,9 +7,6 @@ public record CompanySettingsRequest (
 		String companyName,
 		
 		@NotBlank
-		String phone,
-		
-		@NotBlank
-		String email
+		String phone
 	) {
 }

@@ -177,7 +177,6 @@ public class CompanyService {
 
 	    User user = userRepository.findByUserId(SecurityUtils.getAuthenticatedUser().getId());
 
-	    user.setEmail(request.email());
 	    user.setPhone(request.phone());
 
 	    invalidateCompaniesCache(company);

@@ -48,7 +48,7 @@ public class OutboxEventScheduler {
 				    outboxEventService.markAsPending(event);
 				}
 				
-				LOGGER.info("Erro ao processar o evento -> {}, Tentativa -> {}", event, retry);
+				LOGGER.info("Erro ao processar o evento -> {}, Tentativa -> {}", event.getEventType(), retry);
 			} 
 	    }
 	}

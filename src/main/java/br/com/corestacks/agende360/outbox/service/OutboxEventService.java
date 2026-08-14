@@ -49,6 +49,6 @@ public class OutboxEventService {
     }
     
     public void deleteOldEvents() {
-    	outboxEventRepository.deleteOldEvents(OutboxStatus.PROCESSED, LocalDateTime.now().minus(3, ChronoUnit.DAYS));
+    	outboxEventRepository.deleteOldEvents(LocalDateTime.now().minus(3, ChronoUnit.DAYS));
     }
 }

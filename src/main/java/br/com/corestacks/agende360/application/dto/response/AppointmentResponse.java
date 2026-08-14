@@ -10,6 +10,7 @@ public record AppointmentResponse(
 	    String customerName,
 	    String customerPhone,
 	    String productName,
+	    UUID professionalId,
 	    String professionalName,
 	    LocalDateTime startTime,
 	    LocalDateTime endTime,

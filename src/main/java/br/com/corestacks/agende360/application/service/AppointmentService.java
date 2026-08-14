@@ -385,6 +385,7 @@ public class AppointmentService {
                     customer != null ? customer.getName() : "",
                     customer != null ? customer.getPhone() : "",
                     product != null ? product.getName() : "",
+            		professional.getId(),
                     professional != null ? professional.getName() : "",
                     appointment.getStartTime(),
                     appointment.getEndTime(),

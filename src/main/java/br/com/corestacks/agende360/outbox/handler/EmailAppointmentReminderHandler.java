@@ -9,6 +9,9 @@ import org.springframework.stereotype.Component;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 
+import br.com.corestacks.agende360.application.model.Appointment;
+import br.com.corestacks.agende360.application.repository.AppointmentRepository;
+import br.com.corestacks.agende360.application.type.AppointmentStatus;
 import br.com.corestacks.agende360.messaging.email.dto.AppointmentReminderEmail;
 import br.com.corestacks.agende360.messaging.email.service.EmailService;
 import br.com.corestacks.agende360.outbox.enums.OutboxEventType;
@@ -19,10 +22,12 @@ public class EmailAppointmentReminderHandler implements OutboxEventHandler {
 	
 	private final EmailService emailService;
 	private final ObjectMapper objectMapper;
+	private final AppointmentRepository appointmentRepository;
 	
-	public EmailAppointmentReminderHandler(EmailService emailService, ObjectMapper objectMapper) {
+	public EmailAppointmentReminderHandler(EmailService emailService, ObjectMapper objectMapper, AppointmentRepository appointmentRepository) {
 		this.emailService = emailService;
 		this.objectMapper = objectMapper;
+		this.appointmentRepository = appointmentRepository;
 	}
 
 	@Override
@@ -32,7 +37,16 @@ public class EmailAppointmentReminderHandler implements OutboxEventHandler {
 
 	@Override
 	public void handle(OutboxEvent outboxEvent) {
-		sendEmailReminder(objectMapper.convertValue(outboxEvent.getPayload(), AppointmentReminderEmail.class));
+		AppointmentReminderEmail appReminderEmail = objectMapper.convertValue(outboxEvent.getPayload(), AppointmentReminderEmail.class);
+		
+		String token = appReminderEmail.cancelURL().substring(appReminderEmail.cancelURL().indexOf("/cancel/") + "/cancel/".length());
+		
+		Appointment appointment = appointmentRepository.findByToken(token);
+		
+		if (appointment == null || !appointment.getStatus().equals(AppointmentStatus.CONFIRMED))
+			return;
+		
+		sendEmailReminder(appReminderEmail);
 	}
 	
 	private void sendEmailReminder(AppointmentReminderEmail emailDTO) {

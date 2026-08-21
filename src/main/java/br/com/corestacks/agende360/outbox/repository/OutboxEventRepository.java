@@ -23,6 +23,6 @@ public interface OutboxEventRepository extends JpaRepository<OutboxEvent, UUID> 
 	
 	@Modifying
 	@Transactional
-	@Query("delete from OutboxEvent e where (e.eventStatus = 'PROCESSED' or e.eventStatus = 'SKIPPED') and e.createdAt < :limit")
+	@Query("delete from OutboxEvent e where e.eventStatus = 'PROCESSED' and e.createdAt < :limit")
 	int deleteOldEvents(@Param("limit") LocalDateTime limit);
 }

@@ -23,7 +23,6 @@ public record AppointmentRequest(
 	    @NotBlank(message = "customerName is required")
 	    String customerName,
 	
-	    @NotBlank(message = "customerEmail is required")
 	    String customerEmail,
 	    
 	    @NotBlank(message = "customerPhone is required")

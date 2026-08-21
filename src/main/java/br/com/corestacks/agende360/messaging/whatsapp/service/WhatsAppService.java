@@ -8,8 +8,9 @@ import org.springframework.stereotype.Service;
 import br.com.corestacks.agende360.messaging.whatsapp.client.WhatsAppClient;
 import br.com.corestacks.agende360.messaging.whatsapp.dto.Component;
 import br.com.corestacks.agende360.messaging.whatsapp.dto.Parameter;
-import br.com.corestacks.agende360.messaging.whatsapp.dto.WhatsAppAppointmentReminder;
+import br.com.corestacks.agende360.messaging.whatsapp.dto.WhatsAppAppointmentDTO;
 import br.com.corestacks.agende360.messaging.whatsapp.dto.WhatsappMessageFactory;
+import br.com.corestacks.agende360.outbox.enums.OutboxEventType;
 
 @Service
 public class WhatsAppService {
@@ -20,7 +21,14 @@ public class WhatsAppService {
         this.whatsAppClient = whatsAppClient;
     }
 
-    public void sendAppointmentReminder(WhatsAppAppointmentReminder appointmentDTO) {
+    public void sendAppointmentMessage(OutboxEventType typeEvent, WhatsAppAppointmentDTO appointmentDTO) {
+    	if (typeEvent.equals(OutboxEventType.WHATSAPP_APPOINTMENT_CONFIRMATION))
+    		sendAppointmentReminder("appointment_reminder_2", appointmentDTO);
+    	else
+    		sendAppointmentReminder("appointment_confirmed", appointmentDTO);
+    }
+    
+    private void sendAppointmentReminder(String template, WhatsAppAppointmentDTO appointmentDTO) {
 
     	String formattedDate = appointmentDTO.appointmentDateTime().format(DateTimeFormatter.ofPattern("dd/MM/yyyy"));
     	String formattedTime = appointmentDTO.appointmentDateTime().format(DateTimeFormatter.ofPattern("HH:mm"));
@@ -55,7 +63,7 @@ public class WhatsAppService {
 
         whatsAppClient.sendTemplate(WhatsappMessageFactory.createTemplateMessage(
                 "55" + appointmentDTO.customerPhone(),
-                "appointment_reminder_2",
+                template,
                 components
         ));
     }

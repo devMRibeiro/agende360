@@ -34,10 +34,11 @@ import br.com.corestacks.agende360.application.type.DayOfWeek;
 import br.com.corestacks.agende360.application.type.SchedulingHorizon;
 import br.com.corestacks.agende360.application.util.BaseUrlUtils;
 import br.com.corestacks.agende360.messaging.email.dto.AppointmentReminderEmail;
-import br.com.corestacks.agende360.messaging.whatsapp.dto.WhatsAppAppointmentReminder;
+import br.com.corestacks.agende360.messaging.whatsapp.dto.WhatsAppAppointmentDTO;
 import br.com.corestacks.agende360.outbox.enums.AggregateType;
 import br.com.corestacks.agende360.outbox.enums.OutboxEventType;
 import br.com.corestacks.agende360.outbox.factory.OutboxEventFactory;
+import br.com.corestacks.agende360.outbox.model.OutboxEvent;
 import br.com.corestacks.agende360.outbox.service.OutboxEventService;
 import br.com.corestacks.agende360.security.model.UserDetailsImpl;
 import br.com.corestacks.agende360.security.util.SecurityUtils;
@@ -253,8 +254,8 @@ public class AppointmentService {
 		);
     }
     
-    private WhatsAppAppointmentReminder buildWhatsAppPayload(Customer customer, Appointment appointment, Company company, Product product, User professional) {
-    	return new WhatsAppAppointmentReminder(
+    private WhatsAppAppointmentDTO buildWhatsAppPayload(Customer customer, Appointment appointment, Company company, Product product, User professional) {
+    	return new WhatsAppAppointmentDTO(
 				customer.getPhone(),
 				customer.getName(),
 				appointment.getStartTime(),
@@ -406,15 +407,23 @@ public class AppointmentService {
     private void criaLembretes(Appointment appointment, Customer customer, Company company, Product product, User professional) {
     	
     	LocalDateTime apptDate = appointment.getStartTime();
+        LocalDateTime now = LocalDateTime.now();
         LocalDateTime lembrete24h = apptDate.minusHours(24);
 
-        // Se a data do agendamento for menor do que 24 horas de NOW, define nextAttemptAt para NOW.
-        LocalDateTime nextAttemptAt = lembrete24h.isBefore(LocalDateTime.now()) ? nextAttemptAt = LocalDateTime.now()
-        																  		: lembrete24h;
+        List<OutboxEvent> events = new ArrayList<OutboxEvent>();
+        
+        if (lembrete24h.minusHours(6).isAfter(now)) {
+        	events.add(outboxEventFactory.create(AggregateType.APPOINTMENT, appointment.getId(), OutboxEventType.WHATSAPP_APPOINTMENT_REMINDER, buildWhatsAppPayload(customer, appointment, company, product, professional), lembrete24h));
+        	
+        	if (customer.getEmail() != null)
+        		events.add(outboxEventFactory.create(AggregateType.APPOINTMENT, appointment.getId(), OutboxEventType.EMAIL_APPOINTMENT_REMINDER, buildEmailPayload(company, customer, product, professional, appointment), lembrete24h));
+        }
+        
+    	events.add(outboxEventFactory.create(AggregateType.APPOINTMENT, appointment.getId(), OutboxEventType.WHATSAPP_APPOINTMENT_CONFIRMATION, buildWhatsAppPayload(customer, appointment, company, product, professional), now));
+        
+    	if (customer.getEmail() != null)
+    		events.add(outboxEventFactory.create(AggregateType.APPOINTMENT, appointment.getId(), OutboxEventType.EMAIL_APPOINTMENT_CONFIRMATION, buildEmailPayload(company, customer, product, professional, appointment), now));
     	
-		outboxEventService.saveAll(List.of(
-				outboxEventFactory.create(AggregateType.APPOINTMENT, appointment.getId(), OutboxEventType.WHATSAPP_APPOINTMENT_REMINDER, buildWhatsAppPayload(customer, appointment, company, product, professional), nextAttemptAt),
-				outboxEventFactory.create(AggregateType.APPOINTMENT, appointment.getId(), OutboxEventType.EMAIL_APPOINTMENT_REMINDER, 	 buildEmailPayload(company, customer, product, professional, appointment), nextAttemptAt)
-		));
+		outboxEventService.saveAll(events);
     }
 }

@@ -1,0 +1,93 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Agendamento confirmado</title>
+</head>
+
+<body style="margin:0; padding:0; background-color:#0f172a; font-family:Arial, Helvetica, sans-serif;">
+
+  <table width="100%" cellpadding="0" cellspacing="0" border="0" style="background-color:#0f172a; padding:24px;">
+    <tr>
+      <td align="center">
+
+        <!-- Card principal -->
+        <table width="100%" max-width="600" cellpadding="0" cellspacing="0" border="0"
+          style="background-color:#111827; border-radius:12px; padding:32px;">
+
+          <!-- Header -->
+          <tr>
+            <td style="text-align:center; padding-bottom:24px;">
+              <h1 style="color:#ffffff; margin:0; font-size:24px;">
+                Informações sobre seu agendamento
+              </h1>
+              <p style="color:#9ca3af; margin-top:8px; font-size:14px;">
+                {{COMPANY_NAME}}
+              </p>
+            </td>
+          </tr>
+
+          <!-- Saudação -->
+          <tr>
+            <td style="color:#e5e7eb; font-size:16px; padding-bottom:16px;">
+              Olá, <strong>{{CLIENT_NAME}}</strong>
+            </td>
+          </tr>
+
+          <!-- Mensagem -->
+          <tr>
+            <td style="color:#e5e7eb; font-size:14px; padding-bottom:24px;">
+              Seu agendamento foi confirmado. Veja os detalhes abaixo:
+            </td>
+          </tr>
+
+          <!-- Detalhes -->
+          <tr>
+            <td style="background-color:#1f2937; border-radius:8px; padding:16px;">
+            	<p style="margin:0 0 8px 0; color:#9ca3af; font-size:12px;">Serviço</p>
+              	<p style="margin:0 0 16px 0; color:#ffffff;">{{SERVICE_NAME}}</p>
+
+              	<p style="margin:0 0 8px 0; color:#9ca3af; font-size:12px;">Profissional</p>
+              	<p style="margin:0 0 16px 0; color:#ffffff;">{{PROFESSIONAL_NAME}}</p>
+
+              	<p style="margin:0 0 8px 0; color:#9ca3af; font-size:12px;">Data</p>
+              	<p style="margin:0 0 16px 0; color:#ffffff;">{{APPOINTMENT_DATE}}</p>
+              
+              	<p style="margin:0 0 8px 0; color:#9ca3af; font-size:12px;">Endereço</p>
+				<p style="margin:0; color:#ffffff;">{{LOGRADOURO}}, {{NUMERO}}, {{BAIRRO}}, {{CIDADE}}-{{UF}}, {{CEP}}, {{COMPLEMENTO}}</p>
+            </td>
+          </tr>
+
+          <!-- Botão -->
+          <tr>
+            <td style="padding-top:24px; text-align:center;">
+              <a href="{{CANCEL_LINK}}"
+                 style="background-color:rgb(22 163 74); color:#ffffff; text-decoration:none; padding:12px 20px; border-radius:6px; font-size:14px; display:inline-block;">
+                Cancelar Agendamento
+              </a>
+            </td>
+          </tr>
+
+          <!-- Rodapé -->
+          <tr>
+            <td style="padding-top:24px; text-align:center; font-size:12px; color:#6b7280;">
+              Se você não solicitou este agendamento, ignore este email.
+            </td>
+          </tr>
+
+        </table>
+
+        <!-- Footer externo -->
+        <table width="100%" max-width="600" cellpadding="0" cellspacing="0" border="0" style="margin-top:16px;">
+          <tr>
+            <td style="text-align:center; font-size:12px; color:#6b7280;">
+              © {{YEAR}} CoreStacks. Todos os direitos reservados.
+            </td>
+          </tr>
+        </table>
+      </td>
+    </tr>
+  </table>
+</body>
+</html>

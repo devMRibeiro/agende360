@@ -46,10 +46,10 @@ public class EmailAppointmentReminderHandler implements OutboxEventHandler {
 		if (appointment == null || !appointment.getStatus().equals(AppointmentStatus.CONFIRMED))
 			return;
 		
-		sendEmailReminder(appReminderEmail);
+		sendEmailReminder(outboxEvent.getEventType(), appReminderEmail);
 	}
 	
-	private void sendEmailReminder(AppointmentReminderEmail emailDTO) {
+	private void sendEmailReminder(OutboxEventType eventType, AppointmentReminderEmail emailDTO) {
         String formattedTime = emailDTO.appointmentStartTime().format(DateTimeFormatter.ofPattern("dd/MM/yyyy HH:mm"));
 
         Map<String, String> vars = new HashMap<String, String>();
@@ -68,6 +68,9 @@ public class EmailAppointmentReminderHandler implements OutboxEventHandler {
 	    vars.put("CEP", emailDTO.endereco().getCep());
 	    vars.put("COMPLEMENTO", emailDTO.endereco().getComplemento() == null ? "" : emailDTO.endereco().getComplemento());
 
-        emailService.sendAppointmentReminderEmail(emailDTO.customerEmail(), vars);
+	    if (eventType.equals(OutboxEventType.EMAIL_APPOINTMENT_CONFIRMATION))
+	    	emailService.sendAppointmentConfirmationEmail(emailDTO.customerEmail(), vars);
+	    else
+	    	emailService.sendAppointmentReminderEmail(emailDTO.customerEmail(), vars);
     }
 }

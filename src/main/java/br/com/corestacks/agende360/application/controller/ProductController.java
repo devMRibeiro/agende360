@@ -18,6 +18,7 @@ import org.springframework.web.bind.annotation.RestController;
 import br.com.corestacks.agende360.application.dto.request.ProductCreateRequest;
 import br.com.corestacks.agende360.application.dto.request.ProductUpdateRequest;
 import br.com.corestacks.agende360.application.dto.response.ProductResponse;
+import br.com.corestacks.agende360.application.model.Product;
 import br.com.corestacks.agende360.application.service.CompanyService;
 import br.com.corestacks.agende360.application.service.ProductService;
 import br.com.corestacks.agende360.security.util.SecurityUtils;
@@ -45,7 +46,19 @@ public class ProductController {
 
     @GetMapping("/{productId}")
     public ResponseEntity<ProductResponse> findById(@PathVariable UUID productId) {
-        return ResponseEntity.ok(productService.findById(productId));
+    	
+    	Product product = productService.findById(productId);
+    	
+        return ResponseEntity.ok(
+        		new ProductResponse(
+	                product.getId(),
+	                product.getName(),
+	                product.getDescription(),
+	                product.getPrice(),
+	                product.getDurationMinutes(),
+	                product.getActive()
+	            )
+		);
     }
 
     @PostMapping

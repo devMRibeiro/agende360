@@ -79,25 +79,26 @@ public class ProductService {
         return productsResponse;
     }
     
-    public ProductResponse findById(UUID productId) {
+    public Product findById(UUID productId) {
+    	
         UUID companyId = SecurityUtils.getCompanyId();
 
-        Product product = productRepository.findByProductId(productId);
-
-        if (product == null)
-            throw new IllegalArgumentException("Product not found");
-
-        if (!product.getCompanyId().equals(companyId))
-            throw new IllegalArgumentException("Product not found");
-
-        return new ProductResponse(
-            product.getId(),
-            product.getName(),
-            product.getDescription(),
-            product.getPrice(),
-            product.getDurationMinutes(),
-            product.getActive()
-        );
+        Map<UUID, Product> mapProducts = productsCache.getIfPresent(companyId);
+        
+    	if (mapProducts == null) {
+        	mapProducts = new Hashtable<UUID, Product>();
+        	LOGGER.info("PRODUCT: não encontrado no cache. Consultando no banco.");
+        	Product product = productRepository.findByIdAndCompanyId(productId, companyId);
+        	
+        	if (product == null)
+        		throw new IllegalArgumentException("Product not found");
+        	
+        	mapProducts.put(productId, product);
+        	
+        	productsCache.put(companyId, mapProducts);
+        }
+        
+    	return mapProducts.get(productId);
     }
 
     public void create(ProductCreateRequest request) {

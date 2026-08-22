@@ -14,6 +14,8 @@ public interface ProductRepository extends JpaRepository<Product, UUID> {
 
 	@Query("SELECT p FROM Product p WHERE p.id = :id")
 	Product findByProductId(UUID id);
+	
+	Product findByIdAndCompanyId(UUID id, UUID companyId);
 
     boolean existsByNameAndCompanyId(String name, UUID companyId);
 

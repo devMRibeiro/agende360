@@ -98,8 +98,6 @@ public class UserService {
 		if (userRepository.existsByEmail(request.email()))
 			throw new ConflictException("There is already user with that email");
 		
-//		featureGateService.checkProfessionalsLimit(SecurityUtils.getCompanyId(), userRepository.listProfessionals(SecurityUtils.getCompanyId(), null).size());
-
 		User user = new User();
 		user.setName(request.name());
 		user.setEmail(request.email());
@@ -251,4 +249,24 @@ public class UserService {
 		userRepository.toggleActiveUser(userId, active);
 		usersCache.invalidate(SecurityUtils.getCompanyId());
 	}
+	
+	public User findById(UUID userId, UUID companyId) {
+    	
+        Map<UUID, User> mapUsers = usersCache.getIfPresent(companyId);
+        
+    	if (mapUsers == null) {
+        	mapUsers = new Hashtable<UUID, User>();
+        	LOGGER.info("USER: não encontrado no cache. Consultando no banco.");
+        	User user = userRepository.findByIdAndCompanyId(userId, companyId);
+        	
+        	if (user == null)
+        		throw new IllegalArgumentException("User not found");
+        	
+        	mapUsers.put(userId, user);
+        	
+        	usersCache.put(companyId, mapUsers);
+        }
+        
+    	return mapUsers.get(userId);
+    }
 }

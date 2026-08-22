@@ -25,7 +25,6 @@ import br.com.corestacks.agende360.application.model.Product;
 import br.com.corestacks.agende360.application.model.Schedule;
 import br.com.corestacks.agende360.application.model.User;
 import br.com.corestacks.agende360.application.repository.AppointmentRepository;
-import br.com.corestacks.agende360.application.repository.CompanyRepository;
 import br.com.corestacks.agende360.application.repository.ProductRepository;
 import br.com.corestacks.agende360.application.repository.ScheduleRepository;
 import br.com.corestacks.agende360.application.repository.UserRepository;
@@ -50,7 +49,6 @@ public class AppointmentService {
 	private static final Logger LOGGER = LoggerFactory.getLogger(AppointmentService.class);
 	
     private final AppointmentRepository appointmentRepository;
-    private final CompanyRepository companyRepository;
     private final ProductRepository productRepository;
     private final ScheduleRepository scheduleRepository;
     private final UserRepository userRepository;
@@ -59,12 +57,13 @@ public class AppointmentService {
     private final OutboxEventService outboxEventService;
     private final OutboxEventFactory outboxEventFactory;
     private final CompanyService companyService;
+    private final ProductService productService;
+    private final UserService userService;
 
     private final Cache<UUID, Map<UUID, Product>> productsCache;
 
     public AppointmentService(
             AppointmentRepository appointmentRepository,
-            CompanyRepository companyRepository,
             ProductRepository productRepository,
             ScheduleRepository scheduleRepository,
             UserRepository userRepository,
@@ -73,9 +72,10 @@ public class AppointmentService {
             Cache<UUID, Map<UUID, Product>> productsCache,
             OutboxEventService outboxEventService,
             OutboxEventFactory outboxEventFactory,
-            CompanyService companyService) {
+            CompanyService companyService,
+            ProductService productService,
+            UserService userService) {
         this.appointmentRepository = appointmentRepository;
-        this.companyRepository = companyRepository;
         this.productRepository = productRepository;
         this.scheduleRepository = scheduleRepository;
         this.userRepository = userRepository;
@@ -84,6 +84,8 @@ public class AppointmentService {
 		this.outboxEventService = outboxEventService;
 		this.outboxEventFactory = outboxEventFactory;
 		this.companyService = companyService;
+		this.productService = productService;
+		this.userService = userService;
 		this.productsCache = productsCache;
     }
 
@@ -159,25 +161,16 @@ public class AppointmentService {
     @Transactional
     public void create(String slug, AppointmentRequest request) {
 
-        Company company = companyRepository.findBySlug(slug);
+        Company company = companyService.findByCompanySlug(slug);
 
-        if (company == null)
-            throw new IllegalArgumentException("Company not found");
-
-        if (!company.getActive())
-            throw new IllegalArgumentException("Company is not active");
-
-        Product product = productRepository.findById(request.productId()).orElse(null);
-
-        if (product == null || !product.getCompanyId().equals(company.getId()))
-            throw new IllegalArgumentException("Product not found");
+        Product product = productService.findById(request.productId(), company.getId());
 
         if (!product.getActive())
             throw new IllegalArgumentException("Product is not active");
 
-        User professional = userRepository.findProfessionalById(request.professionalId(), company.getId());
+        User professional = userService.findById(request.professionalId(), company.getId());
 
-        if (professional == null || !professional.getCompanyId().equals(company.getId()))
+        if (!professional.getActive())
             throw new IllegalArgumentException("Professional not found");
 
         LocalDateTime requestDateTime = LocalDateTime.of(request.date(), request.startTime());

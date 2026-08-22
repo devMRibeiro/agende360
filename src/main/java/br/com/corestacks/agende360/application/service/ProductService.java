@@ -79,10 +79,8 @@ public class ProductService {
         return productsResponse;
     }
     
-    public Product findById(UUID productId) {
+    public Product findById(UUID productId, UUID companyId) {
     	
-        UUID companyId = SecurityUtils.getCompanyId();
-
         Map<UUID, Product> mapProducts = productsCache.getIfPresent(companyId);
         
     	if (mapProducts == null) {

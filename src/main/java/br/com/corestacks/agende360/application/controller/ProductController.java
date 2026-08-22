@@ -47,7 +47,7 @@ public class ProductController {
     @GetMapping("/{productId}")
     public ResponseEntity<ProductResponse> findById(@PathVariable UUID productId) {
     	
-    	Product product = productService.findById(productId);
+    	Product product = productService.findById(productId, SecurityUtils.getCompanyId());
     	
         return ResponseEntity.ok(
         		new ProductResponse(

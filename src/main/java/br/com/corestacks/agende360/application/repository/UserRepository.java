@@ -20,12 +20,11 @@ public interface UserRepository extends JpaRepository<User, UUID> {
 	
 	boolean existsByEmail(String email);
 	
+	User findByIdAndCompanyId(UUID userId, UUID companyId);
+	
 	User findByEmailAndCompanyId(String email, UUID companyId);
 	
 	List<User> findByCompanyId(UUID companyId);
-	
-	@Query("select u from User u where u.companyId = :companyId")
-	User getByCompanyId(UUID companyId);
 	
 	@Query("""
 			select u 

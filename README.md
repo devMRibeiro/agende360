@@ -17,15 +17,19 @@
    - [Clientes (Customer)](#clientes-customer)
    - [Dashboard e Métricas](#dashboard-e-métricas)
    - [Configurações da Empresa](#configurações-da-empresa)
+   - [Assinaturas e Planos (em desenvolvimento)](#assinaturas-e-planos-em-desenvolvimento)
    - [Redefinição de Senha](#redefinição-de-senha)
-8. [APIs Públicas (sem autenticação)](#apis-públicas-sem-autenticação)
-9. [APIs Internas (autenticadas)](#apis-internas-autenticadas)
-10. [API de Suporte](#api-de-suporte)
+8. [Sistema de Cache](#sistema-de-cache)
+9. [Sistema de Eventos Assíncronos (Outbox Pattern)](#sistema-de-eventos-assíncronos-outbox-pattern)
+10. [Integração com WhatsApp](#integração-com-whatsapp)
 11. [Sistema de E-mails](#sistema-de-e-mails)
-12. [Scheduler Automático](#scheduler-automático)
-13. [Bootstrap de Dados](#bootstrap-de-dados)
-14. [Modelos de Dados](#modelos-de-dados)
-15. [Tratamento de Erros](#tratamento-de-erros)
+12. [APIs Públicas (sem autenticação)](#apis-públicas-sem-autenticação)
+13. [APIs Internas (autenticadas)](#apis-internas-autenticadas)
+14. [API de Suporte](#api-de-suporte)
+15. [Scheduler Automático](#scheduler-automático)
+16. [Bootstrap de Dados](#bootstrap-de-dados)
+17. [Modelos de Dados](#modelos-de-dados)
+18. [Tratamento de Erros](#tratamento-de-erros)
 
 ---
 
@@ -34,6 +38,8 @@
 O **Agende360** é um backend SaaS (Software as a Service) para gerenciamento de agendamentos. Cada empresa cadastrada na plataforma possui seus próprios serviços, profissionais, horários de funcionamento e agendamentos. O sistema oferece tanto uma interface de gestão interna (para administradores e profissionais da empresa) quanto uma API pública para que clientes finais possam visualizar serviços, consultar disponibilidade e criar agendamentos, sem necessidade de login.
 
 A plataforma é multi-tenant: cada empresa opera de forma isolada, utilizando um identificador único chamado **slug**.
+
+Além do núcleo de agendamento, o backend conta com uma camada de **cache em memória** (Caffeine) para reduzir consultas repetidas ao banco, um **padrão Outbox** para garantir a entrega confiável de notificações assíncronas (e-mail e WhatsApp) e uma **integração com a API oficial do WhatsApp (Meta)** para confirmações e lembretes de agendamento.
 
 ---
 
@@ -49,42 +55,73 @@ A plataforma é multi-tenant: cada empresa opera de forma isolada, utilizando um
 | PostgreSQL | (via driver) | Banco de dados relacional |
 | JJWT | 0.12.5 | Geração e validação de tokens JWT |
 | Resend Java SDK | 4.11.0 | Envio de e-mails transacionais |
+| Caffeine | (via dependência) | Cache em memória (produtos, usuários, empresas, configurações) |
+| Jackson (JSR-310, JDK8, Parameter Names) | (via Boot) | Serialização JSON, incluindo tipos `java.time` e `Optional` |
 | Spring Boot Validation | (via Boot) | Validação de DTOs com Bean Validation |
 | Spring Boot Mail | (via Boot) | Suporte a e-mail |
 | Spring Boot DevTools | (via Boot) | Utilitários de desenvolvimento |
+| Meta Graph API (WhatsApp Business) | v25.0 | Integração externa via HTTP para envio de mensagens de template no WhatsApp |
+
+> **Convenção de código:** o projeto utiliza exclusivamente **Java tradicional** — laços `for`/`while`, `if/else` explícitos — sem uso de lambdas, streams, method references ou funções anônimas, inclusive nas camadas de aplicação Spring Boot.
 
 ---
 
 ## Arquitetura e Estrutura de Pacotes
 
-O projeto segue uma arquitetura em camadas com separação entre domínio de aplicação e segurança:
+O projeto segue uma arquitetura em camadas, com pacotes de topo separando domínio de aplicação, infraestrutura transversal (cache, mensageria, eventos assíncronos) e segurança:
 
 ```
 br.com.corestacks.agende360
 ├── application
-│   ├── config          → Configurações de beans (ex: Resend)
 │   ├── controller      → Controllers REST da aplicação
 │   ├── dto
 │   │   ├── request     → Objetos de entrada das APIs
 │   │   └── response    → Objetos de saída das APIs
 │   ├── exception       → Exceções customizadas e handler global
-│   ├── model           → Entidades JPA
-│   ├── repository      → Repositórios Spring Data JPA
-│   ├── scheduler       → Jobs agendados (cron)
-│   ├── service         → Regras de negócio
-│   ├── type            → Enums do domínio
-│   └── util            → Utilitários gerais
+│   ├── model            → Entidades JPA
+│   ├── repository       → Repositórios Spring Data JPA
+│   ├── scheduler         → Jobs agendados (cron) de domínio
+│   ├── service            → Regras de negócio
+│   ├── type                 → Enums do domínio
+│   └── util                  → Utilitários gerais (senha, URLs, templates legados)
+├── cache
+│   └── config            → Beans dos caches Caffeine e monitor de estatísticas
+├── config
+│   └── JacksonConfig      → Configuração do ObjectMapper global
+├── infrastructure
+│   └── http
+│       ├── client         → Abstração de cliente HTTP (RestClient) usada por integrações externas
+│       ├── config          → Configuração de timeouts do RestClient
+│       ├── exception        → Exceções de chamadas HTTP
+│       └── model             → Modelos genéricos de requisição HTTP
 ├── messaging
-│   ├── engine          → Motor de templates HTML de e-mail
-│   └── service         → Serviço de envio de e-mail
+│   ├── email
+│   │   ├── config          → Configuração do cliente Resend
+│   │   ├── dto              → Payloads de e-mail
+│   │   ├── engine            → Motor de templates HTML de e-mail
+│   │   └── service            → Serviço de envio de e-mail
+│   └── whatsapp
+│       ├── client          → Cliente da API do WhatsApp Business (Meta)
+│       ├── dto               → Payloads de mensagens de template
+│       ├── enums              → Constantes e nomes de templates
+│       └── service             → Orquestração do envio de mensagens
+├── outbox
+│   ├── enums                → Tipos de evento e de agregado
+│   ├── factory                → Fábrica de eventos outbox
+│   ├── handler                  → Handlers que processam cada tipo de evento
+│   ├── model                      → Entidade OutboxEvent
+│   ├── publisher                    → Roteia eventos para o handler correto
+│   ├── repository                     → Consulta e limpeza de eventos
+│   ├── scheduler                       → Jobs de processamento e limpeza
+│   └── service                          → Persistência e transição de status dos eventos
 └── security
-    ├── config          → Configuração do Spring Security
-    ├── controller      → Controller de autenticação
-    ├── filter          → Filtros JWT e API Key
-    ├── model           → UserDetails e RefreshToken
-    ├── repository      → Repositório de RefreshToken
-    ├── service         → Serviços de JWT, cookies, tokens
-    └── util            → Utilitários de segurança (SecurityUtils)
+    ├── config              → Configuração do Spring Security
+    ├── controller           → Controller de autenticação
+    ├── filter                → Filtros JWT e API Key
+    ├── model                  → UserDetails e RefreshToken
+    ├── repository              → Repositório de RefreshToken
+    ├── service                  → Serviços de JWT, cookies, tokens, reset de senha
+    └── util                       → Utilitários de segurança (SecurityUtils, geração de senha)
 ```
 
 ---
@@ -114,6 +151,10 @@ O banco de dados é gerenciado pelo **Flyway**, com migrations versionadas em `s
 | V17 | Adição de colunas de endereço (`logradouro`, `numero`, `bairro`, `cidade`, `estado`, `CEP`) na `company` |
 | V18 | Adição da coluna `complemento` na `company` |
 | V19 | Adição da coluna `is_professional` na `users` |
+| V20 | Criação da tabela `subscription` (plano, status, dados de integração com Stripe) |
+| V21 | Criação dos índices `idx_subscription_company` e `idx_subscription_status` |
+| V22 | Renomear coluna `estado` → `uf` na `company` |
+| V23 | Criação da tabela `outbox_event` e dos índices de status/data para o padrão Outbox |
 
 ---
 
@@ -151,7 +192,7 @@ O sistema utiliza **autenticação stateless** baseada em **JWT (JSON Web Token)
 A cadeia de filtros do Spring Security é composta por:
 
 1. **`ApiKeyFilter`**: executado antes de tudo. Intercepta requisições destinadas a `/api/agende360/**` e exige o header `X-API-KEY`. Qualquer requisição sem a chave correta retorna 401 imediatamente.
-2. **`JwtAuthenticationFilter`**: lê o cookie `access_token`, valida o JWT e popula o `SecurityContextHolder` com um `UserDetailsImpl` contendo `id`, `email`, `companyId` e `role`.
+2. **`JwtAuthenticationFilter`**: lê o cookie `access_token`, valida o JWT e popula o `SecurityContextHolder` com um `UserDetailsImpl` contendo `id`, `email`, `companyId` e `role`. Também registra em log o endpoint acessado e o IP de origem do cliente (considerando o header `X-Forwarded-For`, quando presente).
 
 ### Regras de Rota
 
@@ -160,6 +201,7 @@ A cadeia de filtros do Spring Security é composta por:
 | `/api/auth/**` | Público (sem autenticação) |
 | `/api/public/**` | Público (sem autenticação) |
 | `/api/agende360/**` | Requer role `SUPPORT` + header `X-API-KEY` |
+| `/api/webhook/meta/**` | Público (verificação e recebimento de eventos do WhatsApp/Meta) |
 | Qualquer outra rota | Requer autenticação válida |
 
 ### Segurança dos Cookies
@@ -211,8 +253,8 @@ Regras:
 - Junto com a empresa, são criados automaticamente:
   - Um registro em `company_settings` com `schedulingHorizon = 0` (sem limite).
   - Um usuário `ADMIN` com senha temporária padrão.
-  - E-mail de boas-vindas é enviado ao administrador com os dados de acesso.
-- A empresa possui um endereço completo (`logradouro`, `numero`, `bairro`, `cidade`, `estado`, `CEP`, `complemento`).
+  - Um evento assíncrono (outbox) de boas-vindas é criado para o administrador, contendo os dados de acesso (ver [Sistema de Eventos Assíncronos](#sistema-de-eventos-assíncronos-outbox-pattern)).
+- A empresa possui um endereço completo (`logradouro`, `numero`, `bairro`, `cidade`, `uf`, `cep`, `complemento`).
 
 **Desativação de Empresa** — `/api/agende360/company/{slug}/disable`.
 
@@ -235,6 +277,7 @@ Regras:
 - O usuário é criado sem `passwordChangedAt`, o que indica que é o primeiro acesso.
 - O campo `firstAccess` no endpoint `/api/auth/me` retorna `true` quando `passwordChangedAt` é nulo, sinalizando ao frontend que deve solicitar troca de senha.
 - O usuário é vinculado à empresa do administrador que o criou.
+- A listagem de usuários por empresa é mantida em cache (ver [Sistema de Cache](#sistema-de-cache)) e é invalidada a cada criação/alteração.
 
 **Listagem de usuários** — `/api/management/users` — retorna todos os usuários da empresa do administrador autenticado.
 
@@ -260,6 +303,11 @@ Regras:
 - Apenas usuários com role `ADMIN` podem ativar/desativar o modo profissional.
 - Quando `isProfessional = true`, o ADMIN também aparece na listagem pública de profissionais disponíveis para agendamento.
 
+**Ativação/Desativação de usuário** — `/api/management/user/active` (`ADMIN`).
+
+Regras:
+- Apenas usuários da própria empresa podem ser ativados/desativados pelo `ADMIN`.
+
 ---
 
 ### Produtos/Serviços (Product)
@@ -273,6 +321,7 @@ Regras:
 - Preço mínimo de R$ 0,01, com até 10 dígitos inteiros e 2 casas decimais.
 - Duração (`durationMinutes`) deve ser um inteiro positivo.
 - Produto é criado com `active = true` por padrão.
+- A lista de produtos por empresa é cacheada e invalidada a cada criação/alteração/(des)ativação.
 
 **Atualização** — `PUT /api/product/{productId}`.
 
@@ -331,7 +380,7 @@ O ciclo de vida de um agendamento é gerenciado pelo `AppointmentService`.
 Regras:
 1. A empresa identificada pelo `slug` deve existir e estar ativa.
 2. O produto deve pertencer à empresa e estar ativo.
-3. O profissional deve pertencer à empresa.
+3. O profissional deve pertencer à empresa e estar ativo.
 4. O horário solicitado deve ser no futuro.
 5. O horário deve respeitar o **horizonte de agendamento** configurado pela empresa. Se o horizonte for diferente de 0 (sem limite), a data não pode exceder `hoje + horizonte em dias`.
 6. A empresa deve ter um horário de funcionamento (`schedule`) cadastrado para o dia da semana solicitado.
@@ -339,8 +388,8 @@ Regras:
 8. Não pode haver conflito com outro agendamento do mesmo profissional no mesmo período (status diferente de `CANCELLED`).
 9. O cliente é criado automaticamente se não existir (buscado pelo telefone). Se já existir, seus dados são atualizados.
 10. Um token único (UUID) é gerado para permitir cancelamento posterior sem autenticação.
-11. Um e-mail de confirmação com link de cancelamento é enviado ao cliente.
-12. O agendamento é criado com status `CONFIRMED`.
+11. O agendamento é criado com status `CONFIRMED`.
+12. São agendados, via padrão Outbox, os eventos de **confirmação imediata** (WhatsApp e, se houver e-mail cadastrado, também e-mail) e, quando há pelo menos 30 horas até o início do compromisso, os eventos de **lembrete** (WhatsApp e e-mail) programados para 24 horas antes do horário marcado (ver [Sistema de Eventos Assíncronos](#sistema-de-eventos-assíncronos-outbox-pattern)).
 
 **Consulta de slots disponíveis** — `GET /api/public/{slug}/slots?professionalId=&productId=&date=`.
 
@@ -383,6 +432,8 @@ Regras:
 - `GET /api/appointment` — todos os agendamentos não cancelados da empresa.
 - `GET /api/appointment/today` — agendamentos do dia atual da empresa.
 - `GET /api/appointment/today/me` (`PROFESSIONAL`) — agendamentos do profissional autenticado no dia atual.
+
+**Atualização automática de status** — um job agendado (`UpdateScheduler`) marca como `COMPLETED` os agendamentos `CONFIRMED` cujo horário de término já passou (ver [Scheduler Automático](#scheduler-automático)).
 
 ---
 
@@ -446,6 +497,19 @@ Define com quantos dias de antecedência um cliente pode criar um agendamento. O
 
 ---
 
+### Assinaturas e Planos (em desenvolvimento)
+
+O banco de dados já possui a tabela `subscription`, preparada para suportar cobrança recorrente via **Stripe**:
+
+- `company_id` (único, um plano por empresa), `plan`, `status`.
+- `stripe_customer_id` e `stripe_subscription_id` para integração com o Stripe.
+- `current_period_start` / `current_period_end` e `cancel_at_period_end` para controle de ciclo de cobrança.
+- Índices por `company_id` e `status` para consultas rápidas de plano ativo.
+
+Diversos serviços (`DashboardService`, `ScheduleService`, `ProductService`, `AppointmentService`) já possuem pontos de extensão comentados para um futuro `FeatureGateService`, que deve aplicar limites por plano — por exemplo, dashboard avançado, quantidade de serviços cadastrados e quantidade de intervalos de horário por dia. **Esta funcionalidade ainda não está ativa** na aplicação.
+
+---
+
 ### Redefinição de Senha
 
 **Solicitação** — `POST /api/auth/forgot-password`.
@@ -467,6 +531,112 @@ Regras:
 
 ---
 
+## Sistema de Cache
+
+Para reduzir consultas repetidas ao banco em operações multi-tenant (consultadas a todo momento tanto no painel administrativo quanto na API pública), o backend mantém caches em memória usando **Caffeine**, cada um com capacidade máxima de 10.000 entradas e coleta de estatísticas habilitada:
+
+| Cache | Chave | Valor | Uso |
+|---|---|---|---|
+| `productsCache` | `companyId` | `Map<productId, Product>` | Listagem e busca de produtos por empresa |
+| `usersCache` | `companyId` | `Map<userId, User>` | Listagem de usuários, `/auth/me`, listagem pública de profissionais |
+| `companiesCache` | `companyId` | `Company` | Lookup de empresa por id |
+| `companyIdsBySlugCache` | `slug` | `companyId` | Lookup de empresa por slug (usado nas rotas públicas) |
+| `companySettingsCache` | `companyId` | `CompanySettings` | Horizonte de agendamento configurado |
+
+**Invalidação**: cada operação de escrita (criação, atualização, ativação/desativação de produtos e usuários, atualização de configurações da empresa) invalida a entrada correspondente no cache, forçando uma nova leitura do banco na próxima consulta.
+
+**Monitoramento**: o componente `CacheMonitor` roda a cada 5 minutos e registra em log, para os caches de produtos, usuários e empresas, as métricas de `hits`, `misses`, `hitRate` e `evictions`.
+
+---
+
+## Sistema de Eventos Assíncronos (Outbox Pattern)
+
+Efeitos colaterais que não devem bloquear a resposta ao usuário nem correr o risco de ser perdidos em caso de falha — como o envio de e-mails e mensagens de WhatsApp — são tratados com o **padrão Outbox**, implementado no pacote `outbox`.
+
+### Como funciona
+
+1. **Criação do evento**: ao final de uma operação de negócio (ex.: cadastro de empresa, criação de agendamento), um ou mais registros de `OutboxEvent` são persistidos na mesma transação do banco, com status `PENDING`. Cada evento guarda o tipo (`OutboxEventType`), o agregado de origem (`AggregateType`: `APPOINTMENT` ou `COMPANY`), o payload em JSON e, opcionalmente, um `nextAttemptAt` (para eventos agendados para o futuro, como lembretes).
+2. **Processamento**: o `OutboxEventScheduler` roda a cada **30 segundos**, busca até 50 eventos pendentes cujo `nextAttemptAt` já tenha passado (ou seja nulo) e delega cada um ao handler correspondente através do `OutboxPublisherService`, que mapeia `OutboxEventType → OutboxEventHandler`.
+3. **Sucesso**: o evento é marcado como `PROCESSED` e recebe um `sentAt`.
+4. **Falha**: o contador `retryCount` é incrementado e o erro é registrado em `lastError`.
+   - Se o número de tentativas ainda estiver abaixo do limite definido para o tipo de evento, o evento permanece `PENDING` e um novo `nextAttemptAt` é calculado com **backoff exponencial** (`min(2^retryCount * 30s, 3600s)`, ou seja, no máximo 1 hora entre tentativas).
+   - Caso o limite de tentativas seja atingido, o evento é marcado como `ERROR` e não é mais reprocessado automaticamente.
+5. **Limpeza**: o `OutboxEventCleanupScheduler` roda periodicamente e remove os eventos com status `PROCESSED` cujo `created_at` seja anterior a 3 dias, mantendo a tabela enxuta.
+
+### Tipos de evento e limites de tentativa (`OutboxEventType`)
+
+| Tipo | Máx. tentativas | Descrição |
+|---|---|---|
+| `COMPANY_REGISTRATION_EMAIL` | 3 | E-mail de boas-vindas com dados de acesso do administrador |
+| `EMAIL_APPOINTMENT_CONFIRMATION` | 7 | E-mail de confirmação de agendamento |
+| `EMAIL_APPOINTMENT_REMINDER` | 5 | E-mail de lembrete (24h antes) |
+| `WHATSAPP_APPOINTMENT_CONFIRMATION` | 7 | Mensagem de WhatsApp de confirmação |
+| `WHATSAPP_APPOINTMENT_REMINDER` | 5 | Mensagem de WhatsApp de lembrete (24h antes) |
+| `APPOINTMENT_CANCELLED` | 10 | Reservado para notificação de cancelamento (tipo definido no enum, handler ainda não implementado) |
+
+### Handlers implementados
+
+- **`CompanyRegistrationEmailHandler`** — envia o e-mail de acesso criado após o cadastro de uma empresa.
+- **`EmailAppointmentReminderHandler`** — envia e-mails de confirmação/lembrete de agendamento, verificando antes se o agendamento ainda existe e está com status `CONFIRMED` (evita notificar agendamentos já cancelados).
+- **`WhatsAppAppointmentHandler`** — envia mensagens de WhatsApp de confirmação/lembrete, com a mesma verificação de status `CONFIRMED` antes do envio.
+
+---
+
+## Integração com WhatsApp
+
+O envio de mensagens de WhatsApp é feito através da **API oficial da Meta (Graph API, versão v25.0)**, usando templates de mensagem pré-aprovados no WhatsApp Business.
+
+- **`WhatsAppClient`** é a interface de abstração; **`MetaWhatsAppClient`** é a implementação concreta, que chama `https://graph.facebook.com/v25.0/{phoneNumberId}/messages` usando o `HttpClient` interno (baseado em `RestClient`).
+- Credenciais configuradas via `system.whatsapp.phone-number-id` e `system.whatsapp.access-token`.
+- **`WhatsAppService`** monta o corpo da mensagem de template a partir de um `WhatsAppAppointmentDTO`, incluindo nome do cliente, nome da empresa, data e hora formatadas, endereço, serviço (com descrição, se houver) e nome do profissional, além de um botão com link para cancelamento do agendamento.
+- O template `appointment_confirmed` é usado para a confirmação e `appointment_reminder_2` para o lembrete.
+- Os números de telefone são enviados com o prefixo internacional `55` (Brasil).
+
+### Webhook do Meta (`/api/webhook/meta`)
+
+Endpoint público exigido pela plataforma da Meta para integração com o WhatsApp Business:
+
+| Método | Descrição |
+|---|---|
+| GET | Verificação de assinatura do webhook (`hub.mode`, `hub.verify_token`, `hub.challenge`), validada contra o token configurado em `system.token-webhook` |
+| POST | Recebimento de eventos enviados pela Meta (atualmente apenas registrado em log; ainda não processado/persistido) |
+
+---
+
+## Sistema de E-mails
+
+Os e-mails são enviados pelo serviço **Resend** (`EmailService`), utilizando templates HTML armazenados em `src/main/resources/emails/template/`.
+
+O motor de templates (`EmailTemplateEngine`) realiza substituição de variáveis no formato `{{NOME_VARIAVEL}}` dentro dos arquivos HTML.
+
+### Templates disponíveis
+
+**`appointment_confirmation.html`** — Confirmação de agendamento (enviado logo após a criação do agendamento).
+
+Variáveis: `COMPANY_NAME`, `CLIENT_NAME`, `SERVICE_NAME`, `PROFESSIONAL_NAME`, `APPOINTMENT_DATE`, `CANCEL_LINK`, `LOGRADOURO`, `NUMERO`, `BAIRRO`, `CIDADE`, `UF`, `CEP`, `COMPLEMENTO`, `YEAR`.
+
+**`appointment_reminder.html`** — Lembrete de agendamento (enviado 24h antes, quando há tempo hábil).
+
+Mesmas variáveis do template de confirmação.
+
+**`company_user_created.html`** — Acesso criado para o administrador de uma nova empresa.
+
+Variáveis: `COMPANY_NAME`, `LINK_PUBLICO`, `COMPANY_DOCUMENT`, `USER_NAME`, `USER_EMAIL`, `TEMP_PASSWORD`, `LOGIN_LINK`, `YEAR`.
+
+**`reset_password.html`** — Redefinição de senha.
+
+Variáveis: `CLIENT_NAME`, `RESET_LINK`, `EXPIRATION_TIME`, `YEAR`.
+
+### Comportamento do serviço de e-mail
+
+- Se o destinatário for nulo ou vazio, o e-mail não é enviado e um log de erro é registrado.
+- Cada envio gera um `requestId` (UUID) para rastreamento em logs.
+- Erros de envio lançam `RuntimeException` com a causa original — o que faz o `OutboxEventScheduler` tratar o evento como falho e reagendar uma nova tentativa.
+- Logs registram início, sucesso e falha de cada envio.
+- O envio de e-mails de confirmação e lembrete de agendamento é sempre disparado de forma assíncrona pelo padrão Outbox (ver seção anterior), nunca de forma síncrona na requisição do usuário.
+
+---
+
 ## APIs Públicas (sem autenticação)
 
 Base: `/api/public`
@@ -480,6 +650,8 @@ Base: `/api/public`
 | POST | `/{slug}/appointment` | Criação de agendamento |
 | GET | `/appointment/cancel/{token}` | Cancelamento de agendamento via token |
 | POST | `/check/customer` | Verifica se cliente existe pelo telefone |
+
+Além disso, `/api/webhook/meta` (GET e POST) é público, conforme descrito na seção [Integração com WhatsApp](#integração-com-whatsapp).
 
 ---
 
@@ -543,6 +715,7 @@ Base: `/api/public`
 | PATCH | `/change-password` | ADMIN, PROFESSIONAL | Alterar senha |
 | PUT | `/user` | ADMIN | Atualizar dados do usuário |
 | PATCH | `/user/professional` | ADMIN | Ativar/desativar modo profissional |
+| PATCH | `/user/active` | ADMIN | Ativar/desativar usuário |
 
 ### Configurações — `/api/settings`
 
@@ -572,42 +745,23 @@ Base: `/api/agende360` — requer role `SUPPORT` + header `X-API-KEY`.
 
 ---
 
-## Sistema de E-mails
-
-Os e-mails são enviados pelo serviço **Resend** (`EmailService`), utilizando templates HTML armazenados em `src/main/resources/emails/template/`.
-
-O motor de templates (`EmailTemplateEngine`) realiza substituição de variáveis no formato `{{NOME_VARIAVEL}}` dentro dos arquivos HTML.
-
-### Templates disponíveis
-
-**`appointment_confirmed.html`** — Confirmação de agendamento.
-
-Variáveis: `COMPANY_NAME`, `CLIENT_NAME`, `SERVICE_NAME`, `PROFESSIONAL_NAME`, `APPOINTMENT_DATE`, `CANCEL_LINK`, `RUA`, `NUMERO`, `BAIRRO`, `CIDADE`, `ESTADO`, `CEP`, `COMPLEMENTO`, `YEAR`.
-
-**`company_user_created.html`** — Acesso criado para novo usuário.
-
-Variáveis: `COMPANY_NAME`, `LINK_PUBLICO`, `COMPANY_DOCUMENT`, `USER_NAME`, `USER_EMAIL`, `TEMP_PASSWORD`, `LOGIN_LINK`, `YEAR`.
-
-**`reset_password.html`** — Redefinição de senha.
-
-Variáveis: `CLIENT_NAME`, `RESET_LINK`, `EXPIRATION_TIME`, `YEAR`.
-
-### Comportamento do serviço de e-mail
-
-- Se o destinatário for nulo ou vazio, o e-mail não é enviado e um log de erro é registrado.
-- Cada envio gera um `requestId` (UUID) para rastreamento em logs.
-- Erros de envio lançam `RuntimeException` com a causa original.
-- Logs registram início, sucesso e falha de cada envio.
-
----
-
 ## Scheduler Automático
 
 **`UpdateScheduler`** — executa a cada 10 minutos via cron `0 */10 * * * *`.
 
-Funcionalidade: atualiza automaticamente o status dos agendamentos cujo `endTime` já passou e que ainda estão com status `CONFIRMED`, alterando-os para `COMPLETED`.
+Funcionalidade: atualiza automaticamente o status dos agendamentos cujo `endTime` já passou e que ainda estão com status `CONFIRMED`, alterando-os para `COMPLETED`. Isso garante que agendamentos passados não fiquem eternamente como "confirmados" sem intervenção manual.
 
-Isso garante que agendamentos passados não fiquem eternamente como "confirmados" sem intervenção manual.
+**`OutboxEventScheduler`** — executa a cada 30 segundos via cron `*/30 * * * * *`.
+
+Funcionalidade: processa até 50 eventos pendentes do padrão Outbox por execução, delegando-os ao handler correspondente e aplicando a lógica de sucesso/retentativa descrita em [Sistema de Eventos Assíncronos](#sistema-de-eventos-assíncronos-outbox-pattern).
+
+**`OutboxEventCleanupScheduler`** — executa periodicamente (cron `0 0 * * */2 *` no código).
+
+Funcionalidade: remove eventos do outbox com status `PROCESSED` e `created_at` anterior a 3 dias, evitando o crescimento indefinido da tabela `outbox_event`.
+
+**`NotificationScheduler`** — executa a cada minuto via cron `* */1 * * * *`.
+
+Job reservado para futura implementação de um pipeline de notificações baseado em tabela de eventos (conforme anotações no próprio código-fonte); atualmente não possui lógica implementada.
 
 ---
 
@@ -626,14 +780,14 @@ O `passwordChangedAt` é definido na criação, indicando que não é necessári
 
 ## Modelos de Dados
 
-### `BaseEntity` (superclasse de todas as entidades)
+### `BaseEntity` (superclasse da maioria das entidades)
 - `id` (UUID, gerado automaticamente)
 - `createdAt` (TIMESTAMP, preenchido no `@PrePersist`)
 - `updatedAt` (TIMESTAMP, atualizado no `@PreUpdate` e via `@UpdateTimestamp`)
 
 ### `Company`
 - `name`, `slug` (único), `document` (único), `active` (padrão true)
-- `endereco` (embeddable: `logradouro`, `numero`, `bairro`, `cidade`, `estado`, `cep`, `complemento`)
+- `endereco` (embeddable: `logradouro`, `numero`, `bairro`, `cidade`, `uf`, `cep`, `complemento`)
 
 ### `User`
 - `name`, `email` (único), `password` (BCrypt), `phone`
@@ -667,6 +821,17 @@ O `passwordChangedAt` é definido na criação, indicando que não é necessári
 
 ### `UserProduct`
 - Tabela de associação `users_products` com chave composta (`userId`, `productId`)
+
+### `OutboxEvent`
+- `id`, `aggregateId`, `aggregateType` (enum: `APPOINTMENT`, `COMPANY`)
+- `eventType` (enum `OutboxEventType`), `payload` (JSONB)
+- `eventStatus` (enum: `PENDING`, `PROCESSING`, `PROCESSED`, `ERROR`)
+- `createdAt`, `sentAt`, `retryCount`, `nextAttemptAt`, `lastError`
+
+### `subscription` (tabela sem entidade JPA mapeada ainda)
+- `companyId` (único), `plan`, `status`
+- `stripeCustomerId`, `stripeSubscriptionId`
+- `currentPeriodStart`, `currentPeriodEnd`, `cancelAtPeriodEnd`
 
 ---
 
